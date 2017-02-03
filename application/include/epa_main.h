@@ -16,7 +16,6 @@
 #include "config_epa.h"
 #include "neon_eds.h"
 #include "cdi/io.h"
-#include "epa_acq_interface.h"
 
 /*===============================================================  MACRO's  ==*/
 

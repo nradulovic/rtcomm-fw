@@ -11,15 +11,12 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
-#include <epa_protocol.h>
 #include <stddef.h>
 #include <string.h>
 
 #include "epa_main.h"
 #include "epa_acq.h"
 #include "epa_aux.h"
-#include "epa_tft.h"
-#include "epa_acq_interface.h"
 #include "epa_heartbeat.h"
 #include "epa_calibration.h"
 #include "epa_adt7410.h"
@@ -378,7 +375,7 @@ static naction state_init_acq(struct nsm * sm, const struct nevent * event)
 		}
 		case SIG_ACQ_NOT_READY: {
 
-			return (naction_transit_to(sm, state_init_protocol));
+			return (naction_transit_to(sm, state_setup_acq));
 		}
 		default: {
 			return (naction_super(sm, ntop_state));

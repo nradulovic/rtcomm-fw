@@ -5,12 +5,10 @@
 #include "epa_main.h"
 #include "epa_acq.h"
 #include "epa_aux.h"
-#include "epa_protocol.h"
 #include "epa_heartbeat.h"
 #include "epa_calibration.h"
 #include "epa_adt7410.h"
 #include "epa_eeprom.h"
-#include "epa_tft.h"
 #include "epa_i2c.h"
 #include "bsp.h"
 #include "app_stat.h"
@@ -99,10 +97,6 @@ int main(void)
      */
     nepa_init(&g_epa_heartbeat,	&g_epa_heartbeat_define);
 
-    /* Initialize protocol EPA
-     */
-    nepa_init(&g_epa_protocol,  &g_epa_protocol_define);
-
     /* Initialize EEPROM driver EPA
      */
     nepa_init(&g_epa_eeprom,    &g_epa_eeprom_define);
@@ -119,10 +113,6 @@ int main(void)
      */
     nepa_init(&g_epa_calibration, &g_epa_calibration_define);
 
-    /* Initialize TFT EPA
-     */
-    nepa_init(&g_epa_tft,  &g_epa_tft_define);
-    
     /* Initialize the main EPA. This EPA controls will dispatch control events
      * to all other EPAs.
      */

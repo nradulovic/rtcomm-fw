@@ -11,7 +11,6 @@
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include <data_process.h>
-#include <epa_protocol.h>
 #include <stddef.h>
 #include <string.h>
 
