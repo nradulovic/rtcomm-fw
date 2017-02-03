@@ -23,7 +23,6 @@
 #include "epa_eeprom.h"
 #include "epa_i2c.h"
 #include "cdi/io.h"
-#include "device_mem_map.h"
 #include "app_stat.h"
 #include "ppbuff.h"
 #include "fram_storage.h"
@@ -38,7 +37,6 @@ struct wspace
     struct nequeue				deferred;
     const struct nevent *		locked_event;
     struct acq_consumer *		acq_consumer;
-    char                                temp;
 };
 
 enum local_epa_main_events

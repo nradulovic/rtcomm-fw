@@ -10,7 +10,6 @@
 
 #include "epa_eeprom.h"
 #include "epa_i2c.h"
-#include "device_mem_map.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 
@@ -48,7 +47,6 @@ struct wspace
     uint32_t					idx;
     uint32_t					max_size;
     uint8_t						dev_id;
-    uint8_t						mem_map_id;
 };
 
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -121,7 +119,6 @@ static naction state_init_eeprom(struct nsm * sm, const struct nevent * event)
 			ws->transfer.timeout_ms 	= EEPROM_I2C_TIMEOUT_MS;
 			ws->max_size 		        = 8 * 1024;
 			ws->dev_id			= EEPROM_I2C_ID;
-			ws->mem_map_id			= DEV_ACTIVE_EEPROM;
 
 			return (naction_transit_to(sm, state_idle));
 		}
@@ -152,7 +149,6 @@ static naction state_init_fram(struct nsm * sm, const struct nevent * event)
 			ws->transfer.timeout_ms 	= EEPROM_I2C_TIMEOUT_MS;
 			ws->max_size 				= 128 * 1024;
 			ws->dev_id					= FRAM_I2C_ID;
-			ws->mem_map_id				= DEV_ACTIVE_FRAM;
 
 			return (naction_transit_to(sm, state_idle));
 		}
@@ -189,12 +185,16 @@ static naction state_idle(struct nsm * sm, const struct nevent * event)
 			const struct event_i2c_complete * complete = nevent_data(event);
 
 			if (complete->error) {
-				mem_map()->active[ws->mem_map_id] = false;
+			    /*
+			     * TODO: set that EEPROM/FRAM is NOT active
+			     */
 				nepa_send_signal(ws->producer, SIG_EEPROM_NOT_READY);
 
 				return (naction_handled());
 			} else {
-				mem_map()->active[ws->mem_map_id] = true;
+			    /*
+                 * TODO: set that EEPROM/FRAM is active
+                 */
 				nepa_send_signal(ws->producer, SIG_EEPROM_READY);
 
 				return (naction_transit_to(sm, state_initialized));
@@ -315,7 +315,9 @@ static naction state_write_data(struct nsm * sm, const struct nevent * event)
 
 					return (naction_handled());
 				} else {
-					mem_map()->active[ws->mem_map_id] = false;
+				    /*
+				     * TODO: set that EEPROM/FRAM is NOT active
+				     */
 					nepa_send_signal(ws->producer, SIG_EEPROM_NOT_READY);
 
 					return (naction_transit_to(sm, state_initialized));
@@ -326,7 +328,9 @@ static naction state_write_data(struct nsm * sm, const struct nevent * event)
 				if (ws->idx < ws->size) {
 					return (naction_transit_to(sm, state_write_data));
 				} else {
-					mem_map()->active[ws->mem_map_id] = true;
+				    /*
+				     * TODO: set that EEPROM/FRAM is active
+				     */
 					nepa_send_signal(ws->producer, SIG_EEPROM_READY);
 
 					return (naction_transit_to(sm, state_initialized));
@@ -395,7 +399,9 @@ static naction state_read_data_wr(struct nsm * sm, const struct nevent * event)
 
 					return (naction_handled());
 				} else {
-					mem_map()->active[ws->mem_map_id] = false;
+				    /*
+				     * TODO: set that EEPROM/FRAM is NOT active
+				     */
 					nepa_send_signal(ws->producer, SIG_EEPROM_NOT_READY);
 
 					return (naction_transit_to(sm, state_initialized));
@@ -455,7 +461,9 @@ static naction state_read_data_rd(struct nsm * sm, const struct nevent * event)
 
 					return (naction_handled());
 				} else {
-					mem_map()->active[ws->mem_map_id] = false;
+				    /*
+				     * TODO: set that EEPROM/FRAM is NOT active
+				     */
 					nepa_send_signal(ws->producer, SIG_EEPROM_NOT_READY);
 
 					return (naction_transit_to(sm, state_initialized));
@@ -466,7 +474,9 @@ static naction state_read_data_rd(struct nsm * sm, const struct nevent * event)
 				if (ws->idx < ws->size) {
 					return (naction_transit_to(sm, state_read_data_wr));
 				} else {
-					mem_map()->active[ws->mem_map_id] = true;
+				    /*
+				     * TODO: set that EEPROM/FRAM is active
+				     */
 					nepa_send_signal(ws->producer, SIG_EEPROM_READY);
 
 					return (naction_transit_to(sm, state_initialized));

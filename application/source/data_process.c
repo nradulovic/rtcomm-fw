@@ -9,17 +9,12 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "device_mem_map.h"
 #include "port/compiler.h"
 #include "data_process.h"
 #include "cdi/io.h"
 #include "epa_calibration.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
-
-#define ADC_VREF				2.54f
-#define ADC_QUANT				((ADC_VREF * 2.0f)/((float)(ACQ_ADC_SIGNED_MAX - 1u)))
-
 /*======================================================  LOCAL DATA TYPES  ==*/
 
 #if defined(OPT_USE_DOUBLE)
@@ -180,13 +175,11 @@ void data_process_init(struct process_handle * handle)
 
 void data_process_acq(struct process_handle * handle, struct acq_sample * sample)
 {
-	mem_map_put();
 	sample_set_gain(sample, handle->data.range.curr_gain_level);
 
 	if (handle->config.flags & DATA_PROCESS_ENABLE_RANGE) {
 		range_process_sample(handle, sample);
 	}
-	mem_map()->acq.final = *sample;
 }
 
 
@@ -195,8 +188,6 @@ void data_process_adt7410(struct process_handle * handle, int16_t sample)
 {
 	(void)handle;
 
-	mem_map()->ted.raw = sample;
-	mem_map()->ted.final = (float)sample * 1.0f / 128.0f;
 }
 
 

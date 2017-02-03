@@ -10,8 +10,6 @@
 
 #include "epa_adt7410.h"
 #include "epa_i2c.h"
-#include "device_mem_map.h"
-#include "data_process.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 
@@ -97,7 +95,10 @@ const struct nepa_define        g_epa_adt7410_define = NEPA_DEF_INIT(
 static void
 set_activity_adt7410(bool is_active)
 {
-	mem_map()->active[DEV_ACTIVE_TED] = is_active;
+    (void)is_active;
+    /*
+     * TODO: Set if adt7410 is detected here
+     */
 }
 
 /******************************************************************************
@@ -496,7 +497,10 @@ static naction state_read_temp_rd(struct nsm * sm, const struct nevent * event)
 #if defined(T_MATH_SIMULATION)
 				raw_data = 4016;
 #endif
-				data_process_adt7410(&g_global_process, raw_data);
+				/*
+				 * TODO: do something with raw_data
+				 * TODO: set that adt7410 is active
+				 */
 				set_activity_adt7410(true);
 
 				return (naction_transit_to(sm, state_initialized));

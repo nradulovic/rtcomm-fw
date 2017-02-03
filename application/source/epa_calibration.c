@@ -9,7 +9,6 @@
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include "epa_calibration.h"
-#include "device_mem_map.h"
 #include "epa_eeprom.h"
 #include "epa_i2c.h"
 #include "nv_data.h"
@@ -99,7 +98,9 @@ static naction state_idle(struct nsm * sm, const struct nevent * event)
 			if (is_calibration_valid()) {
 				nepa_send_signal(event->producer, SIG_CALIBRATION_READY);
 
-				mem_map()->active[DEV_ACTIVE_CALIBRATION] = true;
+				/*
+				 * TODO: set if calibration is active here
+				 */
 
 				return (naction_handled());
 			} else {
@@ -180,7 +181,9 @@ static naction state_fetch_data(struct nsm * sm, const struct nevent * event)
 			}
 			nepa_send_signal(ws->producer, SIG_CALIBRATION_READY);
 
-			mem_map()->active[DEV_ACTIVE_CALIBRATION] = true;
+			/*
+			 * TODO: set that calibration is active here
+			 */
 
 			return (naction_transit_to(sm, state_idle));
 		}

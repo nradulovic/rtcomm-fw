@@ -25,7 +25,6 @@
 /*-- Event storage and heap --------------------------------------------------*/
 static struct nheap             g_event_heap;									/* Dinamicka memorija za event-ove */
 static uint8_t                  g_event_heap_storage[4096];						/* Prostor za din. mem. za event-ove */
-static uint8_t                  g_generic_heap_storage[24000];					/* Prostor za din. mem. za opstu upotrebu */
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
@@ -38,12 +37,7 @@ struct nheap             		g_generic_heap;									/* Dinamicka memorija za opst
 
 int main(void)
 {
-
     bsp_init_hal();
-
-    /* Initialize application status
-     */
-    status_init();
 
     /* Initialize NonVolatile data module
      */
@@ -71,10 +65,6 @@ int main(void)
      * pointer to statically allocated storage and it's size.
      */
     nheap_init(&g_event_heap, g_event_heap_storage, sizeof(g_event_heap_storage));
-
-    /* Initialize a generic heap memory, used by FLASH programming, USB protocol
-     */
-    nheap_init(&g_generic_heap, g_generic_heap_storage, sizeof(g_generic_heap_storage));
 
     /* Register the Heap memory for events. New events will allocate memory from
      * this heap.

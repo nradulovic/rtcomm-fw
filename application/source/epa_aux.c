@@ -18,8 +18,6 @@
 #include "app_stat.h"
 #include "ads1256.h"
 #include "cdi/io.h"
-#include "device_mem_map.h"
-#include "data_process.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 
@@ -126,7 +124,10 @@ static void drdy_signal(void)
 static void
 set_activity_aux(bool is_active)
 {
-	mem_map()->active[DEV_ACTIVE_AUX] = is_active;
+    (void)is_active;
+    /*
+     * TODO: set if AUX is active here
+     */
 }
 
 /******************************************************************************

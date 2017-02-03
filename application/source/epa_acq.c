@@ -16,7 +16,6 @@
 
 #include "cdi/io.h"
 #include "epa_acq.h"
-#include "device_mem_map.h"
 #include "app_stat.h"
 #include "acq_channels.h"
 #include "acq_sync.h"
@@ -672,16 +671,16 @@ static naction state_idle(struct nsm * sm, const struct nevent * event)
 
     switch (event->id) {
     	case NSM_ENTRY: {
-    		mem_map()->active[DEV_ACTIVE_ACQ_X] = false;
-			mem_map()->active[DEV_ACTIVE_ACQ_Y] = false;
-			mem_map()->active[DEV_ACTIVE_ACQ_Z] = false;
+    	    /*
+    	     * TODO: Reset ADC status
+    	     */
 
 			return (naction_handled());
     	}
     	case NSM_EXIT: {
-        	mem_map()->active[DEV_ACTIVE_ACQ_X] = acq_x_is_enabled(ACQ_CHANNEL_X);
-        	mem_map()->active[DEV_ACTIVE_ACQ_Y] = acq_x_is_enabled(ACQ_CHANNEL_Y);
-        	mem_map()->active[DEV_ACTIVE_ACQ_Z] = acq_x_is_enabled(ACQ_CHANNEL_Z);
+    	    /*
+    	     * TODO: get detected ADCs status
+    	     */
 
         	return (naction_handled());
     	}

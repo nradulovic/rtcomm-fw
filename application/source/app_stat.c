@@ -13,7 +13,6 @@
 #include <stdbool.h>
 
 #include "app_stat.h"
-#include "device_mem_map.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 
@@ -31,11 +30,6 @@
 /*======================================================  GLOBAL VARIABLES  ==*/
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
-
-
-void status_init(void)
-{
-}
 
 
 
