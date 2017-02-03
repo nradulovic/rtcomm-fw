@@ -1,0 +1,424 @@
+/**@file
+ * @author 		Nenad Radulovic
+ * @date		Jan 29, 2016
+ */
+
+/*=========================================================  INCLUDE FILES  ==*/
+
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+
+#include "device_mem_map.h"
+#include "port/compiler.h"
+#include "data_process.h"
+#include "cdi/io.h"
+#include "epa_calibration.h"
+
+/*=========================================================  LOCAL MACRO's  ==*/
+
+#define ADC_VREF				2.54f
+#define ADC_QUANT				((ADC_VREF * 2.0f)/((float)(ACQ_ADC_SIGNED_MAX - 1u)))
+
+/*======================================================  LOCAL DATA TYPES  ==*/
+
+#if defined(OPT_USE_DOUBLE)
+typedef double fdata;
+#else
+typedef float fdata;
+#endif
+typedef int32_t idata;
+
+/*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
+/*=======================================================  LOCAL VARIABLES  ==*/
+/*======================================================  GLOBAL VARIABLES  ==*/
+
+struct process_handle			g_global_process;
+
+/*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
+
+
+PORT_C_INLINE bool
+gain_pend_lower(struct range_data * range)
+{
+    if (range->pend_gain_level) {
+        range->pend_gain_level--;
+        range->pend_gain_handler(range->pend_gain_level);
+
+        return (true);
+    } else {
+
+        return (false);
+    }
+}
+
+
+
+PORT_C_INLINE bool
+gain_pend_raise(struct range_data * range)
+{
+    if (range->pend_gain_level < (DATA_PROCESS_GAIN_LEVELS - 1)) {
+        range->pend_gain_level++;
+        range->pend_gain_handler(range->pend_gain_level);
+
+        return (true);
+    } else {
+
+        return (false);
+    }
+}
+
+
+
+static void
+range_init(struct process_handle * handle)
+{
+    uint32_t                    idx;
+
+    for (idx = 0; idx < DATA_PROCESS_GAIN_LEVELS; idx++)
+    {
+        handle->config.range.gain[idx].hi = INT32_MAX;
+        handle->config.range.gain[idx].lo = 0;
+    }
+    handle->config.range.attack_time   = UINT32_MAX;
+    handle->config.range.pullback_time = UINT32_MAX;
+    handle->data.range.pend_gain_level = 3;
+    handle->data.range.curr_gain_level = 3;
+    handle->data.range.state           = STATE_INIT;
+}
+
+
+
+static void
+range_process_sample(struct process_handle * handle,
+		const struct acq_sample * sample)
+{
+    uint32_t                    channel;
+    int32_t                     amplitude;
+    struct range_data *         range = &handle->data.range;
+    struct range_config *       range_cfg = &handle->config.range;
+
+    /* NOTE:
+     * Calculate max amplitude from all 3 channels
+     */
+    amplitude = 0;
+
+    for (channel = 0; channel < ACQUNITY_ACQ_CHANNELS; channel++) {
+        int32_t                 abs_val;
+
+        abs_val = abs(sample_get_int(sample, channel));
+
+        if (amplitude < abs_val) {
+            amplitude = abs_val;
+        }
+    }
+
+    switch (range->state) {
+        case STATE_INIT:
+        {
+            range->state = STATE_STABLE;
+            range->attack_counter   = 0;
+            range->pullback_counter = 0;
+            break;
+        }
+        case STATE_STABLE:
+        {
+            if (amplitude > range_cfg->gain[range->curr_gain_level].hi) {
+                range->pullback_counter = 0;
+                range->attack_counter++;
+
+                if (range->attack_counter >= range_cfg->attack_time) {
+
+                    if (gain_pend_lower(range)) {
+                        range->state = STATE_TRANSIT;
+                    }
+                }
+            } else if (amplitude < range_cfg->gain[range->curr_gain_level].lo) {
+                range->attack_counter = 0;
+                range->pullback_counter++;
+
+                if (range->pullback_counter >= range_cfg->pullback_time) {
+
+                    if (gain_pend_raise(range)) {
+                        range->state = STATE_TRANSIT;
+                    }
+                }
+            } else {
+                range->attack_counter   = 0;
+                range->pullback_counter = 0;
+            }
+            break;
+        }
+        case STATE_TRANSIT:
+        {
+            range->attack_counter   = 0;
+            range->pullback_counter = 0;
+
+            if (range->curr_gain_level == range->pend_gain_level) {
+                range->state = STATE_STABLE;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+#define CU16_ADDR_R1			18
+#define CU8_CALN				36
+#define CF_TEMP					48
+#define CF_TH_REF				3904
+#define CF_VTCO					3916
+#define CF_ALPHA_OFFSET			3928
+#define CF_BETA_OFFSET			3940
+#define CF_TE_REF				3952
+#define CF_VTE_OFFSET			3964
+#define CF_ALPHA_0				3976
+#define CF_BETA_0				3988
+#define CF_ALPHA				4000
+#define CF_BETA					4012
+
+
+
+static float
+calc_te_process(float x, float te, uint32_t idx)
+{
+	float						retval;
+	float 						k;
+	float						k_pwr2;
+
+	k = te - calib_f_a(CF_TE_REF, idx);
+	k_pwr2 = k * k;
+
+	retval = x + calib_f_a(CF_VTE_OFFSET, idx) *
+		(1 + calib_f_a(CF_ALPHA_0, idx) * k +
+			 calib_f_a(CF_BETA_0, idx) * k_pwr2);
+	retval /= (1 + calib_f_a(CF_ALPHA, idx) * k +
+			       calib_f_a(CF_BETA, idx) * k_pwr2);
+
+	return (retval);
+}
+
+
+
+static float
+calc_tco_process(float x, float tco,
+		uint32_t idx)
+{
+	float						retval;
+	float						k;
+	float						k_pwr2;
+
+	k = tco - calib_f_a(CF_TH_REF, idx);
+	k_pwr2 = k* k;
+
+	retval = x - calib_f_a(CF_VTCO, idx) *
+			(1 + calib_f_a(CF_ALPHA_OFFSET, idx) * k +
+			     calib_f_a(CF_BETA_OFFSET, idx) * k_pwr2);
+
+	return (retval);
+}
+
+
+
+static uint32_t
+lk_calculate_addr(float x, uint32_t channel_idx)
+{
+	int32_t						value;
+	int32_t						limit;
+	int32_t						lk_idx;
+	uint32_t					caln_idx;
+	uint32_t					retval;
+	/* NOTE: This is a hack.
+	 *
+	 * We are using calib_u32-a to fetch 4 bytes from calibration space and
+	 * using only MSB byte from the word. Array function is used for efficient
+	 * channel indexing. With n_xb4() we are getting only the byte we are
+	 * interested in.
+	 */
+	uint8_t						caln = n_xb4(calib_u32_a(CU8_CALN, channel_idx));
+	uint16_t					addr = calib_u16_a(CU16_ADDR_R1, channel_idx);
+
+	lk_idx = 0;
+	value = (int32_t)x;
+
+	for (caln_idx = 0; caln_idx < caln; caln_idx++) {
+		limit = (int32_t)calib_f(addr + caln_idx * 4u);
+
+		if (value <= limit) {
+			lk_idx = (int32_t)caln_idx;
+			lk_idx--;
+
+			break;
+		}
+	}
+
+	if (lk_idx < 0) {
+		lk_idx = 0;
+	}
+	retval = addr +	caln * 4u + (uint32_t)lk_idx * 36u;
+
+	return (retval);
+}
+
+
+
+static float
+calc_lk_process(float x, float tco, uint32_t channel_idx)
+{
+	float						retval;
+	float						x_pwr2;
+	float						tco_pwr2;
+	uint32_t					lk_addr;
+
+	lk_addr = lk_calculate_addr(x, channel_idx);
+	tco_pwr2 = tco * tco;
+	x_pwr2 = x * x;
+
+	retval = calib_f_a(lk_addr, 0) 					+
+			 calib_f_a(lk_addr, 1) * x 				+
+			 calib_f_a(lk_addr, 2) * tco 			+
+			 calib_f_a(lk_addr, 3) * x_pwr2 		+
+			 calib_f_a(lk_addr, 4) * x * tco 		+
+			 calib_f_a(lk_addr, 5) * tco_pwr2 		+
+			 calib_f_a(lk_addr, 6) * x_pwr2 * tco 	+
+			 calib_f_a(lk_addr, 7) * x * tco_pwr2 	+
+			 calib_f_a(lk_addr, 8) * x_pwr2 * tco_pwr2;
+
+	return (retval);
+}
+
+
+
+static void
+math_process_sample(struct process_handle * handle,
+		const struct acq_sample * in_sample, struct acq_sample * out_sample)
+{
+	uint32_t					channel_idx;
+	float 						x;
+	float 						tco;
+	float 						te;
+
+	if (!mem_map()->active[DEV_ACTIVE_AUX] || !mem_map()->active[DEV_ACTIVE_TED]) {
+		return;
+	}
+	tco = (float)mem_map()->aux.raw[0];
+	te  = (float)mem_map()->ted.raw;
+
+	for (channel_idx = 0; channel_idx < ACQUNITY_ACQ_CHANNELS; channel_idx++) {
+		x = (float)sample_get_int(in_sample, channel_idx);
+
+		if (handle->config.flags & DATA_PROCESS_MATH_FLAG_TE) {
+			x = calc_te_process(x, te, channel_idx);
+		}
+
+		if (handle->config.flags & DATA_PROCESS_MATH_FLAG_TCO) {
+			x = calc_tco_process(x, tco, channel_idx);
+		}
+		x = calc_lk_process(x, tco, channel_idx);
+		sample_set_float(out_sample, x, channel_idx);
+	}
+	sample_cpy_metadata(out_sample, in_sample);
+	sample_set_type(out_sample, SAMPLE_TYPE_FLOAT);
+}
+
+/*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
+/*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
+
+
+
+void data_process_init(struct process_handle * handle)
+{
+	range_init(handle);
+}
+
+
+
+void data_process_acq(struct process_handle * handle, struct acq_sample * sample)
+{
+	mem_map_put();
+	sample_set_gain(sample, handle->data.range.curr_gain_level);
+
+	if (handle->config.flags & DATA_PROCESS_ENABLE_RANGE) {
+		range_process_sample(handle, sample);
+	}
+	mem_map()->acq.final = *sample;
+}
+
+
+
+void data_process_adt7410(struct process_handle * handle, int16_t sample)
+{
+	(void)handle;
+
+	mem_map()->ted.raw = sample;
+	mem_map()->ted.final = (float)sample * 1.0f / 128.0f;
+}
+
+
+
+void data_process_set_range_hi_limit(struct process_handle * handle,
+		int32_t limit, uint32_t level)
+{
+    handle->config.range.gain[level].hi = limit;
+}
+
+
+
+void data_process_set_range_lo_limit(struct process_handle * handle,
+		int32_t limit, uint32_t level)
+{
+    handle->config.range.gain[level].lo = limit;
+}
+
+
+
+void data_process_set_range_attack_time(struct process_handle * handle,
+		uint32_t attack_time)
+{
+    handle->config.range.attack_time = attack_time;
+}
+
+
+
+void data_process_set_range_pullback_time(struct process_handle * handle,
+		uint32_t pullback_time)
+{
+    handle->config.range.pullback_time = pullback_time;
+}
+
+
+
+void data_process_set_gain_handler(struct process_handle * handle,
+		void (* gain_handler)(uint32_t gain))
+{
+    handle->data.range.pend_gain_handler = gain_handler;
+}
+
+
+
+void data_process_set_flags(struct process_handle * handle, uint32_t flags)
+{
+	handle->config.flags = flags;
+}
+
+
+
+uint32_t data_process_get_gain_level(struct process_handle * handle)
+{
+    return (handle->data.range.curr_gain_level);
+}
+
+
+
+void data_process_gain_changed(struct process_handle * handle,
+		uint32_t new_gain)
+{
+    handle->data.range.curr_gain_level = new_gain;
+}
+
+/** @endcond *//***************************************************************
+ * END of data_process.c
+ ******************************************************************************/

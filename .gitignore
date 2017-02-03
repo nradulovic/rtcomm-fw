@@ -1,0 +1,16 @@
+*~
+.*~
+.project
+.settings
+.cproject
+/Debug/
+Objects/
+Listings/
+JLink*
+DebugConfig/
+*.BAT
+.coverage/
+.csdata/
+teslameter_3mhx_fw.uvguix.*
+
+/Release
