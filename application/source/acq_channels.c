@@ -402,12 +402,10 @@ void acq_transfer_dump_to_null(const struct spi_transfer * transfer)
 static
 void acq_transfer_finished(const struct spi_transfer * transfer)
 {
-	static uint32_t				sampled_mask;
+	g_acq.sampled_mask |= 0x1u << transfer->arg.u32;
 
-	sampled_mask |= 0x1u << transfer->arg.u32;
-
-	if (sampled_mask == ACQ_CHANNEL_XYZ_MASK) {
-		sampled_mask = 0;
+	if (g_acq.sampled_mask == ACQ_CHANNEL_XYZ_MASK) {
+		g_acq.sampled_mask = 0;
 
 		trigger_out_conditional_disable();
 		/*
@@ -555,6 +553,7 @@ void acq_x_isr_enable(void (* fn)(void))
     uint32_t                    idx;
 
     g_acq.isr_begin_transfer = fn;
+    g_acq.sampled_mask = 0;
 
     /* NOTE:
      * Turn on EXTI interrupt only for the first is_enabled ADC channel. In this

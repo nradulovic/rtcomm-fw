@@ -62,6 +62,8 @@ struct acq_channels
 	 */
 	void				     (* isr_begin_transfer)(void);
 
+	uint32_t 					sampled_mask;
+
 	/* Struktura rezervisana za svaki kanal ponaosob.
 	 */
 	struct acq_channel
@@ -167,10 +169,6 @@ void acq_x_isr_disable(void);
 
 
 void acq_x_stop_rdc(void);
-
-
-
-void acq_x_restart_process(void);
 
 
 
