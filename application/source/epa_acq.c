@@ -114,7 +114,7 @@ const struct acq_config			g_acq_default_config =
 	   	   	   	   	   	   	   ACQ_SET_ADC_DRATE | ACQ_SET_ADC_IO,
 	.enabled_adc_mask		 = ACQ_CHANNEL_X_MASK | ACQ_CHANNEL_Y_MASK |
 							   ACQ_CHANNEL_Z_MASK,
-	.ms_bus_buff_size		 = ACQUNITY_BUFF_SIZE,
+	.ms_bus_buff_size		 = 100,
 	.trigger_mode			 = TRIG_MODE_OUT,
 	.acq_mode                = ACQ_MODE_CONTINUOUS,
 	.data_process_flags		 = DATA_PROCESS_ENABLE_MATH |
@@ -470,7 +470,7 @@ static naction state_init (struct nsm * sm, const struct nevent * event)
              * At this point all busses and pins are initialized. 			  *
              * -------------------------------------------------------------- */
 
-			return (naction_transit_to(sm, state_reset_adcs));
+            return (naction_transit_to(sm, state_reset_adcs));
         }
         default: {
             return (naction_ignored());
