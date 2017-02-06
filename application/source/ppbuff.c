@@ -18,10 +18,10 @@ static void ring_init(struct ring * ring, uint32_t size, struct acq_sample * sto
 {
 	ring->curr = 0;
 	ring->free = size;
-	memset(&ring->sample[0], 0, size * sizeof(struct acq_sample));
+	ring->sample = storage;
+	memset(storage, 0, size * sizeof(struct acq_sample));
 }
 
-/****************** status ringa *****************/
 static bool ring_is_full(const struct ring * ring)
 {
 	if (ring->free != 0) {
@@ -31,12 +31,6 @@ static bool ring_is_full(const struct ring * ring)
 	}
 }
 
-/**********************************************************************
-  * @name    ring_base(const struct ring * ring)
-  * @brief   vraca pokazivac na prvi sempl u ringu (adresu prvog sempla)
-  * @param   const struct ring * ring: ring  
-  * @retval  pokazivac na prvi sempl u ringu
-  *********************************************************************/
 static void * ring_base(const struct ring * ring)
 {
 	return ((void *)&ring->sample[0]);
@@ -49,20 +43,11 @@ static void ring_reinit(struct ring * ring, uint32_t size)
 	ring->free = size;
 }
 
-/****************** vraca adresu trenutnog sampla u ringu *****************/
 static struct acq_sample * ring_current_sample(struct ring * const ring)
 {
 	return (&ring->sample[ring->curr]);
 }
 
-static void ring_push(struct ring * ring, uint32_t elements)
-{
-	ring->curr += elements;
-	ring->free -= elements;
-}
-
-/****** povecava adresu pokazivaca trenutnog sempla i 
-smanjuje broj slobodnih semplova *******************/
 static void ring_push_sample(struct ring * ring)
 {
 	ring->curr++;
@@ -94,9 +79,9 @@ struct acq_sample * ppbuff_producer_current_sample(const struct ppbuff * buff)
 /*
  * Put item to producer queue
  */
-void ppbuff_producer_push(struct ppbuff * buff, uint32_t elements)
+void ppbuff_producer_push(struct ppbuff * buff)
 {
-	ring_push(buff->producer, elements); 											 //racuna adresu trenutnog i kolicinu slobone memorije u ringu
+	ring_push_sample(buff->producer); 											 //racuna adresu trenutnog i kolicinu slobone memorije u ringu
 
 	if (ring_is_full(buff->producer)) {
 		ring_reinit(buff->producer, buff->size);
@@ -122,9 +107,3 @@ void * ppbuff_consumer_base(struct ppbuff * buff)
 
 
 
-void ppbuff_copy(struct ppbuff * destination, const struct ppbuff * source)
-{
-	memcpy(ppbuff_producer_current_sample(destination), ppbuff_consumer_base(source),
-			source->size * sizeof(struct acq_sample));
-	ppbuff_producer_push(destination, source->size);
-}

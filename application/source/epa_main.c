@@ -11,6 +11,7 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include <epa_i2c_master.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -21,7 +22,6 @@
 #include "epa_calibration.h"
 #include "epa_adt7410.h"
 #include "epa_eeprom.h"
-#include "epa_i2c.h"
 #include "cdi/io.h"
 #include "app_stat.h"
 #include "ppbuff.h"
@@ -33,10 +33,6 @@
 struct wspace
 {
     struct nepa	*				client;
-    struct nevent *				deferred_storage[EPA_MAIN_QUEUE_SIZE];
-    struct nequeue				deferred;
-    const struct nevent *		locked_event;
-    struct acq_consumer *		acq_consumer;
 };
 
 enum local_epa_main_events
@@ -102,19 +98,6 @@ uint32_t						g_trigg_current_no;
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
-
-static void deferred_sample_notify(const struct acq_sample * sample)
-{
-	struct event_main_sample * 	new_sample;
-
-	new_sample = NEVENT_CREATE_I(struct event_main_sample, EVENT_MAIN_SAMPLE);
-
-	if (new_sample) {
-		new_sample->data = sample[1];
-		nepa_send_event_i(&g_epa_main, &new_sample->super);
-	}
-}
-
 /******************************************************************************
  * State machine
  ******************************************************************************/
@@ -122,18 +105,8 @@ static void deferred_sample_notify(const struct acq_sample * sample)
 
 static naction state_init (struct nsm * sm, const struct nevent * event)
 {
-    struct wspace *        ws = nsm_wspace(sm);
-
     switch (event->id) {
         case NSM_INIT: {
-        	struct nequeue_define deferred_config;
-
-			deferred_config.storage = ws->deferred_storage;
-			deferred_config.size = sizeof(ws->deferred_storage);
-
-            nequeue_init(&ws->deferred, &deferred_config);
-
-            ws->acq_consumer = acq_consumer_add(deferred_sample_notify, 1);
 
             return (naction_transit_to(sm, state_config));
         }
@@ -150,16 +123,16 @@ static naction state_config(struct nsm * sm, const struct nevent * event)
 	switch (event->id) {
 		case NSM_ENTRY: {
 
-			nepa_send_signal(&g_epa_i2c, SIG_I2C_INIT);
+			nepa_send_signal(&g_epa_i2c_master, SIG_I2C_MASTER_INIT);
 
 			return (naction_handled());
 		}
-		case SIG_I2C_READY: {
+		case SIG_I2C_MASTER_READY: {
 
 			return (naction_transit_to(sm, state_master_init_eeprom));
 
 		}
-		case SIG_I2C_NOT_READY: {
+		case SIG_I2C_MASTER_NOT_READY: {
 
 			return (naction_transit_to(sm, state_init_aux));
 		}
@@ -416,7 +389,6 @@ static naction state_normal(struct nsm * sm, const struct nevent * event)
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			nepa_defer_fetch_all(&ws->deferred);
 
 			return (naction_handled());
 		}
@@ -474,13 +446,10 @@ static naction state_broadcast_sample(struct nsm * sm, const struct nevent * eve
 			 * Take into account current sampling frequency and set the right
 			 * n-th sample number.
 			 */
-			acq_consumer_at_every(ws->acq_consumer, 1);
-			acq_consumer_enable(ws->acq_consumer);
 
 			return (naction_handled());
 		}
 		case NSM_EXIT: {
-			acq_consumer_disable(ws->acq_consumer);
 
 			return (naction_handled());
 		}
@@ -709,8 +678,6 @@ static naction state_trigger_set_config(struct nsm * sm, const struct nevent * e
  */
 static naction state_trigger_running(struct nsm * sm, const struct nevent * event)
 {
-	struct wspace * 			ws = nsm_wspace(sm);
-
 	switch (event->id) {
 		case NSM_ENTRY: {
 			g_trigg_last_state = MAIN_TRIGG_RUNNING;
@@ -719,13 +686,10 @@ static naction state_trigger_running(struct nsm * sm, const struct nevent * even
 			 * Take into account current sampling frequency and set the right
 			 * n-th sample number.
 			 */
-			acq_consumer_at_every(ws->acq_consumer, 1);
-			acq_consumer_enable(ws->acq_consumer);
 
 			return (naction_handled());
 		}
 		case NSM_EXIT: {
-			acq_consumer_disable(ws->acq_consumer);
 
 			return (naction_handled());
 		}
@@ -751,13 +715,10 @@ static naction state_trigger_running_fetch(struct nsm * sm, const struct nevent 
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			nepa_defer_fetch_one(&ws->deferred);
 
 			return (naction_handled());
 		}
 		case EVENT_MAIN_SAMPLE: {
-			ws->locked_event = event;
-			nevent_lock(event);
 
 			return (naction_transit_to(sm, state_trigger_running_save));
 		}
@@ -788,7 +749,6 @@ static naction state_trigger_running_save(struct nsm * sm, const struct nevent *
 			return (naction_transit_to(sm, state_trigger_running_save_data));
 		}
 		case EVENT_MAIN_SAMPLE: {
-			nepa_defer_event(&ws->deferred, event);
 
 			return (naction_handled());
 		}
@@ -809,25 +769,10 @@ static naction state_trigger_running_save_data(struct nsm * sm, const struct nev
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			struct event_eeprom_transfer * eeprom_transfer;
-			struct event_main_sample * main_sample =
-					(struct event_main_sample *)ws->locked_event;
-
-			eeprom_transfer = NEVENT_CREATE(struct event_eeprom_transfer, EVENT_EEPROM_WRITE);
-
-			if (eeprom_transfer) {
-				eeprom_transfer->address =
-						FRAM_DATA_BASE + (g_trigg_current_no * sizeof(struct acq_sample));
-				eeprom_transfer->buffer  = (void *)&main_sample->data;
-				eeprom_transfer->size    = sizeof(struct acq_sample);
-
-				nepa_send_event(&g_epa_fram, &eeprom_transfer->super);
-			}
 
 			return (naction_handled());
 		}
 		case NSM_EXIT: {
-			nevent_unlock(ws->locked_event);
 
 			return (naction_handled());
 		}

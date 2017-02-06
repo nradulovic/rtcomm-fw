@@ -45,7 +45,7 @@ uint32_t ppbuff_size(const struct ppbuff * buff)
 
 
 struct acq_sample * ppbuff_producer_current_sample(const struct ppbuff * buff);
-void ppbuff_producer_push(struct ppbuff * buff, uint32_t elements);
+void ppbuff_producer_push(struct ppbuff * buff);
 void * ppbuff_consumer_base(struct ppbuff * buff);
 
 static inline
@@ -65,7 +65,5 @@ bool ppbuff_is_consumer_locked(const struct ppbuff * buff)
 {
 	return (buff->is_consumer_locked);
 }
-
-void ppbuff_copy(struct ppbuff * destination, const struct ppbuff * source);
 
 #endif /* APPLICATION_INCLUDE_PPBUFF_H_ */

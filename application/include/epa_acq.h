@@ -80,11 +80,6 @@ struct acq_config
 	uint32_t                    ms_bus_buff_size;
 
 	/*
-	 * This is local consumer buffer
-	 */
-	uint32_t					acq_consumer_buff_size;
-
-	/*
 	 * TRIG_MODE_OUT,
 	 * TRIG_MODE_IN_CONTINUOUS,
 	 * TRIG_MODE_IN_SINGLE_SHOT
@@ -103,7 +98,6 @@ struct acq_config
 	uint32_t					data_process_flags;
 };
 
-struct acq_consumer;
 struct acq_sample;
 
 /*======================================================  GLOBAL VARIABLES  ==*/
@@ -125,15 +119,6 @@ const struct acq_config *		acq_get_config(void)
 
 	return (&g_acq_current_config);
 }
-
-struct acq_consumer * acq_consumer_add(void (*fn)(const struct acq_sample *),
-		uint32_t at_every);
-
-void acq_consumer_at_every(struct acq_consumer * consumer, uint32_t at_every);
-
-void acq_consumer_enable(struct acq_consumer * consumer);
-
-void acq_consumer_disable(struct acq_consumer * consumer);
 
 /*--------------------------------------------------------  C++ extern end  --*/
 #ifdef __cplusplus

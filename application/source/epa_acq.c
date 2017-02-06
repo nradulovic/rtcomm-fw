@@ -53,19 +53,6 @@ struct acq_wspace
 	uint32_t					gain;
 };
 
-#define ACQ_CONSUMERS_MAX_COUNT	3
-struct acq_consumers
-{
-	struct nsched_deferred  	deferred_work;
-	struct acq_consumer
-	{
-		bool					is_enabled;
-		uint32_t				sample_count;									/* Current sample number */
-		uint32_t				at_every;
-		void 				 (* fn)(const struct acq_sample *);
-	}							consumer[ACQ_CONSUMERS_MAX_COUNT];
-};
-
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
 
 static naction state_init       			(struct nsm *, const struct nevent *);
@@ -98,10 +85,6 @@ static struct acq_wspace 		g_acq_wspace;
 static struct ppbuff            g_ms_bus_buff;
 static struct acq_sample		g_ms_bus_buff_storage_a[2048];
 static struct acq_sample		g_ms_bus_buff_storage_b[2048];
-static struct ppbuff			g_acq_consumer_buff;
-static struct acq_sample		g_acq_consumer_buff_storage_a[64];
-static struct acq_sample		g_acq_consumer_buff_storage_b[64];
-static struct acq_consumers 	g_acq_consumers;
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
@@ -227,28 +210,17 @@ static void ms_bus_buff_full(struct ppbuff * buff)
 }
 
 /* -------------------------------------------------------------------------- *
- * ACQ consumer
+ * ACQ bus callback
  * -------------------------------------------------------------------------- */
 
-static void
-acq_consumer_init(void)
-{
-	struct acq_consumers * 		ctx = &g_acq_consumers;
-
-	nsched_deferred_init(&ctx->deferred_work, acq_consumer_deferred_work, ctx);
-}
-
-
-
-static void
-acq_consumer_push_channel_sample(const struct spi_transfer * transfer)
+void acq_transfer_finished(const struct spi_transfer * transfer)
 {
 	static uint32_t				sampled_mask;
 	struct acq_sample *			current_sample;
 	uint32_t 					value;
 
 	value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
-	current_sample = ppbuff_producer_current_sample(&g_acq_consumer_buff);
+	current_sample = ppbuff_producer_current_sample(&g_ms_bus_buff);
 	sample_set_int(current_sample, io_raw_adc_to_int(value), transfer->arg.u32);
 
 	sampled_mask |= 0x1u << transfer->arg.u32;
@@ -257,51 +229,11 @@ acq_consumer_push_channel_sample(const struct spi_transfer * transfer)
 		sampled_mask = 0;
 
 		/*
-		 * Save sample to a small buffer here
+		 * TODO: deferred here?
 		 */
-		ppbuff_producer_push(&g_acq_consumer_buff, 1);
+		ppbuff_producer_push(&g_ms_bus_buff);
+		data_process_acq(&g_global_process, current_sample);
 	}
-}
-
-
-
-static void
-acq_consumer_buff_full(struct ppbuff * buff)
-{
-	nsched_deferred_do(&g_acq_consumers.deferred_work);
-}
-
-
-
-static void acq_consumer_deferred_work(void * arg)
-{
-	struct acq_consumers * 		ctx = arg;
-	uint32_t					idx;
-
-	ppbuff_copy(&g_ms_bus_buff, &g_acq_consumer_buff);
-
-	for (idx = 0; idx < ACQ_CONSUMERS_MAX_COUNT; idx++) {
-		struct acq_consumer *	consumer = &ctx->consumer[idx];
-
-		if (consumer->is_enabled) {
-			consumer->sample_count--;
-
-			if (consumer->sample_count == 0u) {
-				consumer->sample_count = consumer->at_every;
-				consumer->fn(&ctx->current_sample);
-			}
-		}
-	}
-}
-
-
-/* -------------------------------------------------------------------------- *
- * ACQ bus callback
- * -------------------------------------------------------------------------- */
-
-void acq_transfer_finished(const struct spi_transfer * transfer)
-{
-	acq_consumer_push_channel_sample(transfer);
 }
 
 /* -------------------------------------------------------------------------- *
@@ -344,10 +276,6 @@ static bool acq_update_config(struct acq_wspace * ws, struct acq_config * old, c
 	}
 
 	if (old->ms_bus_buff_size != new->ms_bus_buff_size) {
-		return (false);
-	}
-
-	if (old->acq_consumer_buff_size != new->acq_consumer_buff_size) {
 		return (false);
 	}
 
@@ -418,11 +346,6 @@ static bool acq_apply_config(struct acq_wspace * ws, struct acq_config * old, co
 			ms_bus_buff_full,
 			g_ms_bus_buff_storage_a,
 			g_ms_bus_buff_storage_b);
-	ppbuff_init(&g_acq_consumer_buff,
-			new->acq_consumer_buff_size,
-			acq_consumer_buff_full,
-			g_acq_consumer_buff_storage_a,
-			g_acq_consumer_buff_storage_b);
 
 	acq_x_trigger_mode(new->trigger_mode);
 	acq_x_mode(new->acq_mode);
@@ -496,78 +419,6 @@ static bool trigger_rd_continuous(void)
 	acq_sync_set_high();
 
 	return (true);
-}
-
-/* -------------------------------------------------------------------------- *
- * ACQ Consumer handling
- *
- * Consumers are attached to ACQ module to process the data out of main ISR.
- *
- * Each consumer is specified by:
- *  - is_enabled - consumers may be enabled or disabled
- *  - at_every - specifies for how many samples to wait before calling it
- *  - fn - is the consumer function which will be called sample specified by
- *         at every variable.
- *
- * For example, say that you have a module called TFT and it wants to get
- * every hundredth sample:
- * acq_consumer_add(tft_proto, 100)
- *
- * this will call function tft_proto() at every hundredth sample.
- * -------------------------------------------------------------------------- */
-
-
-static bool
-acq_consumer_activate(void)
-{
-	bool						retval;
-	uint32_t					idx;
-
-	retval = false;
-
-	for (idx = 0; idx < g_acq_consumers.count; idx++) {
-		struct acq_consumer *   consumer = &g_acq_consumers.consumer[idx];
-
-		if (consumer->is_enabled) {
-			consumer->sample_count++;
-
-			if (consumer->sample_count == consumer->at_every) {
-				consumer->sample_count = 0u;
-				g_acq_consumers.activated++;
-				nsched_deferred_do(&g_acq_consumers.consumer[idx].deferred_work);
-				retval = true;
-			}
-		}
-	}
-
-	return (retval);
-}
-
-
-
-static void
-acq_consumer_worker(void * arg)
-{
-	struct acq_consumer *		consumer = arg;
-
-	consumer->fn(&g_acq_consumers.samples[0]);
-	g_acq_consumers.activated--;
-}
-
-
-
-static void
-acq_consumer_save_raw(const struct acq_sample * sample)
-{
-	g_acq_consumers.samples[0] = *sample;
-}
-
-
-
-static void
-acq_consumer_save_final(const struct acq_sample * sample)
-{
-	g_acq_consumers.samples[1] = *sample;
 }
 
 /******************************************************************************
@@ -1269,64 +1120,6 @@ static naction state_rd_stop(struct nsm * sm, const struct nevent * event)
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
-
-struct acq_consumer * acq_consumer_add(void (*fn)(const struct acq_sample *),
-		uint32_t at_every)
-{
-	struct acq_consumer *		consumer;
-
-	if (g_acq_consumers.count == NARRAY_DIMENSION(g_acq_consumers.consumer)) {
-		return (NULL);
-	}
-	consumer = &g_acq_consumers.consumer[g_acq_consumers.count];
-	consumer->is_enabled 	= false;
-	consumer->sample_count	= 0u;
-	consumer->at_every 	 	= at_every;
-	consumer->fn 			= fn;
-	nsched_deferred_init(&consumer->deferred_work, acq_consumer_worker,
-			consumer);
-	g_acq_consumers.count++;
-
-	return (consumer);
-}
-
-void acq_consumer_at_every(struct acq_consumer * consumer, uint32_t at_every)
-{
-	consumer->sample_count 	= 0u;
-	consumer->at_every 		= at_every;
-}
-
-void acq_consumer_enable(struct acq_consumer * consumer)
-{
-	consumer->sample_count 	= 0u;
-	consumer->is_enabled 	= true;
-}
-
-void acq_consumer_disable(struct acq_consumer * consumer)
-{
-	consumer->is_enabled = false;
-}
-
-/******************************************************************************
- * PPBUF callback
- ******************************************************************************/
-
-void ppbuff_one_sample_callback(struct acq_sample * sample)
-{
-	bool						consumer_should_activate;
-
-	consumer_should_activate = acq_consumer_activate();
-
-	if (consumer_should_activate) {
-		acq_consumer_save_raw(sample);
-	}
-	data_process_acq(&g_global_process, sample);
-
-	if (consumer_should_activate) {
-		acq_consumer_save_final(sample);
-	}
-}
-
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
 /** @endcond *//** @} *//******************************************************
  * END of mem_class.c

@@ -99,7 +99,6 @@ void ads1256_reset_sync(struct ads1256_chip * chip)
 	transfer.buff[0]  = ADS_CMD_RESET;
 	transfer.size     = 1;
 	transfer.complete = NULL;
-	transfer.arg.ip   = 0;
 	transfer.flags    = 0;
 
 	timeout = (uint32_t)1000;
@@ -236,7 +235,7 @@ void ads1256_read_sync(struct ads1256_chip * chip)
   * @retval no return values
   *****************************************************************/
 void ads1256_read_begin_sync(struct ads1256_chip * chip,
-		void                 (* complete)(struct spi_transfer *))
+		void                 (* complete)(const struct spi_transfer *))
 {
 	struct spi_transfer *       transfer = &chip->transfer;
 
@@ -267,9 +266,8 @@ void ads1256_sync_min_delay(void)
 						data
   * @retval no real return values
   *********************************************************************/
-void ads1256_read_finish_sync(
-	struct ads1256_chip * 		chip,
-	void                     (* complete)(struct spi_transfer *))
+void ads1256_read_finish_sync(struct ads1256_chip * chip,
+		void (* complete)(const struct spi_transfer *))
 {
 	struct spi_transfer *       transfer = &chip->transfer;
 
@@ -342,7 +340,7 @@ void ads1256_set_cmd_sync_no_wait(struct ads1256_chip * chip, uint8_t cmd)
   *********************************************************************/
 void ads1256_rdc_read_async(
     struct ads1256_chip *       chip,
-    void                     (* complete)(struct spi_transfer *))
+    void                     (* complete)(const struct spi_transfer *))
 {
 	struct spi_transfer *	    transfer;
 
@@ -359,9 +357,8 @@ void ads1256_rdc_read_async(
   * @retval no retval,  (sampled data is stored to memory memory buffer
 						which is pointed by chip->transfer->buff) 
   *********************************************************************/
-void ads1256_rdc_read_sync(
-    struct ads1256_chip *       chip,
-    void                     (* complete)(struct spi_transfer *))
+void ads1256_rdc_read_sync(struct ads1256_chip * chip,
+		void (* complete)(const struct spi_transfer *))
 {
 	struct spi_transfer         transfer;
 

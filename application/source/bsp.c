@@ -12,7 +12,6 @@
 
 #include "bsp.h"
 #include "hw_config.h"
-#include "prim_gpio.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/

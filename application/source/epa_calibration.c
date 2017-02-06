@@ -8,9 +8,9 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include <epa_i2c_master.h>
 #include "epa_calibration.h"
 #include "epa_eeprom.h"
-#include "epa_i2c.h"
 #include "nv_data.h"
 #include "main.h"
 

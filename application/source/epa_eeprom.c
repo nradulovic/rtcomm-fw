@@ -8,8 +8,8 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include <epa_i2c_master.h>
 #include "epa_eeprom.h"
-#include "epa_i2c.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 
@@ -38,7 +38,7 @@ struct wspace
     struct nequeue				deferred;
     struct nevent *				deferred_queue_storage[EPA_EEPROM_QUEUE_SIZE];
     struct nepa *				producer;
-    struct event_i2c_transfer	transfer;
+    struct event_i2c_master_transfer	transfer;
     uint8_t						i2c_retry;
     uint8_t						i2c_buffer[3];
     uint32_t					address;
@@ -171,18 +171,18 @@ static naction state_idle(struct nsm * sm, const struct nevent * event)
 			 * registers and not impact any data stored on device.
 			 */
 			ws->producer 			= event->producer;
-			ws->transfer.super.id 	= EVENT_I2C_WRITE;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_WRITE;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 2;
 			ws->i2c_buffer[0] 		= 0;
 			ws->i2c_buffer[1] 		= 0;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 			    /*
@@ -277,7 +277,7 @@ static naction state_write_data(struct nsm * sm, const struct nevent * event)
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_WRITE;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_WRITE;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 3;
 			ws->transfer.dev_id     = ws->dev_id |
@@ -286,7 +286,7 @@ static naction state_write_data(struct nsm * sm, const struct nevent * event)
 			ws->i2c_buffer[1]		= ((ws->address + ws->idx) >> 0u) & 0xffu;
 			ws->i2c_buffer[2]		= ws->raw_buffer[ws->idx];
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
@@ -295,8 +295,8 @@ static naction state_write_data(struct nsm * sm, const struct nevent * event)
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error == NERROR_NO_DEVICE) {
 				/* We got no ACK here. Previous write operation is still
@@ -362,7 +362,7 @@ static naction state_read_data_wr(struct nsm * sm, const struct nevent * event)
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_WRITE;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_WRITE;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 2;
 			ws->transfer.dev_id     = ws->dev_id |
@@ -370,7 +370,7 @@ static naction state_read_data_wr(struct nsm * sm, const struct nevent * event)
 			ws->i2c_buffer[0] 		= ((ws->address + ws->idx) >> 8u) & 0xffu;
 			ws->i2c_buffer[1]		= ((ws->address + ws->idx) >> 0u) & 0xffu;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
@@ -379,8 +379,8 @@ static naction state_read_data_wr(struct nsm * sm, const struct nevent * event)
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error == NERROR_NO_DEVICE) {
 				/* We got no ACK here. Previous write operation is still
@@ -436,11 +436,11 @@ static naction state_read_data_rd(struct nsm * sm, const struct nevent * event)
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_READ;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_READ;
 			ws->transfer.buffer   	= &ws->raw_buffer[ws->idx];
 			ws->transfer.size     	= 1;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
@@ -449,8 +449,8 @@ static naction state_read_data_rd(struct nsm * sm, const struct nevent * event)
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 				ws->i2c_retry++;

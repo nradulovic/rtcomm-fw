@@ -46,7 +46,7 @@ static bool acq_2_drdy_is_active(void);
 static void acq_2_cs_enable(void);
 static void acq_2_cs_disable(void);
 
-static void trigger_out_finished_2_wrap(struct spi_transfer * transfer);
+static void trigger_out_finished_2_wrap(const struct spi_transfer * transfer);
 
 /*=======================================================  LOCAL VARIABLES  ==*/
 
@@ -396,10 +396,10 @@ static void acq_2_cs_disable(void)
  * poziva se ova funkcija kako bi se generisala zadnja ivica TRIG output signala
  */
 static
-void trigger_out_finished_2_wrap(struct spi_transfer * transfer)
+void trigger_out_finished_2_wrap(const struct spi_transfer * transfer)
 {
 	trigger_out_conditional_disable();
-	acq_transfer_finished_2(transfer);
+	acq_transfer_finished(transfer);
 }
 
 
@@ -408,7 +408,7 @@ void trigger_out_finished_2_wrap(struct spi_transfer * transfer)
  * Citanje podatka koji se odbacuje
  */
 static
-void isr_dummy_read(struct spi_transfer * transfer)
+void isr_dummy_read(const struct spi_transfer * transfer)
 {
 	(void)transfer;
 }
@@ -712,7 +712,7 @@ void acq_isr_begin_rdc_trigger_in_c(void)
 
 
 
-static void rc_read_begin_complete_2(struct spi_transfer * transfer)
+static void rc_read_begin_complete_2(const struct spi_transfer * transfer)
 {
 	(void)transfer;
 

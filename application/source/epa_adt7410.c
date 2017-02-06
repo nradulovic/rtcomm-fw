@@ -8,8 +8,8 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include <epa_i2c_master.h>
 #include "epa_adt7410.h"
-#include "epa_i2c.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 
@@ -52,7 +52,7 @@ struct workspace
     struct netimer              period;
     struct netimer              wait;
     struct nepa *				producer;
-    struct event_i2c_transfer 	transfer;
+    struct event_i2c_master_transfer 	transfer;
     uint32_t					i2c_retry;
     uint8_t						i2c_buffer[2];
     uint32_t					period_ms;
@@ -155,17 +155,17 @@ static naction state_reset(struct nsm * sm, const struct nevent * event)
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_WRITE;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_WRITE;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 1;
 			ws->i2c_buffer[0]    	= ADT7410_REG_RESET;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 				ws->i2c_retry++;
@@ -209,18 +209,18 @@ static naction state_write_reg_conf(struct nsm * sm, const struct nevent * event
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_WRITE;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_WRITE;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 2;
 			ws->i2c_buffer[0] 		= ADT7410_REG_CONFIGURATION;
 			ws->i2c_buffer[1] 		= REG_CONFIGURATION_RESOLUTION;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 				ws->i2c_retry++;
@@ -336,17 +336,17 @@ static naction state_read_status_wr(struct nsm * sm, const struct nevent * event
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_WRITE;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_WRITE;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 1;
 			ws->i2c_buffer[0] 		= ADT7410_REG_STATUS;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 
@@ -381,16 +381,16 @@ static naction state_read_status_rd(struct nsm * sm, const struct nevent * event
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_READ;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_READ;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 1;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 
@@ -433,17 +433,17 @@ static naction state_read_temp_wr(struct nsm * sm, const struct nevent * event)
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_WRITE;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_WRITE;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 1;
 			ws->i2c_buffer[0] 		= ADT7410_REG_TEMP_MSB;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 
@@ -474,16 +474,16 @@ static naction state_read_temp_rd(struct nsm * sm, const struct nevent * event)
 
 	switch (event->id) {
 		case NSM_ENTRY: {
-			ws->transfer.super.id 	= EVENT_I2C_READ;
+			ws->transfer.super.id 	= EVENT_I2C_MASTER_READ;
 			ws->transfer.buffer   	= &ws->i2c_buffer[0];
 			ws->transfer.size     	= 2;
 
-			nepa_send_event(&g_epa_i2c, &ws->transfer.super);
+			nepa_send_event(&g_epa_i2c_master, &ws->transfer.super);
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_COMPLETE: {
-			const struct event_i2c_complete * complete = nevent_data(event);
+		case EVENT_I2C_MASTER_COMPLETE: {
+			const struct event_i2c_master_complete * complete = nevent_data(event);
 
 			if (complete->error) {
 

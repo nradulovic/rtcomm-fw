@@ -1,6 +1,7 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include <epa_i2c_master.h>
 #include "main.h"
 #include "epa_main.h"
 #include "epa_acq.h"
@@ -9,7 +10,6 @@
 #include "epa_calibration.h"
 #include "epa_adt7410.h"
 #include "epa_eeprom.h"
-#include "epa_i2c.h"
 #include "bsp.h"
 #include "app_stat.h"
 #include "ctrl_bus.h"
@@ -23,8 +23,7 @@
 /*=======================================================  LOCAL VARIABLES  ==*/
 
 /*-- Event storage and heap --------------------------------------------------*/
-static struct nheap             g_event_heap;									/* Dinamicka memorija za event-ove */
-static uint8_t                  g_event_heap_storage[4096];						/* Prostor za din. mem. za event-ove */
+static uint8_t                  g_generic_heap_storage[4096];					/* Prostor za din. mem. za event-ove */
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
@@ -64,14 +63,15 @@ int main(void)
      * Function nheap_init() requires a pointer to heap memory structure,
      * pointer to statically allocated storage and it's size.
      */
-    nheap_init(&g_event_heap, g_event_heap_storage, sizeof(g_event_heap_storage));
+    nheap_init(&g_generic_heap, g_generic_heap_storage,
+    		sizeof(g_generic_heap_storage));
 
     /* Register the Heap memory for events. New events will allocate memory from
      * this heap.
      */
-    nevent_register_mem(&g_event_heap.mem_class);
+    nevent_register_mem(&g_generic_heap.mem_class);
 
-    nepa_init(&g_epa_i2c,       &g_epa_i2c_define);
+    nepa_init(&g_epa_i2c_master,       &g_epa_i2c_master_define);
 
     /* Initialize Acquisition EPA. This EPA responsibility is handling of X, Y
      * and Z ADC and sending data to Linux

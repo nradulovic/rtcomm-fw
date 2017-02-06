@@ -53,7 +53,7 @@ struct spi_config
 struct spi_transfer
 {
     uint8_t                     buff[CONFIG_TRANSFER_BUFF_SIZE];
-	void					 (* complete)(struct spi_transfer *);
+	void					 (* complete)(const struct spi_transfer *);
 	union complete_args
 	{
 		void *						p;
