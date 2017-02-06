@@ -21,6 +21,8 @@
 #include "acq_channels.h"
 #include "hw_config.h"
 
+#include "test_timer.h"
+
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -67,11 +69,21 @@ static const struct ads1256_chip_vt g_acq_chip_vt[ACQUNITY_ACQ_CHANNELS] =
     }
 };
 
+static bool g_drdy;
+
 /*======================================================  GLOBAL VARIABLES  ==*/
 
 struct acq_channels		g_acq;
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
+
+static void test_timer_callback(void)
+{
+	g_drdy = !g_drdy;
+
+	acq_x_drdy_isr();
+}
+
 
 /* -------------------------------------------------------------------------- *
  * Channel 0 methods
@@ -129,7 +141,9 @@ static void acq_0_init(void)
     pin_config.Alternate    = ACQ_0_SPI_SCK_AF;
     HAL_GPIO_Init(ACQ_0_SPI_SCK_GPIO_PORT, &pin_config);
 
-    HAL_NVIC_SetPriority(ACQ_0_DRDY_EXTI, IRQ_PRIO_ACQ_x_EXTI, 0);
+#if !defined(TEST_MS_BUS_INCS)
+# error "Define TEST_MS_BUS_INCS"
+#endif
     HAL_NVIC_SetPriority(ACQ_0_SPI_IRQ, IRQ_PRIO_ACQ_x_SPI, 0);
     HAL_NVIC_ClearPendingIRQ(ACQ_0_SPI_IRQ);
     HAL_NVIC_EnableIRQ(ACQ_0_SPI_IRQ);
@@ -139,29 +153,21 @@ static void acq_0_init(void)
 
 static void acq_0_drdy_isr_enable(void)
 {
-	/* Clear EXTI controller interrupt bit, because this is holding interrupt.
-	 */
-	__HAL_GPIO_EXTI_CLEAR_IT(ACQ_0_DRDY_PIN);
-    NVIC_ClearPendingIRQ(ACQ_0_DRDY_EXTI);
-    NVIC_EnableIRQ(ACQ_0_DRDY_EXTI);
+	test_timer_init(0, test_timer_callback);
 }
 
 
 
 static void acq_0_drdy_isr_disable(void)
 {
-    NVIC_DisableIRQ(ACQ_0_DRDY_EXTI);
+	test_timer_disable();;
 }
 
 
 
 static bool acq_0_drdy_is_active(void)
 {
-    if (gpio_read(ACQ_0_DRDY_PORT, ACQ_0_DRDY_PIN)) {
-        return (true);
-    } else {
-        return (false);
-    }
+    return (g_drdy);
 }
 
 
@@ -234,7 +240,6 @@ static void acq_1_init(void)
     pin_config.Alternate    = ACQ_1_SPI_SCK_AF;
     HAL_GPIO_Init(ACQ_1_SPI_SCK_GPIO_PORT, &pin_config);
 
-    HAL_NVIC_SetPriority(ACQ_1_DRDY_EXTI, IRQ_PRIO_ACQ_x_EXTI, 0);
     HAL_NVIC_SetPriority(ACQ_1_SPI_IRQ, IRQ_PRIO_ACQ_x_SPI, 0);
     HAL_NVIC_ClearPendingIRQ(ACQ_1_SPI_IRQ);
     HAL_NVIC_EnableIRQ(ACQ_1_SPI_IRQ);
@@ -244,27 +249,21 @@ static void acq_1_init(void)
 
 static void acq_1_drdy_isr_enable(void)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT(ACQ_1_DRDY_PIN);
-	NVIC_ClearPendingIRQ(ACQ_1_DRDY_EXTI);
-    NVIC_EnableIRQ(ACQ_1_DRDY_EXTI);
+
 }
 
 
 
 static void acq_1_drdy_isr_disable(void)
 {
-    NVIC_DisableIRQ(ACQ_1_DRDY_EXTI);
+
 }
 
 
 
 static bool acq_1_drdy_is_active(void)
 {
-    if (gpio_read(ACQ_1_DRDY_PORT, ACQ_1_DRDY_PIN)) {
-        return (true);
-    } else {
-        return (false);
-    }
+	return (g_drdy);
 }
 
 
@@ -338,7 +337,6 @@ static void acq_2_init(void)
     pin_config.Alternate    = ACQ_2_SPI_SCK_AF;
     HAL_GPIO_Init(ACQ_2_SPI_SCK_GPIO_PORT, &pin_config);
 
-    HAL_NVIC_SetPriority(ACQ_2_DRDY_EXTI, IRQ_PRIO_ACQ_x_EXTI, 0);
     HAL_NVIC_SetPriority(ACQ_2_SPI_IRQ, IRQ_PRIO_ACQ_x_SPI, 0);
     HAL_NVIC_ClearPendingIRQ(ACQ_2_SPI_IRQ);
     HAL_NVIC_EnableIRQ(ACQ_2_SPI_IRQ);
@@ -348,27 +346,19 @@ static void acq_2_init(void)
 
 static void acq_2_drdy_isr_enable(void)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT(ACQ_2_DRDY_PIN);
-	NVIC_ClearPendingIRQ(ACQ_2_DRDY_EXTI);
-    NVIC_EnableIRQ(ACQ_2_DRDY_EXTI);
 }
 
 
 
 static void acq_2_drdy_isr_disable(void)
 {
-    NVIC_DisableIRQ(ACQ_2_DRDY_EXTI);
 }
 
 
 
 static bool acq_2_drdy_is_active(void)
 {
-    if (gpio_read(ACQ_2_DRDY_PORT, ACQ_2_DRDY_PIN)) {
-        return (true);
-    } else {
-        return (false);
-    }
+	return (g_drdy);
 }
 
 

@@ -506,12 +506,8 @@ static naction state_reset_adcs(struct nsm * sm, const nevent * event)
 				for (idx = 0; idx < ACQUNITY_ACQ_CHANNELS; idx++) {
 					uint32_t 	adc_drate;
 
-					adc_drate = acq_x_read_reg(idx, ADS_REG_DRATE);
-
-					if (adc_drate == ADS_DRATE_30KSPS) {
-						ws->detected_adc_mask |= (0x1u << idx);
-						detected++;
-					}
+					ws->detected_adc_mask |= (0x1u << idx);
+					detected++;
 				}
 
 				if (detected) {
@@ -576,6 +572,9 @@ static naction state_idle(struct nsm * sm, const struct nevent * event)
     	    /*
     	     * TODO: Reset ADC status
     	     */
+    		acq_x_channel_enable(ACQ_CHANNEL_X);
+    		acq_x_channel_enable(ACQ_CHANNEL_Y);
+    		acq_x_channel_enable(ACQ_CHANNEL_Z);
 
 			return (naction_handled());
     	}
