@@ -54,6 +54,13 @@ struct spi_transfer
 {
     uint8_t                     buff[CONFIG_TRANSFER_BUFF_SIZE];
 	void					 (* complete)(struct spi_transfer *);
+	union complete_args
+	{
+		void *						p;
+		int32_t					    s32;
+		uint32_t					u32;
+		intptr_t					ip;
+	}							arg;
 	uint16_t					size;
 	uint32_t                    flags;
 };

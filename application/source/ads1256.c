@@ -78,10 +78,11 @@ end
 
 
 void ads1256_init(struct ads1256_chip * chip, struct spi_client * client,
-		const struct ads1256_chip_vt * vtable)
+		const struct ads1256_chip_vt * vtable, uint32_t id)
 {
 	chip->client = client;
 	memcpy(&chip->vt, vtable, sizeof(chip->vt));
+	chip->transfer.arg.u32 = id;
 }
 
 /**********************************************************************
@@ -98,6 +99,7 @@ void ads1256_reset_sync(struct ads1256_chip * chip)
 	transfer.buff[0]  = ADS_CMD_RESET;
 	transfer.size     = 1;
 	transfer.complete = NULL;
+	transfer.arg.ip   = 0;
 	transfer.flags    = 0;
 
 	timeout = (uint32_t)1000;
@@ -234,7 +236,7 @@ void ads1256_read_sync(struct ads1256_chip * chip)
   * @retval no return values
   *****************************************************************/
 void ads1256_read_begin_sync(struct ads1256_chip * chip,
-		void                     (* complete)(struct spi_transfer *))
+		void                 (* complete)(struct spi_transfer *))
 {
 	struct spi_transfer *       transfer = &chip->transfer;
 

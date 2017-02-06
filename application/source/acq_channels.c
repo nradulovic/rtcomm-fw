@@ -46,8 +46,6 @@ static bool acq_2_drdy_is_active(void);
 static void acq_2_cs_enable(void);
 static void acq_2_cs_disable(void);
 
-static void trigger_out_finished_0_wrap(struct spi_transfer * transfer);
-static void trigger_out_finished_1_wrap(struct spi_transfer * transfer);
 static void trigger_out_finished_2_wrap(struct spi_transfer * transfer);
 
 /*=======================================================  LOCAL VARIABLES  ==*/
@@ -393,33 +391,6 @@ static void acq_2_cs_disable(void)
  * IRQ handler helper functions
  * -------------------------------------------------------------------------- */
 
-
-/* NOTE:
- * Pre pozivanja pravih ISR handlera za zavrsetak citanja gotovih podataka
- * poziva se ova funkcija kako bi se generisala zadnja ivica TRIG output signala
- */
-static
-void trigger_out_finished_0_wrap(struct spi_transfer * transfer)
-{
-	trigger_out_conditional_disable();
-	acq_transfer_finished_0(transfer);
-}
-
-
-
-/* NOTE:
- * Pre pozivanja pravih ISR handlera za zavrsetak citanja gotovih podataka
- * poziva se ova funkcija kako bi se generisala zadnja ivica TRIG output signala
- */
-static
-void trigger_out_finished_1_wrap(struct spi_transfer * transfer)
-{
-	trigger_out_conditional_disable();
-	acq_transfer_finished_1(transfer);
-}
-
-
-
 /* NOTE:
  * Pre pozivanja pravih ISR handlera za zavrsetak citanja gotovih podataka
  * poziva se ova funkcija kako bi se generisala zadnja ivica TRIG output signala
@@ -496,7 +467,8 @@ void acq_x_bus_init(void)
         ads1256_init(
                 &g_acq.chn[idx].chip,
                 &g_acq.chn[idx].client,
-                &g_acq_chip_vt[idx]);
+                &g_acq_chip_vt[idx],
+				idx);
     }
 }
 
@@ -649,13 +621,17 @@ void acq_isr_begin_rdc_trigger_out(void)
     trigger_out_enable();
 
 	ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_X].chip,
-		trigger_out_finished_0_wrap);
+			acq_transfer_finished);
 
 	ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Y].chip,
-		trigger_out_finished_1_wrap);
+			acq_transfer_finished);
 
+    /* NOTE:
+     * trigger_out_finished_2_wrap() se poziva jer ona clear-uje TRIGGER OUT pin
+     * pre poziva trigger_out_finished_2() funkcije.
+     */
 	ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Z].chip,
-		trigger_out_finished_2_wrap);
+			trigger_out_finished_2_wrap);
 }
 
 
@@ -671,13 +647,13 @@ void acq_isr_begin_rdc_trigger_in_s(void)
 {
 	if (g_acq.trig_is_allowed) {
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_X].chip,
-			acq_transfer_finished_0);
+			acq_transfer_finished);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Y].chip,
-			acq_transfer_finished_1);
+			acq_transfer_finished);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Z].chip,
-			acq_transfer_finished_2);
+			acq_transfer_finished);
 	} else {
 		/* NOTE:
 		 * This data is read by the controller but not stored anywhere, so use
@@ -711,13 +687,13 @@ void acq_isr_begin_rdc_trigger_in_c(void)
 		g_acq.trig_is_allowed = false;
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_X].chip,
-			acq_transfer_finished_0);
+			acq_transfer_finished);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Y].chip,
-			acq_transfer_finished_1);
+			acq_transfer_finished);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Z].chip,
-			acq_transfer_finished_2);
+			acq_transfer_finished);
 	} else {
 		/* NOTE:
 		 * This data is read by the controller but not stored anywhere, so use
@@ -742,11 +718,11 @@ static void rc_read_begin_complete_2(struct spi_transfer * transfer)
 
 	ads1256_read_delay();
 	ads1256_read_finish_sync(&g_acq.chn[ACQ_CHANNEL_X].chip,
-		acq_transfer_finished_0);
+		acq_transfer_finished);
 	ads1256_read_finish_sync(&g_acq.chn[ACQ_CHANNEL_Y].chip,
-		acq_transfer_finished_1);
+		acq_transfer_finished);
 	ads1256_read_finish_sync(&g_acq.chn[ACQ_CHANNEL_Z].chip,
-		acq_transfer_finished_2);
+		acq_transfer_finished);
 }
 
 

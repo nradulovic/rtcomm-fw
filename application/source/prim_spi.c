@@ -145,23 +145,23 @@ void delay_us(uint32_t __attribute__((unused)) delay)
 {
 
 	__asm__ __volatile__(
-		"	 CBZ R0, end				\n"
-		"    MOV R1, #20				\n"
-		"loop2:							\n"
-		"    MOV R2, R0					\n"
-		"loop:							\n"
-		"    NOP						\n"
-		"    SUB R2, R2, #1				\n"
-		"    CMP R2, #0					\n"
-		"    BNE loop					\n"
-		"    SUB R1, R1, #1				\n"
-		"    CMP R1, #0					\n"
-		"    BNE loop2					\n"
-		"end:							\n"
-		"    BX lr						\n"
-        :
-        :
-        : "r0", "r1", "r2");
+	"	 CBZ R0, end				\n"
+	"    MOV R1, #19				\n"
+	"loop2:						\n"
+	"    MOV R2, R0					\n"
+    "loop:						\n"
+	"    NOP						\n"
+	"    SUB R2, R2, #1				\n"
+	"    CMP R2, #0					\n"
+	"    BNE loop					\n"
+	"    SUB R1, R1, #1				\n"
+	"    CMP R1, #0					\n"
+	"    BNE loop2					\n"
+	"end:						\n"
+	"    BX lr						\n"
+	:
+	:
+	: "r0", "r1", "r2");
 }
 #elif defined(PORT_C_ARMCC)
 static __asm void delay_us(uint32_t __attribute__((unused)) delay)

@@ -184,13 +184,7 @@ void acq_x_drdy_isr(void)
 
 
 
-extern void acq_transfer_finished_0(struct spi_transfer * transfer);
-
-extern void acq_transfer_finished_1(struct spi_transfer * transfer);
-
-extern void acq_transfer_finished_2(struct spi_transfer * transfer);
-
-
+extern void acq_transfer_finished(struct spi_transfer * transfer);
 
 extern void acq_isr_begin_rdc_trigger_out(void);
 extern void acq_isr_begin_rdc_trigger_in_s(void);

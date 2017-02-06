@@ -56,16 +56,13 @@ struct acq_wspace
 #define ACQ_CONSUMERS_MAX_COUNT	3
 struct acq_consumers
 {
-	uint32_t					count; 											/* Number of consumers */
-	uint32_t					activated;
-	struct acq_sample			samples[2];										/* Hold raw and final sample */
+	struct nsched_deferred  	deferred_work;
 	struct acq_consumer
 	{
 		bool					is_enabled;
 		uint32_t				sample_count;									/* Current sample number */
 		uint32_t				at_every;
 		void 				 (* fn)(const struct acq_sample *);
-		struct nsched_deferred  deferred_work;
 	}							consumer[ACQ_CONSUMERS_MAX_COUNT];
 };
 
@@ -98,8 +95,13 @@ static bool trigger_rdc_continious(void);
 
 static struct nevent *          g_event_queue_storage[EPA_ACQ_QUEUE_SIZE];
 static struct acq_wspace 		g_acq_wspace;
-static struct ppbuff            g_pp_buff;
-static struct acq_consumers 	g_consumers;
+static struct ppbuff            g_ms_bus_buff;
+static struct acq_sample		g_ms_bus_buff_storage_a[2048];
+static struct acq_sample		g_ms_bus_buff_storage_b[2048];
+static struct ppbuff			g_acq_consumer_buff;
+static struct acq_sample		g_acq_consumer_buff_storage_a[64];
+static struct acq_sample		g_acq_consumer_buff_storage_b[64];
+static struct acq_consumers 	g_acq_consumers;
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
@@ -129,7 +131,7 @@ const struct acq_config			g_acq_default_config =
 	   	   	   	   	   	   	   ACQ_SET_ADC_DRATE | ACQ_SET_ADC_IO,
 	.enabled_adc_mask		 = ACQ_CHANNEL_X_MASK | ACQ_CHANNEL_Y_MASK |
 							   ACQ_CHANNEL_Z_MASK,
-	.buff_size				 = MAX_RING_BUFF_SIZE,
+	.ms_bus_buff_size				 = MAX_RING_BUFF_SIZE,
 	.trigger_mode			 = TRIG_MODE_OUT,
 	.acq_mode                = ACQ_MODE_CONTINUOUS,
 	.data_process_flags		 = DATA_PROCESS_ENABLE_MATH |
@@ -195,7 +197,7 @@ const struct acq_config			g_acq_default_config =
 
 static void ms_bus_tx_complete(void)
 {
-    ppbuff_unlock_consumer(&g_pp_buff);
+    ppbuff_unlock_consumer(&g_ms_bus_buff);
     notify_disable();
 }
 
@@ -203,61 +205,103 @@ static void ms_bus_tx_complete(void)
 
 static void ms_bus_tx_error(void)
 {
-    ppbuff_unlock_consumer(&g_pp_buff);
+    ppbuff_unlock_consumer(&g_ms_bus_buff);
 }
+
+
+
+static void ms_bus_buff_full(struct ppbuff * buff)
+{
+	notify_disable();
+
+    if (!ppbuff_is_consumer_locked(buff)) {
+        void *                  buffer;
+        uint16_t                size;
+
+        ppbuff_lock_consumer(buff);
+        buffer = ppbuff_consumer_base(buff);
+        size   = (uint16_t)(ppbuff_size(buff) * sizeof(struct acq_sample));
+        ms_bus_start_tx(buffer, size);
+    }
+    notify_enable();
+}
+
+/* -------------------------------------------------------------------------- *
+ * ACQ consumer
+ * -------------------------------------------------------------------------- */
+
+static void
+acq_consumer_init(void)
+{
+	struct acq_consumers * 		ctx = &g_acq_consumers;
+
+	nsched_deferred_init(&ctx->deferred_work, acq_consumer_deferred_work, ctx);
+}
+
+
+
+static void
+acq_consumer_push_channel_sample(const struct spi_transfer * transfer)
+{
+	static uint32_t				sampled_mask;
+	struct acq_sample *			current_sample;
+	uint32_t 					value;
+
+	value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
+	current_sample = ppbuff_producer_current_sample(&g_acq_consumer_buff);
+	sample_set_int(current_sample, io_raw_adc_to_int(value), transfer->arg.u32);
+
+	sampled_mask |= 0x1u << transfer->arg.u32;
+
+	if (sampled_mask == ACQ_CHANNEL_XYZ_MASK) {
+		sampled_mask = 0;
+
+		/*
+		 * Save sample to a small buffer here
+		 */
+		ppbuff_producer_push(&g_acq_consumer_buff, 1);
+	}
+}
+
+
+
+static void
+acq_consumer_buff_full(struct ppbuff * buff)
+{
+	nsched_deferred_do(&g_acq_consumers.deferred_work);
+}
+
+
+
+static void acq_consumer_deferred_work(void * arg)
+{
+	struct acq_consumers * 		ctx = arg;
+	uint32_t					idx;
+
+	ppbuff_copy(&g_ms_bus_buff, &g_acq_consumer_buff);
+
+	for (idx = 0; idx < ACQ_CONSUMERS_MAX_COUNT; idx++) {
+		struct acq_consumer *	consumer = &ctx->consumer[idx];
+
+		if (consumer->is_enabled) {
+			consumer->sample_count--;
+
+			if (consumer->sample_count == 0u) {
+				consumer->sample_count = consumer->at_every;
+				consumer->fn(&ctx->current_sample);
+			}
+		}
+	}
+}
+
 
 /* -------------------------------------------------------------------------- *
  * ACQ bus callback
  * -------------------------------------------------------------------------- */
 
-
-void acq_transfer_finished_0(struct spi_transfer * transfer)
+void acq_transfer_finished(const struct spi_transfer * transfer)
 {
-    struct acq_sample * 		sample;
-    uint32_t 					value;
-
-    value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
-    sample = ppbuff_current_sample(&g_pp_buff);
-#if defined(T_MATH_SIMULATION)
-    sample_set_int(samples, -1263, ACQ_CHANNEL_X);
-#else
-    sample_set_int(sample, io_raw_adc_to_int(value), ACQ_CHANNEL_X);
-#endif
-    ppbuff_push_sample(&g_pp_buff, ACQ_CHANNEL_X_MASK);
-}
-
-
-
-void acq_transfer_finished_1(struct spi_transfer * transfer)
-{
-    struct acq_sample * 		sample;
-    uint32_t					value;
-
-    value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
-    sample = ppbuff_current_sample(&g_pp_buff);
-#if defined(T_MATH_SIMULATION)
-    sample_set_int(samples, -6539, ACQ_CHANNEL_Y);
-#else
-    sample_set_int(sample, io_raw_adc_to_int(value), ACQ_CHANNEL_Y);
-#endif
-    ppbuff_push_sample(&g_pp_buff, ACQ_CHANNEL_Y_MASK);
-}
-
-
-
-void acq_transfer_finished_2(struct spi_transfer * transfer)
-{
-    struct acq_sample * 		sample;
-    uint32_t					value;
-
-    value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
-	sample = ppbuff_current_sample(&g_pp_buff);
-#if defined(T_MATH_SIMULATION)
-	sample_set_int(samples, -11018, ACQ_CHANNEL_Z);
-#else
-    sample_set_int(sample, io_raw_adc_to_int(value), ACQ_CHANNEL_Z);
-#endif
-    ppbuff_push_sample(&g_pp_buff, ACQ_CHANNEL_Z_MASK);
+	acq_consumer_push_channel_sample(transfer);
 }
 
 /* -------------------------------------------------------------------------- *
@@ -299,7 +343,11 @@ static bool acq_update_config(struct acq_wspace * ws, struct acq_config * old, c
 		return (false);
 	}
 
-	if (old->buff_size != new->buff_size) {
+	if (old->ms_bus_buff_size != new->ms_bus_buff_size) {
+		return (false);
+	}
+
+	if (old->acq_consumer_buff_size != new->acq_consumer_buff_size) {
 		return (false);
 	}
 
@@ -365,7 +413,16 @@ static bool acq_apply_config(struct acq_wspace * ws, struct acq_config * old, co
 	data_process_set_range_pullback_time(&g_global_process, new->pullback_time);
 	data_process_set_flags(&g_global_process, new->data_process_flags);
 
-	ppbuff_init(&g_pp_buff, new->buff_size, new->enabled_adc_mask);
+	ppbuff_init(&g_ms_bus_buff,
+			new->ms_bus_buff_size,
+			ms_bus_buff_full,
+			g_ms_bus_buff_storage_a,
+			g_ms_bus_buff_storage_b);
+	ppbuff_init(&g_acq_consumer_buff,
+			new->acq_consumer_buff_size,
+			acq_consumer_buff_full,
+			g_acq_consumer_buff_storage_a,
+			g_acq_consumer_buff_storage_b);
 
 	acq_x_trigger_mode(new->trigger_mode);
 	acq_x_mode(new->acq_mode);
@@ -468,16 +525,16 @@ acq_consumer_activate(void)
 
 	retval = false;
 
-	for (idx = 0; idx < g_consumers.count; idx++) {
-		struct acq_consumer *   consumer = &g_consumers.consumer[idx];
+	for (idx = 0; idx < g_acq_consumers.count; idx++) {
+		struct acq_consumer *   consumer = &g_acq_consumers.consumer[idx];
 
 		if (consumer->is_enabled) {
 			consumer->sample_count++;
 
 			if (consumer->sample_count == consumer->at_every) {
 				consumer->sample_count = 0u;
-				g_consumers.activated++;
-				nsched_deferred_do(&g_consumers.consumer[idx].deferred_work);
+				g_acq_consumers.activated++;
+				nsched_deferred_do(&g_acq_consumers.consumer[idx].deferred_work);
 				retval = true;
 			}
 		}
@@ -493,8 +550,8 @@ acq_consumer_worker(void * arg)
 {
 	struct acq_consumer *		consumer = arg;
 
-	consumer->fn(&g_consumers.samples[0]);
-	g_consumers.activated--;
+	consumer->fn(&g_acq_consumers.samples[0]);
+	g_acq_consumers.activated--;
 }
 
 
@@ -502,7 +559,7 @@ acq_consumer_worker(void * arg)
 static void
 acq_consumer_save_raw(const struct acq_sample * sample)
 {
-	g_consumers.samples[0] = *sample;
+	g_acq_consumers.samples[0] = *sample;
 }
 
 
@@ -510,7 +567,7 @@ acq_consumer_save_raw(const struct acq_sample * sample)
 static void
 acq_consumer_save_final(const struct acq_sample * sample)
 {
-	g_consumers.samples[1] = *sample;
+	g_acq_consumers.samples[1] = *sample;
 }
 
 /******************************************************************************
@@ -1218,17 +1275,17 @@ struct acq_consumer * acq_consumer_add(void (*fn)(const struct acq_sample *),
 {
 	struct acq_consumer *		consumer;
 
-	if (g_consumers.count == NARRAY_DIMENSION(g_consumers.consumer)) {
+	if (g_acq_consumers.count == NARRAY_DIMENSION(g_acq_consumers.consumer)) {
 		return (NULL);
 	}
-	consumer = &g_consumers.consumer[g_consumers.count];
+	consumer = &g_acq_consumers.consumer[g_acq_consumers.count];
 	consumer->is_enabled 	= false;
 	consumer->sample_count	= 0u;
 	consumer->at_every 	 	= at_every;
 	consumer->fn 			= fn;
 	nsched_deferred_init(&consumer->deferred_work, acq_consumer_worker,
 			consumer);
-	g_consumers.count++;
+	g_acq_consumers.count++;
 
 	return (consumer);
 }
@@ -1268,29 +1325,6 @@ void ppbuff_one_sample_callback(struct acq_sample * sample)
 	if (consumer_should_activate) {
 		acq_consumer_save_final(sample);
 	}
-}
-
-
-
-void ppbuff_full_callback(bool consumer_is_locked)
-{
-    if (!consumer_is_locked) {
-        void *                  buffer;
-        uint16_t                size;
-
-        ppbuff_lock_consumer(&g_pp_buff);
-        buffer = ppbuff_consumer_base(&g_pp_buff);
-        size   = (uint16_t)(ppbuff_size(&g_pp_buff) * sizeof(struct acq_sample));
-        ms_bus_start_tx(buffer, size);
-    }
-    notify_enable();
-}
-
-
-
-void ppbuff_half_full_callback(void)
-{
-    notify_disable();
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

@@ -19,42 +19,53 @@ struct ring
 {
 	uint32_t					curr;
 	uint32_t					free;
-	uint32_t					size;
-	bool						is_locked;
-	struct acq_sample   		sample[MAX_RING_BUFF_SIZE];
+	struct acq_sample * 		sample;
 };
 
 struct ppbuff
 {
-	struct ring					ring[2];
 	struct ring * 				consumer;
 	struct ring * 				producer;
-	uint32_t					sampled_mask;
-	uint32_t 					enabled_mask;
+	void					 (* fn_full)(struct ppbuff *);
+	uint32_t					size;
+	bool						is_consumer_locked;
+	struct ring					ring[2];
 };
 
-/**@brief		Initialize Ping-Pong buffer
- * @param 		buff
- * @param 		size
- * 				Number of samples. Range: [0 to MAX_RING_BUFF_SIZE]
- *  @arg		MAX_RING_BUFF_SIZE - use full size
- * @param 		enabled_mask
- *  @arg        ACQ_CHANNEL_X_MASK or 0x01 - X channel mask
- *  @arg		ACQ_CHANNEL_Y_MASK or 0x02 - Y channel mask
- *  @arg		ACQ_CHANNEL_Z_MASK or 0x04 - Z channel mask
- */
-void ppbuff_init(struct ppbuff * buff, uint32_t size, uint32_t enabled_mask);
-uint32_t ppbuff_size(const struct ppbuff * buff);
-uint32_t ppbuff_free(const struct ppbuff * buff);
-void ppbuff_swap(struct ppbuff * buff);
-struct acq_sample * ppbuff_current_sample(const struct ppbuff * buff);
-void ppbuff_push_sample(struct ppbuff * buff, uint32_t channel_mask);
-void * ppbuff_consumer_base(struct ppbuff * buff);
-void ppbuff_lock_consumer(struct ppbuff * buff);
-void ppbuff_unlock_consumer(struct ppbuff * buff);
+void ppbuff_init(struct ppbuff * buff, uint32_t size,
+		void (* fn_full)(struct ppbuff *), struct acq_sample * a_storage,
+		struct acq_sample * b_storage);
 
-extern void ppbuff_one_sample_callback(struct acq_sample * sample);
-extern void ppbuff_full_callback(bool consumer_is_locked);
-extern void ppbuff_half_full_callback(void);
+
+static inline
+uint32_t ppbuff_size(const struct ppbuff * buff)
+{
+	return (buff->size);
+}
+
+
+struct acq_sample * ppbuff_producer_current_sample(const struct ppbuff * buff);
+void ppbuff_producer_push(struct ppbuff * buff, uint32_t elements);
+void * ppbuff_consumer_base(struct ppbuff * buff);
+
+static inline
+void ppbuff_lock_consumer(struct ppbuff * buff)
+{
+	buff->is_consumer_locked = true;
+}
+
+static inline
+void ppbuff_unlock_consumer(struct ppbuff * buff)
+{
+	buff->is_consumer_locked = false;
+}
+
+static inline
+bool ppbuff_is_consumer_locked(const struct ppbuff * buff)
+{
+	return (buff->is_consumer_locked);
+}
+
+void ppbuff_copy(struct ppbuff * destination, const struct ppbuff * source);
 
 #endif /* APPLICATION_INCLUDE_PPBUFF_H_ */

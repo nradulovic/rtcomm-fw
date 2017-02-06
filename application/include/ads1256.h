@@ -34,7 +34,7 @@ struct ads1256_chip
 };
 
 void ads1256_init(struct ads1256_chip * chip, struct spi_client * client,
-		const struct ads1256_chip_vt * vtable);
+		const struct ads1256_chip_vt * vtable, uint32_t id);
 void ads1256_reset_sync(struct ads1256_chip * chip);
 void ads1256_wait(struct ads1256_chip * chip);
 void ads1256_write_reg_sync(struct ads1256_chip * chip, uint32_t reg, uint8_t data);

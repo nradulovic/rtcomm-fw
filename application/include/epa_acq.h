@@ -73,7 +73,16 @@ struct acq_config
 	 * ACQ_CHANNEL_Z_MASK - Z channel mask
 	 */
 	uint32_t					enabled_adc_mask;
-	uint32_t                    buff_size;
+
+	/*
+	 * This is Master Bus buffer
+	 */
+	uint32_t                    ms_bus_buff_size;
+
+	/*
+	 * This is local consumer buffer
+	 */
+	uint32_t					acq_consumer_buff_size;
 
 	/*
 	 * TRIG_MODE_OUT,

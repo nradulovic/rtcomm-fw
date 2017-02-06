@@ -179,7 +179,7 @@ void aux_channel_init(void)
             &ACQ_AUX_SPI,
             aux_cs_enable,
             aux_cs_disable);
-    ads1256_init(&g_aux_channel.chip, &g_aux_channel.client, &g_aux_chip_vt);
+    ads1256_init(&g_aux_channel.chip, &g_aux_channel.client, &g_aux_chip_vt, 0);
 }
 
 
