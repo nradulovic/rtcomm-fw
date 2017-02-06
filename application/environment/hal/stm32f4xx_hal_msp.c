@@ -78,30 +78,6 @@ void HAL_MspDeInit(void)
 
 
 
-/**
-  * @brief  Initializes the PPP MSP.
-  * @note   This functiona is called from HAL_PPP_Init() function to perform
-  *         peripheral(PPP) system level initialization (GPIOs, clock, DMA, interrupt)
-  * @retval None
-  */
-void HAL_PPP_MspInit(void)
-{
-
-}
-
-/**
-  * @brief  DeInitializes the PPP MSP.
-  * @note   This functiona is called from HAL_PPP_DeInit() function to perform
-  *         peripheral(PPP) system level de-initialization (GPIOs, clock, DMA, interrupt)
-  * @retval None
-  */
-void HAL_PPP_MspDeInit(void)
-{
-
-}
-
-
-
 void HAL_SPI_MspInit(SPI_HandleTypeDef * hspi)
 {
     /* NOTE:
