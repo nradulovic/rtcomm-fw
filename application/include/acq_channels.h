@@ -69,7 +69,7 @@ struct acq_channels
 	    struct spi_client           client;
 	    struct ads1256_chip         chip;
 	    bool                        is_enabled;
-	}							chn[3];
+	}							chn[ACQUNITY_ACQ_CHANNELS];
 
 	/* Acquisition mode
 	 * - ACQ_MODE_CONTINUOUS - Read Data  (RDC - see ADS1256 datasheet)
@@ -184,7 +184,7 @@ void acq_x_drdy_isr(void)
 
 
 
-extern void acq_transfer_finished(const struct spi_transfer * transfer);
+extern void acq_x_transfer_finished(const struct acq_channel * channels);
 
 extern void acq_isr_begin_rdc_trigger_out(void);
 extern void acq_isr_begin_rdc_trigger_in_s(void);

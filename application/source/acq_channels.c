@@ -46,8 +46,6 @@ static bool acq_2_drdy_is_active(void);
 static void acq_2_cs_enable(void);
 static void acq_2_cs_disable(void);
 
-static void trigger_out_finished_2_wrap(const struct spi_transfer * transfer);
-
 /*=======================================================  LOCAL VARIABLES  ==*/
 
 static const struct ads1256_chip_vt g_acq_chip_vt[ACQUNITY_ACQ_CHANNELS] =
@@ -392,25 +390,31 @@ static void acq_2_cs_disable(void)
  * -------------------------------------------------------------------------- */
 
 /* NOTE:
- * Pre pozivanja pravih ISR handlera za zavrsetak citanja gotovih podataka
- * poziva se ova funkcija kako bi se generisala zadnja ivica TRIG output signala
- */
-static
-void trigger_out_finished_2_wrap(const struct spi_transfer * transfer)
-{
-	trigger_out_conditional_disable();
-	acq_transfer_finished(transfer);
-}
-
-
-
-/* NOTE:
  * Citanje podatka koji se odbacuje
  */
 static
-void isr_dummy_read(const struct spi_transfer * transfer)
+void acq_transfer_dump_to_null(const struct spi_transfer * transfer)
 {
 	(void)transfer;
+}
+
+
+static
+void acq_transfer_finished(const struct spi_transfer * transfer)
+{
+	static uint32_t				sampled_mask;
+
+	sampled_mask |= 0x1u << transfer->arg.u32;
+
+	if (sampled_mask == ACQ_CHANNEL_XYZ_MASK) {
+		sampled_mask = 0;
+
+		trigger_out_conditional_disable();
+		/*
+		 * NOTE: Deferred here!
+		 */
+		acq_x_transfer_finished(&g_acq.chn[0]);
+	}
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
@@ -631,7 +635,7 @@ void acq_isr_begin_rdc_trigger_out(void)
      * pre poziva trigger_out_finished_2() funkcije.
      */
 	ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Z].chip,
-			trigger_out_finished_2_wrap);
+			acq_transfer_finished);
 }
 
 
@@ -660,13 +664,13 @@ void acq_isr_begin_rdc_trigger_in_s(void)
 		 * isr_dummy_read() function.
 		 */
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_X].chip,
-			isr_dummy_read);
+			acq_transfer_dump_to_null);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Y].chip,
-			isr_dummy_read);
+			acq_transfer_dump_to_null);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Z].chip,
-			isr_dummy_read);
+			acq_transfer_dump_to_null);
 	}
 }
 
@@ -700,13 +704,13 @@ void acq_isr_begin_rdc_trigger_in_c(void)
 		 * isr_dummy_read() function.
 		 */
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_X].chip,
-			isr_dummy_read);
+			acq_transfer_dump_to_null);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Y].chip,
-			isr_dummy_read);
+			acq_transfer_dump_to_null);
 
 		ads1256_rdc_read_async(&g_acq.chn[ACQ_CHANNEL_Z].chip,
-			isr_dummy_read);
+			acq_transfer_dump_to_null);
 	}
 }
 
@@ -731,8 +735,8 @@ void acq_isr_begin_rc_trigger_in_c(void)
 {
 	if (g_acq.trig_is_allowed) {
 		g_acq.trig_is_allowed = false;
-		ads1256_read_begin_sync(&g_acq.chn[ACQ_CHANNEL_X].chip, isr_dummy_read);
-		ads1256_read_begin_sync(&g_acq.chn[ACQ_CHANNEL_Y].chip, isr_dummy_read);
+		ads1256_read_begin_sync(&g_acq.chn[ACQ_CHANNEL_X].chip, acq_transfer_dump_to_null);
+		ads1256_read_begin_sync(&g_acq.chn[ACQ_CHANNEL_Y].chip, acq_transfer_dump_to_null);
 		ads1256_read_begin_sync(&g_acq.chn[ACQ_CHANNEL_Z].chip, rc_read_begin_complete_2);
 	}
 }

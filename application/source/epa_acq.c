@@ -83,8 +83,8 @@ static bool trigger_rdc_continious(void);
 static struct nevent *          g_event_queue_storage[EPA_ACQ_QUEUE_SIZE];
 static struct acq_wspace 		g_acq_wspace;
 static struct ppbuff            g_ms_bus_buff;
-static struct acq_sample		g_ms_bus_buff_storage_a[2048];
-static struct acq_sample		g_ms_bus_buff_storage_b[2048];
+static struct acq_sample		g_ms_bus_buff_storage_a[ACQUNITY_BUFF_SIZE];
+static struct acq_sample		g_ms_bus_buff_storage_b[ACQUNITY_BUFF_SIZE];
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
@@ -114,7 +114,7 @@ const struct acq_config			g_acq_default_config =
 	   	   	   	   	   	   	   ACQ_SET_ADC_DRATE | ACQ_SET_ADC_IO,
 	.enabled_adc_mask		 = ACQ_CHANNEL_X_MASK | ACQ_CHANNEL_Y_MASK |
 							   ACQ_CHANNEL_Z_MASK,
-	.ms_bus_buff_size		 = 2048,
+	.ms_bus_buff_size		 = ACQUNITY_BUFF_SIZE,
 	.trigger_mode			 = TRIG_MODE_OUT,
 	.acq_mode                = ACQ_MODE_CONTINUOUS,
 	.data_process_flags		 = DATA_PROCESS_ENABLE_MATH |
@@ -139,8 +139,8 @@ const struct acq_config			g_acq_default_config =
 	ACQ_SET_ADC_MUX | ACQ_SET_ADC_ADCON | ACQ_SET_ADC_DRATE | ACQ_SET_ADC_IO,
 	/* .enabled_adc_mask */
 	ACQ_CHANNEL_X_MASK | ACQ_CHANNEL_Y_MASK | ACQ_CHANNEL_Z_MASK,
-	/* .buff_size */
-	MAX_RING_BUFF_SIZE,
+	/* .ms_bus_buff_size */
+	ACQUNITY_BUFF_SIZE,
 	/* .trigger_mode */
 	TRIG_MODE_OUT,
 	/* .acq_mode */
@@ -212,27 +212,22 @@ static void ms_bus_buff_full(struct ppbuff * buff)
  * ACQ bus callback
  * -------------------------------------------------------------------------- */
 
-void acq_transfer_finished(const struct spi_transfer * transfer)
+void acq_x_transfer_finished(const struct acq_channel * channels)
 {
-	static uint32_t				sampled_mask;
-	struct acq_sample *			current_sample;
-	uint32_t 					value;
+	struct acq_sample * 		current_sample;
+	uint32_t					value;
+	uint32_t					idx;
 
-	value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
 	current_sample = ppbuff_producer_current_sample(&g_ms_bus_buff);
-	sample_set_int(current_sample, io_raw_adc_to_int(value), transfer->arg.u32);
 
-	sampled_mask |= 0x1u << transfer->arg.u32;
+	for (idx = 0; idx < ACQUNITY_ACQ_CHANNELS; idx++) {
+		const struct spi_transfer *	transfer = &channels[idx].chip.transfer;
 
-	if (sampled_mask == ACQ_CHANNEL_XYZ_MASK) {
-		sampled_mask = 0;
-
-		/*
-		 * TODO: deferred here?
-		 */
-		ppbuff_producer_push(&g_ms_bus_buff);
-		data_process_acq(&g_global_process, current_sample);
+		value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
+		sample_set_int(current_sample, io_raw_adc_to_int(value), idx);
 	}
+	data_process_acq(&g_global_process, current_sample);
+	ppbuff_producer_push(&g_ms_bus_buff);
 }
 
 /* -------------------------------------------------------------------------- *
