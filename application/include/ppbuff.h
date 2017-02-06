@@ -13,8 +13,6 @@
 
 #include "cdi/io.h"
 
-#define MAX_RING_BUFF_SIZE				2048
-
 struct ring
 {
 	uint32_t					curr;
@@ -49,21 +47,21 @@ void ppbuff_producer_push(struct ppbuff * buff);
 void * ppbuff_consumer_base(struct ppbuff * buff);
 
 static inline
-void ppbuff_lock_consumer(struct ppbuff * buff)
+bool ppbuff_lock_consumer(struct ppbuff * buff)
 {
-	buff->is_consumer_locked = true;
+	if (buff->is_consumer_locked) {
+		return (false);
+	} else {
+		buff->is_consumer_locked = true;
+
+		return (true);
+	}
 }
 
 static inline
 void ppbuff_unlock_consumer(struct ppbuff * buff)
 {
 	buff->is_consumer_locked = false;
-}
-
-static inline
-bool ppbuff_is_consumer_locked(const struct ppbuff * buff)
-{
-	return (buff->is_consumer_locked);
 }
 
 #endif /* APPLICATION_INCLUDE_PPBUFF_H_ */

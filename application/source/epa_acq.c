@@ -114,7 +114,7 @@ const struct acq_config			g_acq_default_config =
 	   	   	   	   	   	   	   ACQ_SET_ADC_DRATE | ACQ_SET_ADC_IO,
 	.enabled_adc_mask		 = ACQ_CHANNEL_X_MASK | ACQ_CHANNEL_Y_MASK |
 							   ACQ_CHANNEL_Z_MASK,
-	.ms_bus_buff_size				 = MAX_RING_BUFF_SIZE,
+	.ms_bus_buff_size		 = 2048,
 	.trigger_mode			 = TRIG_MODE_OUT,
 	.acq_mode                = ACQ_MODE_CONTINUOUS,
 	.data_process_flags		 = DATA_PROCESS_ENABLE_MATH |
@@ -197,11 +197,10 @@ static void ms_bus_buff_full(struct ppbuff * buff)
 {
 	notify_disable();
 
-    if (!ppbuff_is_consumer_locked(buff)) {
+    if (ppbuff_lock_consumer(buff)) {
         void *                  buffer;
         uint16_t                size;
 
-        ppbuff_lock_consumer(buff);
         buffer = ppbuff_consumer_base(buff);
         size   = (uint16_t)(ppbuff_size(buff) * sizeof(struct acq_sample));
         ms_bus_start_tx(buffer, size);
