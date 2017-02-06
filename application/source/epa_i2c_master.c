@@ -8,8 +8,7 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
-#include "epa_i2c.h"
-
+#include "epa_i2c_master.h"
 #include "ctrl_bus.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
@@ -77,8 +76,8 @@ static const struct ctrl_bus_client g_ctrl_bus =
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 /*-- Heart beat EPA ----------------------------------------------------------*/
-struct nepa                     g_epa_i2c;
-const struct nepa_define        g_epa_i2c_define = NEPA_DEF_INIT(
+struct nepa                     g_epa_i2c_master;
+const struct nepa_define        g_epa_i2c_master_define = NEPA_DEF_INIT(
 		&g_i2c_workspace,
 		&state_init,
 		NSM_TYPE_FSM,
@@ -100,7 +99,7 @@ static void i2c_error(uint16_t error, uint16_t transferred)
 	i2c_transferred.error       = error;
 	i2c_transferred.transferred = transferred;
 
-	nepa_send_event_i(&g_epa_i2c, &i2c_transferred.super);
+	nepa_send_event_i(&g_epa_i2c_master, &i2c_transferred.super);
 }
 
 
@@ -114,7 +113,7 @@ static void i2c_complete(uint16_t transferred)
 	i2c_transferred.error 		= 0;
 	i2c_transferred.transferred = transferred;
 
-	nepa_send_event_i(&g_epa_i2c, &i2c_transferred.super);
+	nepa_send_event_i(&g_epa_i2c_master, &i2c_transferred.super);
 }
 
 /*-- FSM states --------------------------------------------------------------*/
@@ -142,10 +141,10 @@ static naction state_init(struct nsm * sm, const struct nevent * event)
 static naction state_sleeping(struct nsm * sm, const struct nevent * event)
 {
 	switch (event->id) {
-		case SIG_I2C_INIT: {
+		case SIG_I2C_MASTER_INIT: {
 			ctrl_bus_init(&g_ctrl_bus);
 
-			nepa_send_signal(event->producer, SIG_I2C_READY);
+			nepa_send_signal(event->producer, SIG_I2C_MASTER_READY);
 
 			return (naction_transit_to(sm, state_idle));
 		}
@@ -169,8 +168,8 @@ static naction state_idle(struct nsm * sm, const struct nevent * event)
 
 			return (naction_handled());
 		}
-		case EVENT_I2C_READ: {
-			const struct event_i2c_transfer * transfer = nevent_data(event);
+		case EVENT_I2C_MASTER_READ: {
+			const struct event_i2c_master_transfer * transfer = nevent_data(event);
 
 			ws->producer 	= event->producer;
 			ws->buffer   	= transfer->buffer;
@@ -183,8 +182,8 @@ static naction state_idle(struct nsm * sm, const struct nevent * event)
 
 			return (naction_transit_to(sm, state_transfer));
 		}
-		case EVENT_I2C_WRITE: {
-			const struct event_i2c_transfer * transfer = nevent_data(event);
+		case EVENT_I2C_MASTER_WRITE: {
+			const struct event_i2c_master_transfer * transfer = nevent_data(event);
 
 			ws->producer 	= event->producer;
 			ws->buffer   	= transfer->buffer;
@@ -221,9 +220,9 @@ static naction state_transfer(struct nsm * sm, const struct nevent * event)
 			return (naction_handled());
 		}
 		case NSM_EXIT: {
-			struct event_i2c_complete * complete;
+			struct event_i2c_master_complete * complete;
 
-			complete = NEVENT_CREATE(struct event_i2c_complete, EVENT_I2C_COMPLETE);
+			complete = NEVENT_CREATE(struct event_i2c_master_complete, EVENT_I2C_MASTER_COMPLETE);
 
 			if (complete) {
 
@@ -257,7 +256,7 @@ static naction state_transfer(struct nsm * sm, const struct nevent * event)
 
 			return (naction_transit_to(sm, state_idle));
 		}
-		case SIG_I2C_CANCEL: {
+		case SIG_I2C_MASTER_CANCEL: {
 			ctrl_bus_cancel();
 
 			ws->error |= I2C_ERROR_ABORT;
@@ -271,8 +270,8 @@ static naction state_transfer(struct nsm * sm, const struct nevent * event)
 
 			return (naction_transit_to(sm, state_idle));
 		}
-		case EVENT_I2C_READ:
-		case EVENT_I2C_WRITE: {
+		case EVENT_I2C_MASTER_READ:
+		case EVENT_I2C_MASTER_WRITE: {
 			nepa_defer_event(&ws->defer, event);
 
 			return (naction_handled());
