@@ -31,6 +31,11 @@ static bool ring_is_full(const struct ring * ring)
 	}
 }
 
+static bool ring_is_half_full(const struct ring * ring)
+{
+	return (ring->free == ring->curr);
+}
+
 static void * ring_base(const struct ring * ring)
 {
 	return ((void *)&ring->sample[0]);
@@ -59,14 +64,16 @@ static void ring_push_sample(struct ring * ring)
  * -------------------------------------------------------------------------- */
 
 void ppbuff_init(struct ppbuff * buff, uint32_t size,
-		void (* fn_full)(struct ppbuff *), struct acq_sample * a_storage,
-		struct acq_sample * b_storage)
+		void (* fn_full)(struct ppbuff *), void (* fn_half)(struct ppbuff *),
+		struct acq_sample * a_storage, struct acq_sample * b_storage)
 {
 	ring_init(&buff->ring[0], size, a_storage);
 	ring_init(&buff->ring[1], size, b_storage);
 	buff->consumer = &buff->ring[0];
 	buff->producer = &buff->ring[1];
 	buff->fn_full  = fn_full;
+	buff->fn_half  = fn_half;
+	buff->size = size;
 }
 
 
@@ -83,7 +90,9 @@ void ppbuff_producer_push(struct ppbuff * buff)
 {
 	ring_push_sample(buff->producer); 											 //racuna adresu trenutnog i kolicinu slobone memorije u ringu
 
-	if (ring_is_full(buff->producer)) {
+	if (ring_is_half_full(buff->producer)) {
+		buff->fn_half(buff);
+	} else if (ring_is_full(buff->producer)) {
 		ring_reinit(buff->producer, buff->size);
 
 		if (!buff->is_consumer_locked) { // ako buff->consumer nije zakljucan zameni bafere

@@ -25,14 +25,15 @@ struct ppbuff
 	struct ring * 				consumer;
 	struct ring * 				producer;
 	void					 (* fn_full)(struct ppbuff *);
+	void					 (* fn_half)(struct ppbuff *);
 	uint32_t					size;
 	bool						is_consumer_locked;
 	struct ring					ring[2];
 };
 
 void ppbuff_init(struct ppbuff * buff, uint32_t size,
-		void (* fn_full)(struct ppbuff *), struct acq_sample * a_storage,
-		struct acq_sample * b_storage);
+		void (* fn_full)(struct ppbuff *), void (* fn_half)(struct ppbuff *),
+		struct acq_sample * a_storage, struct acq_sample * b_storage);
 
 
 static inline

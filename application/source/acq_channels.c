@@ -23,6 +23,8 @@
 
 #include "test_timer.h"
 
+#include "sched/deferred.h"
+
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -70,6 +72,7 @@ static const struct ads1256_chip_vt g_acq_chip_vt[ACQUNITY_ACQ_CHANNELS] =
 };
 
 static bool g_drdy;
+static struct nsched_deferred 	g_deferred;
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
@@ -81,7 +84,7 @@ static void test_timer_callback(void)
 {
 	g_drdy = !g_drdy;
 
-	acq_x_drdy_isr();
+	acq_x_transfer_finished(NULL);
 }
 
 
@@ -389,6 +392,7 @@ void acq_transfer_dump_to_null(const struct spi_transfer * transfer)
 }
 
 
+
 static
 void acq_transfer_finished(const struct spi_transfer * transfer)
 {
@@ -398,10 +402,7 @@ void acq_transfer_finished(const struct spi_transfer * transfer)
 		g_acq.sampled_mask = 0;
 
 		trigger_out_conditional_disable();
-		/*
-		 * NOTE: Deferred here!
-		 */
-		acq_x_transfer_finished(&g_acq.chn[0]);
+		nsched_deferred_do(&g_deferred);
 	}
 }
 
@@ -412,6 +413,8 @@ void acq_x_bus_init(void)
 {
     uint32_t                    idx;
     struct spi_config           spi_config;
+
+    nsched_deferred_init(&g_deferred, acq_x_transfer_finished, &g_acq.chn[0]);
 
     for (idx = 0; idx < ACQUNITY_ACQ_CHANNELS; idx++) {
         spi_config.flags    = SPI_TRANSFER_TX   | SPI_TRANSFER_RX   |

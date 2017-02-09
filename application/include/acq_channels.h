@@ -177,6 +177,13 @@ void acq_x_drdy_isr(void)
 {
 	extern struct acq_channels g_acq;
 
+	if (g_acq.sampled_mask) {
+		/* NOTE:
+		 * Previous transfer is not finished!
+		 */
+		for (;;);
+	}
+
 	g_acq.isr_begin_transfer();
 }
 

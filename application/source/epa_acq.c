@@ -193,19 +193,26 @@ static void ms_bus_tx_error(void)
 
 
 
+static void ms_bus_buff_half_full(struct ppbuff * buff)
+{
+	(void)buff;
+
+	notify_enable();
+}
+
+
 static void ms_bus_buff_full(struct ppbuff * buff)
 {
 	notify_disable();
 
     if (ppbuff_lock_consumer(buff)) {
         void *                  buffer;
-        uint16_t                size;
+        uint16_t				size;
 
         buffer = ppbuff_consumer_base(buff);
-        size   = (uint16_t)(ppbuff_size(buff) * sizeof(struct acq_sample));
-        ms_bus_start_tx(buffer, size);
+        size   = ppbuff_size(buff) * sizeof(struct acq_sample);
+        ms_bus_start_tx(buffer, 16);
     }
-    notify_enable();
 }
 
 /* -------------------------------------------------------------------------- *
@@ -215,16 +222,14 @@ static void ms_bus_buff_full(struct ppbuff * buff)
 void acq_x_transfer_finished(const struct acq_channel * channels)
 {
 	struct acq_sample * 		current_sample;
-	uint32_t					value;
 	uint32_t					idx;
+	static int32_t				value;
 
+	(void)channels;
 	current_sample = ppbuff_producer_current_sample(&g_ms_bus_buff);
 
 	for (idx = 0; idx < ACQUNITY_ACQ_CHANNELS; idx++) {
-		const struct spi_transfer *	transfer = &channels[idx].chip.transfer;
-
-		value = __REV(*(uint32_t *)&transfer->buff[0]) >> 8u;
-		sample_set_int(current_sample, io_raw_adc_to_int(value), idx);
+		sample_set_int(current_sample, 0x10f05, idx);
 	}
 	data_process_acq(&g_global_process, current_sample);
 	ppbuff_producer_push(&g_ms_bus_buff);
@@ -338,6 +343,7 @@ static bool acq_apply_config(struct acq_wspace * ws, struct acq_config * old, co
 	ppbuff_init(&g_ms_bus_buff,
 			new->ms_bus_buff_size,
 			ms_bus_buff_full,
+			ms_bus_buff_half_full,
 			g_ms_bus_buff_storage_a,
 			g_ms_bus_buff_storage_b);
 
