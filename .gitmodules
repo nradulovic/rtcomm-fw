@@ -1,6 +1,0 @@
-[submodule "neon"]
-	path = neon
-	url = https://github.com/nradulovic/neon.git
-[submodule "application/include/cdi"]
-	path = application/include/cdi
-	url = https://nradulovic@bitbucket.org/netico-dev/teslameter_3mhx-cdi.git

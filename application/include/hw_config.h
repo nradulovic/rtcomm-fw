@@ -34,7 +34,7 @@
  */
 #define NOTIFY_PIN						GPIO_PIN_4
 #define NOTIFY_PORT						GPIOD
-#define NOTIFY_CLK_ENABLE()				__GPIOD_CLK_ENABLE()
+#define NOTIFY_GPIO_CLK_ENABLE()				__GPIOD_CLK_ENABLE()
 
 /*
  * --  SYNC GPIO  -------------------------------------------------------------
@@ -214,22 +214,22 @@
 
 #define SPI_MS_MOSI_PIN					GPIO_PIN_12
 #define SPI_MS_MOSI_GPIO_PORT			GPIOC
-#define SPI_MS_MOSI_GPIO_ENABLE()		__GPIOC_CLK_ENABLE()
+#define SPI_MS_MOSI_GPIO_CLK_ENABLE()	__GPIOC_CLK_ENABLE()
 #define SPI_MS_MOSI_AF					GPIO_AF6_SPI3
 
 #define SPI_MS_MISO_PIN					GPIO_PIN_11
 #define SPI_MS_MISO_GPIO_PORT			GPIOC
-#define SPI_MS_MISO_GPIO_ENABLE()		__GPIOC_CLK_ENABLE()
+#define SPI_MS_MISO_GPIO_CLK_ENABLE()	__GPIOC_CLK_ENABLE()
 #define SPI_MS_MISO_AF					GPIO_AF6_SPI3
 
 #define SPI_MS_SCK_PIN					GPIO_PIN_10
 #define SPI_MS_SCK_GPIO_PORT			GPIOC
-#define SPI_MS_SCK_GPIO_ENABLE()		__GPIOC_CLK_ENABLE()
+#define SPI_MS_SCK_GPIO_CLK_ENABLE()	__GPIOC_CLK_ENABLE()
 #define SPI_MS_SCK_AF					GPIO_AF6_SPI3
 
 #define SPI_MS_NSS_PIN					GPIO_PIN_15
 #define SPI_MS_NSS_GPIO_PORT			GPIOA
-#define SPI_MS_NSS_GPIO_ENABLE()		__GPIOA_CLK_ENABLE()
+#define SPI_MS_NSS_GPIO_CLK_ENABLE()	__GPIOA_CLK_ENABLE()
 #define SPI_MS_NSS_AF					GPIO_AF6_SPI3
 
 #define SPI_MS_CLK_PHASE				SPI_PHASE_1EDGE
@@ -303,4 +303,8 @@
 #define PROTOCOL_LED_GPIO_PORT			GPIOD
 #define PROTOCOL_LED_GPIO_PIN			GPIO_PIN_6
 
+/*
+ * --  Test timer --------------------------------------------------
+ */
+#define TEST_TIMER
 #endif /* HW_CONFIG_H_ */

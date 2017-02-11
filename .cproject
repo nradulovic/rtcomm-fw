@@ -114,7 +114,6 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="application/environment/startup/gcc/startup_stm32f479xx.s|application/environment/startup/gcc/startup_stm32f469xx.s|application/environment/startup/gcc/startup_stm32f446xx.s|application/environment/startup/gcc/startup_stm32f439xx.s|application/environment/startup/gcc/startup_stm32f437xx.s|application/environment/startup/gcc/startup_stm32f429xx.s|application/environment/startup/gcc/startup_stm32f427xx.s|application/environment/startup/gcc/startup_stm32f417xx.s|application/environment/startup/gcc/startup_stm32f415xx.s|application/environment/startup/gcc/startup_stm32f410tx.s|application/environment/startup/gcc/startup_stm32f410rx.s|application/environment/startup/gcc/startup_stm32f410cx.s|application/environment/startup/gcc/startup_stm32f407xx.s|application/environment/startup/gcc/startup_stm32f405xx.s|application/environment/startup/gcc/startup_stm32f401xe.s|application/environment/startup/gcc/startup_stm32f401xc.s|application/source/nv_data.c|application/source/epa_eeprom.c|application/source/epa_calibration.c|application/source/epa_adt7410.c|application/source/epa_i2c_master.c|neon/drivers/port|neon/drivers/source|neon/eds/port" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="neon/eds/port/stm32f4xx-none-gcc"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

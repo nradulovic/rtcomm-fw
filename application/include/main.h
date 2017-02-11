@@ -6,8 +6,6 @@
 
 #include <stdint.h>
 
-#include "neon_eds.h"
-
 /*===============================================================  MACRO's  ==*/
 /*------------------------------------------------------  C++ extern begin  --*/
 #ifdef __cplusplus
@@ -15,9 +13,6 @@ extern "C" {
 #endif
 /*============================================================  DATA TYPES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
-
-extern struct nheap             g_generic_heap;									/* Dinamicka memorija za opstu upotrebu */
-
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 /*--------------------------------------------------------  C++ extern end  --*/
 #ifdef __cplusplus

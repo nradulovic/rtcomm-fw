@@ -19,9 +19,6 @@
 /*======================================================  LOCAL DATA TYPES  ==*/
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
 /*=======================================================  LOCAL VARIABLES  ==*/
-
-static struct ms_bus_config     g_config;
-
 /*======================================================  GLOBAL VARIABLES  ==*/
 
 SPI_HandleTypeDef               g_ms_spi_handle;
@@ -31,9 +28,8 @@ DMA_HandleTypeDef               g_ms_spi_dma_tx_handle;
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 
-void ms_bus_init(const struct ms_bus_config * config)
+void ms_bus_init(void)
 {
-    memcpy(&g_config, config, sizeof(g_config));
     g_ms_spi_handle.Instance = SPI_MS;
     g_ms_spi_handle.Init.BaudRatePrescaler = SPI_MS_BAUD_CLOCK;
     g_ms_spi_handle.Init.Direction         = SPI_DIRECTION_2LINES;
@@ -62,11 +58,6 @@ void ms_bus_start_tx(const void * data, uint16_t size)
  * DMA IRQ handlers
  ******************************************************************************/
 
-void SPI_MS_DMA_TX_IRQHandler(void)
-{
-    HAL_DMA_IRQHandler(&g_ms_spi_dma_tx_handle);
-}
-
 /******************************************************************************
  * SPI callbacks
  ******************************************************************************/
@@ -74,29 +65,24 @@ void SPI_MS_DMA_TX_IRQHandler(void)
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef * hspi)
 {
-    /* NOTE:
-     * Since this is the only SPI we ignore the handle
-     */
-    (void)hspi;
-    g_config.tx_complete();
+    if (hspi == &g_ms_spi_handle) {
+    	ms_bus_complete_callback();
+    }
 }
 
 
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef * hspi)
 {
-    /* NOTE:
-     * Since this is the only SPI we ignore the handle
-     */
-    (void)hspi;
-
-    /* NOTE:
-     * If get here it probably means that the master didn't read us.
-     * In that case reset the DMA & SPI and buffers
-     */
-    hspi->hdmatx->ErrorCode = HAL_DMA_ERROR_NONE;
-    hspi->ErrorCode         = HAL_SPI_ERROR_NONE;
-    g_config.tx_error();
+	if (hspi == &g_ms_spi_handle) {
+		/* NOTE:
+		 * If get here it probably means that the master didn't read us.
+		 * In that case reset the DMA & SPI and buffers
+		 */
+		hspi->hdmatx->ErrorCode = HAL_DMA_ERROR_NONE;
+		hspi->ErrorCode         = HAL_SPI_ERROR_NONE;
+		ms_bus_error_callback();
+	}
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

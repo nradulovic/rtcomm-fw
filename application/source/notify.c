@@ -17,7 +17,7 @@ void notify_init_as_output(void)
 {
 	GPIO_InitTypeDef 			pin_config;
 
-	NOTIFY_CLK_ENABLE();
+	NOTIFY_GPIO_CLK_ENABLE();
 	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
 	pin_config.Pin   = NOTIFY_PIN;
 	pin_config.Pull  = GPIO_NOPULL;
@@ -32,7 +32,7 @@ void notify_init_as_input(void)
 {
 	GPIO_InitTypeDef 			pin_config;
 
-	NOTIFY_CLK_ENABLE();
+	NOTIFY_GPIO_CLK_ENABLE();
 	pin_config.Mode  = GPIO_MODE_INPUT;
 	pin_config.Pin   = NOTIFY_PIN;
 	pin_config.Pull  = GPIO_PULLDOWN;

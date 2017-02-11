@@ -21,19 +21,8 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 
-void ACQ_AUX_DRDY_EXTI_Handler(void);
-void ACQ_AUX_SPI_IRQ_Handler(void);
-
-void ACQ_0_DRDY_EXTI_Handler(void);
-void ACQ_1_DRDY_EXTI_Handler(void);
-void ACQ_2_DRDY_EXTI_Handler(void);
-void ACQ_0_SPI_IRQ_Handler(void);
-void ACQ_1_SPI_IRQ_Handler(void);
-void ACQ_2_SPI_IRQ_Handler(void);
-/*
- * Other peripheral ISRs
- */
-void OTG_FS_IRQHandler(void);
+void SPI_MS_DMA_TX_IRQHandler(void);
+void TIM2_IRQHandler(void);
 
 #ifdef __cplusplus
 }
