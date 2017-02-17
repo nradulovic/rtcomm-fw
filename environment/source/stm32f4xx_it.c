@@ -74,7 +74,7 @@ void SysTick_Handler(void)
 
 void HWCON_RTCOMM_SPI_DMA_TX_IRQHandler(void)
 {
-    HAL_DMA_IRQHandler(&g_rtcomm_spi_dma_tx);
+    HAL_DMA_IRQHandler(&g_rtcomm.dma_tx);
 }
 
 #if defined(TEST_MS_BUS_INCS)

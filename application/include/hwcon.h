@@ -23,7 +23,7 @@
 #define IRQ_PRIO_TRIGGER_OUT_TIM        2
 #define IRQ_PRIO_SYSTICK                3
 #define IRQ_PRIO_NEON					4
-#define HWCON_RTCOMM_SPI_DMA_TX_IRQ_PRIO             4
+#define HWCON_RTCOMM_SPI_DMA_TX_IRQ_PRIO             1
 #define IRQ_PRIO_ACQ_AUX_SPI            4
 #define IRQ_PRIO_ACQ_AUX_EXTI           4
 #define IRQ_PRIO_USB_OTG				6
@@ -34,7 +34,7 @@
 /*
  * --  Notification GPIO  -----------------------------------------------------
  */
-#define HWCOM_NOTIFY_PIN						GPIO_PIN_4
+#define HWCON_NOTIFY_PIN						GPIO_PIN_4
 #define HWCON_NOTIFY_PORT						GPIOD
 #define HWCON_NOTIFY_CLK_ENABLE()				__GPIOD_CLK_ENABLE()
 

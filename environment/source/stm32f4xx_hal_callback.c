@@ -28,12 +28,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef * hspi)
 {
-	extern SPI_HandleTypeDef g_rtcomm_spi;
-
-    if (hspi == &g_rtcomm_spi) {
-    	extern void ms_bus_complete_callback();
-
-    	ms_bus_complete_callback();
+    if (hspi == &g_rtcomm.spi) {
+    	rtcomm_isr_complete(&g_rtcomm);
     }
 }
 
@@ -41,11 +37,8 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef * hspi)
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef * hspi)
 {
-	extern SPI_HandleTypeDef g_rtcomm_spi;
+	if (hspi == &g_rtcomm.spi) {
 
-	if (hspi == &g_rtcomm_spi) {
-		extern void ms_bus_error_callback();
-
-		ms_bus_error_callback();
+		rtcomm_isr_error(&g_rtcomm);
 	}
 }
