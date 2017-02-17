@@ -15,7 +15,7 @@
 #endif
 
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 {
 #if defined(HWCON_TEST_TIMER0_ENABLE)
 	if (htim == &g_test_timer0) {
@@ -38,7 +38,6 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef * hspi)
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef * hspi)
 {
 	if (hspi == &g_rtcomm.spi) {
-
 		rtcomm_isr_error(&g_rtcomm);
 	}
 }

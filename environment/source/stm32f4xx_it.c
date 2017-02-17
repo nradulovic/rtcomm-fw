@@ -31,27 +31,27 @@
 
 void NMI_Handler(void)
 {
-    status_panic(0);
+    status_panic(STATUS_UNHANDLED_EXCP);
 }
 
 void HardFault_Handler(void)
 {
-	status_panic(0);
+	status_panic(STATUS_UNHANDLED_EXCP);
 }
 
 void MemManage_Handler(void)
 {
-	status_panic(0);
+	status_panic(STATUS_UNHANDLED_EXCP);
 }
 
 void BusFault_Handler(void)
 {
-	status_panic(0);
+	status_panic(STATUS_UNHANDLED_EXCP);
 }
 
 void UsageFault_Handler(void)
 {
-	status_panic(0);
+	status_panic(STATUS_UNHANDLED_EXCP);
 }
 
 void SVC_Handler(void)
@@ -77,7 +77,7 @@ void HWCON_RTCOMM_SPI_DMA_TX_IRQHandler(void)
     HAL_DMA_IRQHandler(&g_rtcomm.dma_tx);
 }
 
-#if defined(TEST_MS_BUS_INCS)
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 void HWCON_TEST_TIMER0_IRQHandler(void)
 {
 	HAL_TIM_IRQHandler(&g_test_timer0);

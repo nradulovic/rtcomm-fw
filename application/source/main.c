@@ -5,7 +5,7 @@
 #include "hwcon.h"
 #include "rtcomm.h"
 
-#if defined(TEST_MS_BUS_INCS)
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 #include "test_timer0.h"
 #endif
 

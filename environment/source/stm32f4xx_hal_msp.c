@@ -6,7 +6,7 @@
 #include "status.h"
 #include "rtcomm.h"
 
-#if defined(TEST_MS_BUS_INCS)
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 #include "test_timer0.h"
 #endif
 
@@ -55,7 +55,7 @@ void setup_clock(void)
 	RCC_OscInitStruct.PLL.PLLQ       = 4;
 
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		status_panic(10);
+		status_panic(STATUS_HW_INIT_FAILED);
 	}
 
 	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -68,7 +68,7 @@ void setup_clock(void)
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
-		status_panic(10);
+		status_panic(STATUS_HW_INIT_FAILED);
 	}
 }
 
@@ -259,6 +259,12 @@ void setup_gpio(void)
 }
 
 static
+void setup_exti(void)
+{
+
+}
+
+static
 void setup_spi(void)
 {
 	/* NOTE:
@@ -281,9 +287,15 @@ void setup_spi(void)
 }
 
 static
+void setup_i2c(void)
+{
+
+}
+
+static
 void setup_timer(void)
 {
-#if defined(TEST_MS_BUS_INCS)
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 	/*
 	 * Setup TEST_TIMER0
 	 */
@@ -342,7 +354,9 @@ void HAL_MspInit(void)
 {
 	setup_clock();
 	setup_gpio();
+	setup_exti();
 	setup_spi();
+	setup_i2c();
 	setup_timer();
 }
 
@@ -400,6 +414,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef * htim)
 {
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 	if (htim == &g_test_timer0) {
 		/* Enable clock */
 		HWCON_TEST_TIMER0_CLK_ENABLE();
@@ -411,6 +426,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef * htim)
 		/* Enable the global Interrupt */
 		HAL_NVIC_EnableIRQ(HWCON_TEST_TIMER0_IRQn);
 	}
+#endif
 }
 
 

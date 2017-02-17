@@ -12,6 +12,7 @@
 
 #include "hwcon.h"
 #include "rtcomm.h"
+#include "status.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -56,11 +57,10 @@ void setup_dma(struct rtcomm_handle * handle)
 	handle->state = STATE_SETUP_DMA;
 
 	error = HAL_SPI_Transmit_DMA(&handle->spi, handle->storage_b, handle->size);
-	/*
-	 * TODO: Assert the error
-	 */
-	(void)error;
 
+	if (error) {
+		status_panic(STATUS_RUNTIME_CHECK_FAILED);
+	}
 	handle->state = STATE_SENDING;
 }
 
@@ -99,8 +99,8 @@ void rtcomm_push(struct rtcomm_handle * handle)
 		/*
 		 * We are trying to send new buffer to consumer but the consumer has not
 		 * read us yet. In this case do the following:
-		 * - reset DMA
-		 * - setup DMA
+		 * - do NOT reset DMA
+		 * - do NOT setup DMA since it is already setup
 		 * - return the pointer to the same buffer (no swap)
 		 */
 	}
