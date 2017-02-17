@@ -23,39 +23,55 @@
 #define IRQ_PRIO_TRIGGER_OUT_TIM        2
 #define IRQ_PRIO_SYSTICK                3
 #define IRQ_PRIO_NEON					4
-#define IRQ_PRIO_SPI_MS_DMA             4
+#define HWCON_RTCOMM_SPI_DMA_TX_IRQ_PRIO             4
 #define IRQ_PRIO_ACQ_AUX_SPI            4
 #define IRQ_PRIO_ACQ_AUX_EXTI           4
 #define IRQ_PRIO_USB_OTG				6
 #define IRQ_PRIO_I2C_CTRL               8
 
+#define HWCON_TEST_TIMER0_IRQ_PRIO		1
+
 /*
  * --  Notification GPIO  -----------------------------------------------------
  */
-#define NOTIFY_PIN						GPIO_PIN_4
-#define NOTIFY_PORT						GPIOD
-#define NOTIFY_GPIO_CLK_ENABLE()				__GPIOD_CLK_ENABLE()
+#define HWCOM_NOTIFY_PIN						GPIO_PIN_4
+#define HWCON_NOTIFY_PORT						GPIOD
+#define HWCON_NOTIFY_CLK_ENABLE()				__GPIOD_CLK_ENABLE()
+
+/*
+ * --  Heartbeat LED GPIO  ----------------------------------------------------
+ */
+#define HWCON_HEARTBEAT_PIN                GPIO_PIN_14
+#define HWCON_HEARTBEAT_PORT               GPIOD
+#define HWCON_HEARTBEAT_CLK_ENABLE()       __GPIOD_CLK_ENABLE()
 
 /*
  * --  SYNC GPIO  -------------------------------------------------------------
  */
-#define SYNC_PIN						GPIO_PIN_7
-#define SYNC_PORT					    GPIOD
-#define SYNC_CLK_ENABLE()			    __GPIOD_CLK_ENABLE()
+#define HWCON_SYNC_PIN						GPIO_PIN_7
+#define HWCON_SYNC_PORT					    GPIOD
+#define HWCON_SYNC_CLK_ENABLE()			    __GPIOD_CLK_ENABLE()
+
+/*
+ * --  Protocol status LED -----------------------------------------
+ */
+#define HWCON_PROTOCOL_LED_CLK_ENABLE()		__HAL_RCC_GPIOD_CLK_ENABLE()
+#define HWCON_PROTOCOL_LED_PORT			GPIOD
+#define HWCON_PROTOCOL_LED_PIN			GPIO_PIN_6
 
 /*
  * --  Trigger GPIO OUT -------------------------------------------------------
  */
-#define TRIGGER_OUT_PIN                 GPIO_PIN_7
-#define TRIGGER_OUT_PORT                GPIOC
-#define TRIGGER_OUT_CLK_ENABLE()        __GPIOC_CLK_ENABLE()
+#define HWCON_TRIGGER_OUT_PIN                 GPIO_PIN_7
+#define HWCON_TRIGGER_OUT_PORT                GPIOC
+#define HWCON_TRIGGER_OUT_CLK_ENABLE()        __GPIOC_CLK_ENABLE()
 
 /*
  * --  Trigger GPIO IN --------------------------------------------------------
  */
-#define TRIGGER_IN_PIN                  GPIO_PIN_5
-#define TRIGGER_IN_PORT                 GPIOD
-#define TRIGGER_IN_CLK_ENABLE()         __GPIOD_CLK_ENABLE()
+#define HWCON_TRIGGER_IN_PIN                  GPIO_PIN_5
+#define HWCON_TRIGGER_IN_PORT                 GPIOD
+#define HWCON_TRIGGER_IN_CLK_ENABLE()         __GPIOD_CLK_ENABLE()
 #define TRIGGER_IN_EXTI_IRQn            EXTI9_5_IRQn
 #define TRIGGER_IN_EXTI_Handler         EXTI9_5_IRQHandler
 
@@ -68,37 +84,37 @@
 /*
  * --  Channel X --------------------------------------------------------------
  */
-#define ACQ_0_DRDY_PIN					GPIO_PIN_2
-#define ACQ_0_DRDY_PORT                 GPIOD
-#define ACQ_0_DRDY_CLK_ENABLE()         __GPIOD_CLK_ENABLE()
-#define ACQ_0_DRDY_EXTI					EXTI2_IRQn
-#define ACQ_0_DRDY_EXTI_Handler			EXTI2_IRQHandler
-
 #define ACQ_0_SPI						g_spi4
 #define ACQ_0_SPI_CLK_ENABLE()			__SPI4_CLK_ENABLE()
 #define ACQ_0_SPI_IRQ					SPI4_IRQn
 #define ACQ_0_SPI_IRQ_Handler			SPI4_IRQHandler
 #define ACQ_0_SPI_BAUD_CLOCK            SPI_BAUDRATEPRESCALER_64
 
-#define ACQ_0_SPI_NSS_PIN				GPIO_PIN_11
-#define ACQ_0_SPI_NSS_GPIO_PORT			GPIOE
-#define ACQ_0_SPI_NSS_GPIO_ENABLE()		__GPIOE_CLK_ENABLE()
-#define ACQ_0_SPI_NSS_AF				GPIO_AF5_SPI4
+#define HWCON_ACQ_0_SPI_NSS_PIN				GPIO_PIN_11
+#define HWCON_ACQ_0_SPI_NSS_PORT			GPIOE
+#define HWCON_ACQ_0_SPI_NSS_CLK_ENABLE()		__GPIOE_CLK_ENABLE()
+#define HWCON_ACQ_0_SPI_NSS_AF				GPIO_AF5_SPI4
 
-#define ACQ_0_SPI_MISO_PIN				GPIO_PIN_13
-#define ACQ_0_SPI_MISO_GPIO_PORT		GPIOE
-#define ACQ_0_SPI_MISO_GPIO_ENABLE()	__GPIOE_CLK_ENABLE()
-#define ACQ_0_SPI_MISO_AF				GPIO_AF5_SPI4
+#define HWCON_ACQ_0_SPI_MISO_PIN				GPIO_PIN_13
+#define HWCON_ACQ_0_SPI_MISO_PORT		GPIOE
+#define HWCON_ACQ_0_SPI_MISO_CLK_ENABLE()	__GPIOE_CLK_ENABLE()
+#define HWCON_ACQ_0_SPI_MISO_AF				GPIO_AF5_SPI4
 
-#define ACQ_0_SPI_MOSI_PIN				GPIO_PIN_14
-#define ACQ_0_SPI_MOSI_GPIO_PORT		GPIOE
-#define ACQ_0_SPI_MOSI_GPIO_ENABLE()	__GPIOE_CLK_ENABLE()
-#define ACQ_0_SPI_MOSI_AF				GPIO_AF5_SPI4
+#define HWCON_ACQ_0_SPI_MOSI_PIN				GPIO_PIN_14
+#define HWCON_ACQ_0_SPI_MOSI_PORT		GPIOE
+#define HWCON_ACQ_0_SPI_MOSI_CLK_ENABLE()	__GPIOE_CLK_ENABLE()
+#define HWCON_ACQ_0_SPI_MOSI_AF				GPIO_AF5_SPI4
 
-#define ACQ_0_SPI_SCK_PIN				GPIO_PIN_12
-#define ACQ_0_SPI_SCK_GPIO_PORT			GPIOE
-#define ACQ_0_SPI_SCK_GPIO_ENABLE()		__GPIOE_CLK_ENABLE()
-#define ACQ_0_SPI_SCK_AF				GPIO_AF5_SPI4
+#define HWCON_ACQ_0_SPI_SCK_PIN				GPIO_PIN_12
+#define HWCON_ACQ_0_SPI_SCK_PORT			GPIOE
+#define HWCON_ACQ_0_SPI_SCK_ENABLE()		__GPIOE_CLK_ENABLE()
+#define HWCON_ACQ_0_SPI_SCK_AF				GPIO_AF5_SPI4
+
+#define ACQ_0_DRDY_PIN					GPIO_PIN_2
+#define ACQ_0_DRDY_PORT                 GPIOD
+#define ACQ_0_DRDY_CLK_ENABLE()         __GPIOD_CLK_ENABLE()
+#define ACQ_0_DRDY_EXTI					EXTI2_IRQn
+#define ACQ_0_DRDY_EXTI_Handler			EXTI2_IRQHandler
 
 /*
  * --  Channel Y --------------------------------------------------------------
@@ -209,8 +225,8 @@
  * --  SPI Master description  ----------------------------------------------
  */
 #define SPI_MS							SPI3
-#define SPI_MS_BAUD_CLOCK				SPI_BAUDRATEPRESCALER_2
-#define SPI_MS_CLK_ENABLE()				__SPI3_CLK_ENABLE()
+#define HWCON_RTCOMM_SPI_BAUD_CLOCK				SPI_BAUDRATEPRESCALER_2
+#define HWCON_RTCOMM_SPI_CLK_ENABLE()				__SPI3_CLK_ENABLE()
 
 #define SPI_MS_MOSI_PIN					GPIO_PIN_12
 #define SPI_MS_MOSI_GPIO_PORT			GPIOC
@@ -232,20 +248,18 @@
 #define SPI_MS_NSS_GPIO_CLK_ENABLE()	__GPIOA_CLK_ENABLE()
 #define SPI_MS_NSS_AF					GPIO_AF6_SPI3
 
-#define SPI_MS_CLK_PHASE				SPI_PHASE_1EDGE
-#define SPI_MS_CLK_POL					SPI_POLARITY_LOW
+#define HWCON_RTCOMM_SPI_CLK_PHASE				SPI_PHASE_1EDGE
+#define HWCON_RTCOMM_SPI_CLK_POL					SPI_POLARITY_LOW
 
 /* Definition for SPIx's DMA */
-#define SPI_MS_DMA_CLK_ENABLE()			__DMA1_CLK_ENABLE()
+#define HWCON_RTCOMM_SPI_DMA_CLK_ENABLE()			__DMA1_CLK_ENABLE()
 
-#define SPI_MS_TX_DMA_CHANNEL           DMA_CHANNEL_0
-#define SPI_MS_TX_DMA_STREAM            DMA1_Stream5
-#define SPI_MS_RX_DMA_CHANNEL           DMA_CHANNEL_0
-#define SPI_MS_RX_DMA_STREAM            DMA1_Stream0
+#define HWCON_RTCOMM_SPI_DMA_TX_CHANNEL           DMA_CHANNEL_0
+#define HWCON_RTCOMM_SPI_DMA_TX_STREAM            DMA1_Stream5
 
 /* Definition for SPIx's NVIC */
-#define SPI_MS_DMA_TX_IRQn              DMA1_Stream5_IRQn
-#define SPI_MS_DMA_TX_IRQHandler        DMA1_Stream5_IRQHandler
+#define HWCON_RTCOMM_SPI_DMA_TX_IRQn              DMA1_Stream5_IRQn
+#define HWCON_RTCOMM_SPI_DMA_TX_IRQHandler        DMA1_Stream5_IRQHandler
 
 
 /*
@@ -272,13 +286,6 @@
 #define I2C_CTRL_RELEASE_RESET()        __HAL_RCC_I2C1_RELEASE_RESET()
 
 /*
- * --  Status LED description  -----------------------------------------------
- */
-#define LED_HARTBEAT_PIN                GPIO_PIN_14
-#define LED_HARTBEAT_PORT               GPIOD
-#define LED_HARTBEAT_CLK_ENABLE()       __GPIOD_CLK_ENABLE()
-
-/*
  * --  Timer for trigger out generation  ----------------------------
  */
 #define TRIGGER_OUT_TIM_CLK_ENABLE()    __HAL_RCC_TIM3_CLK_ENABLE()
@@ -297,14 +304,17 @@
 #define TRIGGER_IN_TIM_INSTANCE         TIM4
 
 /*
- * --  Protocol status LED -----------------------------------------
- */
-#define PROTOCOL_LED_CLK_ENABLE()		__HAL_RCC_GPIOD_CLK_ENABLE()
-#define PROTOCOL_LED_GPIO_PORT			GPIOD
-#define PROTOCOL_LED_GPIO_PIN			GPIO_PIN_6
-
-/*
  * --  Test timer --------------------------------------------------
  */
-#define TEST_TIMER
+#define HWCON_TEST_TIMER0				TIM2
+#define HWCON_TEST_TIMER0_IRQn			TIM2_IRQn
+#define HWCON_TEST_TIMER0_CLK_ENABLE()	__HAL_RCC_TIM2_CLK_ENABLE()
+#define HWCON_TEST_TIMER0_APB			1
+#define HWCON_TEST_TIMER0_IRQHandler	TIM2_IRQHandler
+
+
+#if defined(TEST_MS_BUS_INCS)
+#define HWCON_TEST_TIMER0_ENABLE
+#endif
+
 #endif /* HW_CONFIG_H_ */

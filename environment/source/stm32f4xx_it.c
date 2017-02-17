@@ -10,9 +10,16 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include "status.h"
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
-#include "app_stat.h"
+#include "rtcomm.h"
+#include "hwcon.h"
+
+#if defined(HWCON_TEST_TIMER0_ENABLE)
+#include "test_timer0.h"
+#endif
+
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -29,22 +36,22 @@ void NMI_Handler(void)
 
 void HardFault_Handler(void)
 {
-    status_panic(1);
+	status_panic(0);
 }
 
 void MemManage_Handler(void)
 {
-    status_panic(2);
+	status_panic(0);
 }
 
 void BusFault_Handler(void)
 {
-    status_panic(3);
+	status_panic(0);
 }
 
 void UsageFault_Handler(void)
 {
-    status_panic(4);
+	status_panic(0);
 }
 
 void SVC_Handler(void)
@@ -65,19 +72,17 @@ void SysTick_Handler(void)
 }
 
 
-void SPI_MS_DMA_TX_IRQHandler(void)
+void HWCON_RTCOMM_SPI_DMA_TX_IRQHandler(void)
 {
-	extern DMA_HandleTypeDef g_ms_spi_dma_tx_handle;
-
-    HAL_DMA_IRQHandler(&g_ms_spi_dma_tx_handle);
+    HAL_DMA_IRQHandler(&g_rtcomm_spi_dma_tx);
 }
 
-void TIM2_IRQHandler(void)
+#if defined(TEST_MS_BUS_INCS)
+void HWCON_TEST_TIMER0_IRQHandler(void)
 {
-	extern TIM_HandleTypeDef g_test_timer;
-
-	HAL_TIM_IRQHandler(&g_test_timer);
+	HAL_TIM_IRQHandler(&g_test_timer0);
 }
+#endif
 
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

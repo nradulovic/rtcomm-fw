@@ -65,17 +65,11 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1010431040" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.2064767922" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/application/environment/hal}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/application/environment/neon}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/application/environment}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/application/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/cmsis/device/st/stm32f4xx/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/cmsis/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/hal/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/neon/drivers/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/neon/eds/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/neon/eds/port/stm32f4xx-none-gcc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/neon/lib/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/environment/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/hal/STM32F4xx_HAL_Driver/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/hal/CMSIS/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/teslameter_3mhx-fw/hal/CMSIS/Device/ST/STM32F4xx/Include}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1530422146" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F411xE"/>
@@ -88,7 +82,7 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.1919353193" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections.1109024531" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.899756951" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/application/environment/linker/stm32f411re_flash.ld}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/environment/stm32f411re_flash.ld}&quot;"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.1097101160" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -113,7 +107,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="application/environment/startup/gcc/startup_stm32f479xx.s|application/environment/startup/gcc/startup_stm32f469xx.s|application/environment/startup/gcc/startup_stm32f446xx.s|application/environment/startup/gcc/startup_stm32f439xx.s|application/environment/startup/gcc/startup_stm32f437xx.s|application/environment/startup/gcc/startup_stm32f429xx.s|application/environment/startup/gcc/startup_stm32f427xx.s|application/environment/startup/gcc/startup_stm32f417xx.s|application/environment/startup/gcc/startup_stm32f415xx.s|application/environment/startup/gcc/startup_stm32f410tx.s|application/environment/startup/gcc/startup_stm32f410rx.s|application/environment/startup/gcc/startup_stm32f410cx.s|application/environment/startup/gcc/startup_stm32f407xx.s|application/environment/startup/gcc/startup_stm32f405xx.s|application/environment/startup/gcc/startup_stm32f401xe.s|application/environment/startup/gcc/startup_stm32f401xc.s|application/source/nv_data.c|application/source/epa_eeprom.c|application/source/epa_calibration.c|application/source/epa_adt7410.c|application/source/epa_i2c_master.c|neon/drivers/port|neon/drivers/source|neon/eds/port" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="hal/BSP/|hal/CMSIS/Device/|hal/CMSIS/DSP_Lib/|hal/CMSIS/Lib/|hal/CMSIS/RTOS/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

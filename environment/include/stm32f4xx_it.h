@@ -2,7 +2,7 @@
 #define __STM32F4xx_IT_H
 
 
-#include "hw_config.h"
+#include <hwcon.h>
 
 #ifdef __cplusplus
  extern "C" {
@@ -21,8 +21,11 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 
-void SPI_MS_DMA_TX_IRQHandler(void);
-void TIM2_IRQHandler(void);
+/*
+ * Peripheral vectors
+ */
+void HWCON_RTCOMM_SPI_DMA_TX_IRQHandler(void);
+void HWCON_TEST_TIMER0_IRQHandler(void);
 
 #ifdef __cplusplus
 }

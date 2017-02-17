@@ -9,20 +9,14 @@
  * @brief       Application status
  *********************************************************************//** @{ */
 
-#ifndef APPLICATION_INCLUDE_APP_STAT_H_
-#define APPLICATION_INCLUDE_APP_STAT_H_
+#ifndef APPLICATION_INCLUDE_STATUS_H_
+#define APPLICATION_INCLUDE_STATUS_H_
 
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include <stdint.h>
 
-#include "hw_config.h"
-#include "prim_gpio.h"
-
 /*===============================================================  MACRO's  ==*/
-
-#define led_ms_send_on()
-#define led_ms_send_off()
 
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus
@@ -45,4 +39,4 @@ void status_panic(uint32_t error);
  * END of app_stat.h
  ******************************************************************************/
 
-#endif /* APPLICATION_INCLUDE_APP_STAT_H_ */
+#endif /* APPLICATION_INCLUDE_STATUS_H_ */
