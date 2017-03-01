@@ -5,8 +5,8 @@
 #include "hwcon.h"
 #include "rtcomm.h"
 #include "cdi/io.h"
-#include "base/debug.h"
-#include "sched/deferred.h"
+#include "neon_eds.h"
+#include "epa_rtcomm.h"
 
 #if defined(HWCON_TEST_TIMER0_ENABLE)
 #include "test_timer0.h"
@@ -32,7 +32,8 @@ static void deferred(void * arg)
 {
     (void)arg;
 
-    rtcomm_push(&g_rtcomm);
+    static struct nevent rtcomm_push = NEVENT_INITIALIZER(RTCOMM_PUSH, NULL, 0);
+    nepa_send_event_i(&g_rtcomm_epa, &rtcomm_push);
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
@@ -43,7 +44,10 @@ int main(void)
 
 	rtcomm_init(&g_rtcomm, &g_storage[0], &g_storage[1], sizeof(g_storage[0]));
 	nsched_deferred_init(&g_deferred, deferred, NULL);
+	nepa_init(&g_rtcomm_epa, &g_rtcomm_epa_define);
 	test_timer0_enable();
+
+	nthread_schedule();
 
 	for (;;);
 
