@@ -62,9 +62,14 @@ void DebugMon_Handler(void)
 {
 }
 
+/*
+ * This interrupt is defined inside Neon
+ */
+#if 0
 void PendSV_Handler(void)
 {
 }
+#endif
 
 void SysTick_Handler(void)
 {
