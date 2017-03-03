@@ -80,19 +80,29 @@ void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 
 
 
-void rtcomm_push(struct rtcomm_handle * handle)
+void rtcomm_release_new(struct rtcomm_handle * handle)
+{
+    if (handle->state == STATE_IDLE) {
+        /*
+         * Swap buffers
+         */
+        register void * tmp;
+
+        tmp = handle->storage_a;
+        handle->storage_a = handle->storage_b;
+        handle->storage_b = tmp;
+    } else {
+        handle->counter.skipped_err++;
+    }
+}
+
+
+void rtcomm_emit(struct rtcomm_handle * handle)
 {
 	notify_reset();
 
-	if (handle->state == STATE_IDLE) {
-		/*
-		 * Swap buffers
-		 */
-		register void * tmp;
+	if (handle->state == STATE_PREP_DATA) {
 
-		tmp = handle->storage_a;
-		handle->storage_a = handle->storage_b;
-		handle->storage_b = tmp;
 		setup_dma(handle);
 	} else {
 		handle->counter.skipped_err++;

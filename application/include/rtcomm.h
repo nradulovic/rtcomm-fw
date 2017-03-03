@@ -11,12 +11,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "cdi/cdi_rtcomm.h"
+
 #include "stm32f4xx_hal.h"
 
 enum rtcomm_state
 {
 	STATE_INIT,
 	STATE_IDLE,
+	STATE_PREP_DATA,
 	STATE_RESET_DMA,
 	STATE_SETUP_DMA,
 	STATE_SENDING,
@@ -30,12 +33,7 @@ struct rtcomm_handle
 	enum rtcomm_state			state;
 	SPI_HandleTypeDef			spi;
 	DMA_HandleTypeDef			dma_tx;
-	struct rtcomm_stats
-	{
-		uint32_t					complete_err;
-		uint32_t					transfer_err;
-		uint32_t					skipped_err;
-	}							counter;
+	struct rtcomm_stats         counter;
 };
 
 extern struct rtcomm_handle		g_rtcomm;
@@ -44,7 +42,7 @@ void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 		void * storage_b, uint16_t size);
 
 static inline
-void * rtcomm_request(struct rtcomm_handle * handle)
+void * rtcomm_request_new(struct rtcomm_handle * handle)
 {
 	return (handle->storage_a);
 }
@@ -54,7 +52,23 @@ void * rtcomm_request(struct rtcomm_handle * handle)
  * responsibility to obtain a new buffer while sending the current one to the
  * consumer.
  */
-void rtcomm_push(struct rtcomm_handle * handle);
+void rtcomm_release_new(struct rtcomm_handle * handle);
+
+static inline
+void * rtcomm_peek(struct rtcomm_handle * handle)
+{
+    if (handle->state == STATE_IDLE) {
+        handle->state = STATE_PREP_DATA;
+
+        return (handle->storage_b);
+    } else {
+        handle->counter.skipped_err++;
+
+        return (NULL);
+    }
+}
+
+void rtcomm_emit(struct rtcomm_handle * handle);
 void rtcomm_isr_complete(struct rtcomm_handle * handle);
 void rtcomm_isr_error(struct rtcomm_handle * handle);
 

@@ -47,8 +47,8 @@ enum rtcomm_epa_events
 };
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-extern struct nepa_define g_rtcomm_epa_define;
-extern struct nepa g_rtcomm_epa;
+extern struct nepa_define g_rtcs_epa_define;
+extern struct nepa g_rtcs_epa;
 
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 /*--------------------------------------------------------  C++ extern end  --*/

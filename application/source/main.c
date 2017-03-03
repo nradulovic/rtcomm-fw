@@ -2,79 +2,27 @@
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include "main.h"
-#include "hwcon.h"
-#include "rtcomm.h"
-#include "cdi/io.h"
 #include "neon_eds.h"
 #include "epa_rtcomm.h"
-
-#if defined(HWCON_TEST_TIMER0_ENABLE)
-#include "test_timer0.h"
-#endif
-
-
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
-
-static void deferred(void * arg);
-
 /*=======================================================  LOCAL VARIABLES  ==*/
-
-static struct acq_buffer	    g_storage[2];
-static struct nsched_deferred   g_deferred;
-
 /*======================================================  GLOBAL VARIABLES  ==*/
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
-
-static void deferred(void * arg)
-{
-    (void)arg;
-
-    static struct nevent rtcomm_push = NEVENT_INITIALIZER(RTCOMM_PUSH, NULL, 0);
-    nepa_send_event_i(&g_rtcomm_epa, &rtcomm_push);
-}
-
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 int main(void)
 {
 	HAL_Init();
 
-	rtcomm_init(&g_rtcomm, &g_storage[0], &g_storage[1], sizeof(g_storage[0]));
-	nsched_deferred_init(&g_deferred, deferred, NULL);
-	nepa_init(&g_rtcomm_epa, &g_rtcomm_epa_define);
-	test_timer0_enable();
+	nepa_init(&g_rtcs_epa, &g_rtcs_epa_define);
 
 	nthread_schedule();
 
-	for (;;);
-
     return (0);
 }
-
-#if defined(HWCON_TEST_TIMER0_ENABLE)
-void test_timer0_callback(void)
-{
-	static uint32_t	sample_idx;
-	struct acq_buffer * buffer;
-
-	buffer = rtcomm_request(&g_rtcomm);
-
-	sample_set_int(&buffer->sample[sample_idx], 1, ACQ_CHANNEL_X);
-	sample_set_int(&buffer->sample[sample_idx], 2, ACQ_CHANNEL_Y);
-	sample_set_int(&buffer->sample[sample_idx], 3, ACQ_CHANNEL_Z);
-    sample_idx +=30;
-
-	if (sample_idx == NARRAY_DIMENSION(g_storage[0].sample)) {
-		sample_idx = 0;
-		nsched_deferred_do(&g_deferred);
-	}
-}
-#endif
-
-
 
 PORT_C_NORETURN
 void hook_at_assert(
