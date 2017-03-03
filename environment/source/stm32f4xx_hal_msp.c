@@ -75,7 +75,7 @@ void setup_clock(void)
 static
 void reset_config(GPIO_InitTypeDef * config)
 {
-	memset(&config, 0, sizeof(*config));
+	memset(config, 0, sizeof(*config));
 }
 
 static
