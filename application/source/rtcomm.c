@@ -93,6 +93,11 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
         handle->storage_b = tmp;
     } else {
         handle->counter.skipped_err++;
+        /*
+         * We are trying to send new buffer to consumer but the consumer has not
+         * read us yet. In this case do the following:
+         * - return the pointer to the same buffer (no swap)
+         */
     }
 }
 
@@ -102,17 +107,15 @@ void rtcomm_emit(struct rtcomm_handle * handle)
 	notify_reset();
 
 	if (handle->state == STATE_PREP_DATA) {
-
 		setup_dma(handle);
 	} else {
 		handle->counter.skipped_err++;
-		/*
-		 * We are trying to send new buffer to consumer but the consumer has not
-		 * read us yet. In this case do the following:
-		 * - do NOT reset DMA
-		 * - do NOT setup DMA since it is already setup
-		 * - return the pointer to the same buffer (no swap)
-		 */
+        /*
+         * We are trying to send new buffer to consumer but the consumer has not
+         * read us yet. In this case do the following:
+         * - do NOT reset DMA
+         * - do NOT setup DMA since it is already setup
+         */
 	}
 	notify_set();
 }
