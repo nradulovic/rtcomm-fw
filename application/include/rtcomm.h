@@ -9,15 +9,67 @@
 #define APPLICATION_INCLUDE_RTCOMM_H_
 
 #include <stdint.h>
+#include <stdbool.h>
+
+#include "cdi/cdi_rtcomm.h"
+
 #include "stm32f4xx_hal.h"
 
-extern SPI_HandleTypeDef               g_rtcomm_spi;
-extern DMA_HandleTypeDef               g_rtcomm_spi_dma_tx;
+enum rtcomm_state
+{
+	STATE_INIT,
+	STATE_IDLE,
+	STATE_PREP_DATA,
+	STATE_RESET_DMA,
+	STATE_SETUP_DMA,
+	STATE_SENDING,
+};
 
-void rtcomm_init(void);
-void ms_bus_start_tx(const void * data, uint16_t size);
+struct rtcomm_handle
+{
+	void *						storage_a;
+	void *						storage_b;
+	uint16_t					size;
+	enum rtcomm_state			state;
+	SPI_HandleTypeDef			spi;
+	DMA_HandleTypeDef			dma_tx;
+	struct rtcomm_stats         counter;
+};
 
-extern void ms_bus_complete_callback(void);
-extern void ms_bus_error_callback(void);
+extern struct rtcomm_handle		g_rtcomm;
+
+void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
+		void * storage_b, uint16_t size);
+
+static inline
+void * rtcomm_request_new(struct rtcomm_handle * handle)
+{
+	return (handle->storage_a);
+}
+
+/*
+ * At this point a producer needs new buffer to write to. It is RTCOMMs
+ * responsibility to obtain a new buffer while sending the current one to the
+ * consumer.
+ */
+void rtcomm_release_new(struct rtcomm_handle * handle);
+
+static inline
+void * rtcomm_peek(struct rtcomm_handle * handle)
+{
+    if (handle->state == STATE_IDLE) {
+        handle->state = STATE_PREP_DATA;
+
+        return (handle->storage_b);
+    } else {
+        handle->counter.skipped_err++;
+
+        return (NULL);
+    }
+}
+
+void rtcomm_emit(struct rtcomm_handle * handle);
+void rtcomm_isr_complete(struct rtcomm_handle * handle);
+void rtcomm_isr_error(struct rtcomm_handle * handle);
 
 #endif /* APPLICATION_INCLUDE_RTCOMM_H_ */

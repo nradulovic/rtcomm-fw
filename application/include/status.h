@@ -18,6 +18,11 @@
 
 /*===============================================================  MACRO's  ==*/
 
+#define STATUS_UNHANDLED_EXCP			1
+#define STATUS_ASSERT_FAILED			2
+#define STATUS_HW_INIT_FAILED			3
+#define STATUS_RUNTIME_CHECK_FAILED		4
+
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus
 extern "C" {

@@ -2,11 +2,8 @@
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include "main.h"
-#include "rtcomm.h"
-
-#if defined(TEST_MS_BUS_INCS)
-#include "test_timer0.h"
-#endif
+#include "neon_eds.h"
+#include "epa_rtcomm.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -20,17 +17,29 @@ int main(void)
 {
 	HAL_Init();
 
-	for (;;);
+	nepa_init(&g_rtcs_epa, &g_rtcs_epa_define);
+
+	nthread_schedule();
 
     return (0);
 }
 
-#if defined(TEST_MS_BUS_INCS)
-void test_timer0_callback(void)
+PORT_C_NORETURN
+void hook_at_assert(
+    const struct ncomponent_info * component_info,
+    const char *                fn,
+    uint32_t                    line,
+    const char *                expr,
+    const char *                msg)
 {
+    (void)component_info;
+    (void)fn;
+    (void)line;
+    (void)expr;
+    (void)msg;
 
+    for (;;);
 }
-#endif
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
 /** @endcond *//***************************************************************

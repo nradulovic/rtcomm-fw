@@ -6,7 +6,7 @@
 #include "status.h"
 #include "rtcomm.h"
 
-#if defined(TEST_MS_BUS_INCS)
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 #include "test_timer0.h"
 #endif
 
@@ -55,7 +55,7 @@ void setup_clock(void)
 	RCC_OscInitStruct.PLL.PLLQ       = 4;
 
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		status_panic(10);
+		status_panic(STATUS_HW_INIT_FAILED);
 	}
 
 	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -68,14 +68,14 @@ void setup_clock(void)
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
-		status_panic(10);
+		status_panic(STATUS_HW_INIT_FAILED);
 	}
 }
 
 static
 void reset_config(GPIO_InitTypeDef * config)
 {
-	memset(&config, 0, sizeof(*config));
+	memset(config, 0, sizeof(*config));
 }
 
 static
@@ -89,11 +89,11 @@ void setup_gpio(void)
 	HWCON_NOTIFY_CLK_ENABLE();
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
-	pin_config.Pin   = HWCOM_NOTIFY_PIN;
+	pin_config.Pin   = HWCON_NOTIFY_PIN;
 	pin_config.Pull  = GPIO_NOPULL;
 	pin_config.Speed = GPIO_SPEED_HIGH;
 	HAL_GPIO_Init(HWCON_NOTIFY_PORT, &pin_config);
-	HAL_GPIO_WritePin(HWCON_NOTIFY_PORT, HWCOM_NOTIFY_PIN, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(HWCON_NOTIFY_PORT, HWCON_NOTIFY_PIN, GPIO_PIN_RESET);
 
 	/*
 	 * --  Heartbeat LED GPIO  ------------------------------------------------
@@ -259,31 +259,43 @@ void setup_gpio(void)
 }
 
 static
+void setup_exti(void)
+{
+
+}
+
+static
 void setup_spi(void)
 {
 	/* NOTE:
 	 * 1. Multiplexer configuration is set in stm32f4xx_hal_msp.c:setup_gpios()
 	 * 2. DMA is set in stm32f4xx_hal_msp.c:HAL_SPI_MspInit()
 	 */
-    g_rtcomm_spi.Instance = SPI_MS;
-    g_rtcomm_spi.Init.BaudRatePrescaler = HWCON_RTCOMM_SPI_BAUD_CLOCK;
-    g_rtcomm_spi.Init.Direction         = SPI_DIRECTION_2LINES;
-    g_rtcomm_spi.Init.CLKPhase          = HWCON_RTCOMM_SPI_CLK_PHASE;
-    g_rtcomm_spi.Init.CLKPolarity       = HWCON_RTCOMM_SPI_CLK_POL;
-    g_rtcomm_spi.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLED;
-    g_rtcomm_spi.Init.CRCPolynomial     = 7;
-    g_rtcomm_spi.Init.DataSize          = SPI_DATASIZE_8BIT;
-    g_rtcomm_spi.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-    g_rtcomm_spi.Init.NSS               = SPI_NSS_HARD_INPUT;
-    g_rtcomm_spi.Init.TIMode            = SPI_TIMODE_DISABLED;
-    g_rtcomm_spi.Init.Mode              = SPI_MODE_SLAVE;
-    HAL_SPI_Init(&g_rtcomm_spi);
+    g_rtcomm.spi.Instance = SPI_MS;
+    g_rtcomm.spi.Init.BaudRatePrescaler = HWCON_RTCOMM_SPI_BAUD_CLOCK;
+    g_rtcomm.spi.Init.Direction         = SPI_DIRECTION_2LINES;
+    g_rtcomm.spi.Init.CLKPhase          = HWCON_RTCOMM_SPI_CLK_PHASE;
+    g_rtcomm.spi.Init.CLKPolarity       = HWCON_RTCOMM_SPI_CLK_POL;
+    g_rtcomm.spi.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLED;
+    g_rtcomm.spi.Init.CRCPolynomial     = 7;
+    g_rtcomm.spi.Init.DataSize          = SPI_DATASIZE_8BIT;
+    g_rtcomm.spi.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+    g_rtcomm.spi.Init.NSS               = SPI_NSS_HARD_INPUT;
+    g_rtcomm.spi.Init.TIMode            = SPI_TIMODE_DISABLED;
+    g_rtcomm.spi.Init.Mode              = SPI_MODE_SLAVE;
+    HAL_SPI_Init(&g_rtcomm.spi);
+}
+
+static
+void setup_i2c(void)
+{
+
 }
 
 static
 void setup_timer(void)
 {
-#if defined(TEST_MS_BUS_INCS)
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 	/*
 	 * Setup TEST_TIMER0
 	 */
@@ -342,7 +354,9 @@ void HAL_MspInit(void)
 {
 	setup_clock();
 	setup_gpio();
+	setup_exti();
 	setup_spi();
+	setup_i2c();
 	setup_timer();
 }
 
@@ -359,26 +373,26 @@ void HAL_MspDeInit(void)
 
 void HAL_SPI_MspInit(SPI_HandleTypeDef * hspi)
 {
-	if (hspi == &g_rtcomm_spi) {
+	if (hspi == &g_rtcomm.spi) {
 		HWCON_RTCOMM_SPI_CLK_ENABLE();
 		HWCON_RTCOMM_SPI_DMA_CLK_ENABLE();
 
 		/* DMA */
-		g_rtcomm_spi_dma_tx.Instance = HWCON_RTCOMM_SPI_DMA_TX_STREAM;
-		g_rtcomm_spi_dma_tx.Init.Channel = HWCON_RTCOMM_SPI_DMA_TX_CHANNEL;
-		g_rtcomm_spi_dma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
-		g_rtcomm_spi_dma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-		g_rtcomm_spi_dma_tx.Init.MemInc	= DMA_MINC_ENABLE;
-		g_rtcomm_spi_dma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-		g_rtcomm_spi_dma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-		g_rtcomm_spi_dma_tx.Init.Mode = DMA_NORMAL;
-		g_rtcomm_spi_dma_tx.Init.Priority = DMA_PRIORITY_LOW;
-		g_rtcomm_spi_dma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-		g_rtcomm_spi_dma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
-		g_rtcomm_spi_dma_tx.Init.MemBurst = DMA_MBURST_INC4;
-		g_rtcomm_spi_dma_tx.Init.PeriphBurst = DMA_PBURST_INC4;
-		HAL_DMA_Init(&g_rtcomm_spi_dma_tx);
-		__HAL_LINKDMA(&g_rtcomm_spi, hdmatx, g_rtcomm_spi_dma_tx);
+		g_rtcomm.dma_tx.Instance = HWCON_RTCOMM_SPI_DMA_TX_STREAM;
+		g_rtcomm.dma_tx.Init.Channel = HWCON_RTCOMM_SPI_DMA_TX_CHANNEL;
+		g_rtcomm.dma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+		g_rtcomm.dma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+		g_rtcomm.dma_tx.Init.MemInc	= DMA_MINC_ENABLE;
+		g_rtcomm.dma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		g_rtcomm.dma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+		g_rtcomm.dma_tx.Init.Mode = DMA_NORMAL;
+		g_rtcomm.dma_tx.Init.Priority = DMA_PRIORITY_LOW;
+		g_rtcomm.dma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+		g_rtcomm.dma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+		g_rtcomm.dma_tx.Init.MemBurst = DMA_MBURST_INC4;
+		g_rtcomm.dma_tx.Init.PeriphBurst = DMA_PBURST_INC4;
+		HAL_DMA_Init(&g_rtcomm.dma_tx);
+		__HAL_LINKDMA(&g_rtcomm.spi, hdmatx, g_rtcomm.dma_tx);
 
 		/* DMA IRQ */
 		HAL_NVIC_SetPriority(HWCON_RTCOMM_SPI_DMA_TX_IRQn, HWCON_RTCOMM_SPI_DMA_TX_IRQ_PRIO, 0);
@@ -400,6 +414,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef * htim)
 {
+#if defined(HWCON_TEST_TIMER0_ENABLE)
 	if (htim == &g_test_timer0) {
 		/* Enable clock */
 		HWCON_TEST_TIMER0_CLK_ENABLE();
@@ -411,6 +426,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef * htim)
 		/* Enable the global Interrupt */
 		HAL_NVIC_EnableIRQ(HWCON_TEST_TIMER0_IRQn);
 	}
+#endif
 }
 
 
