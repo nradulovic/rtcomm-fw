@@ -14,6 +14,7 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 #include "rtcomm.h"
+#include "prim_spi.h"
 #include "hwcon.h"
 
 #if defined(HWCON_TEST_TIMER0_ENABLE)
@@ -88,6 +89,42 @@ void HWCON_TEST_TIMER0_IRQHandler(void)
 	HAL_TIM_IRQHandler(&g_test_timer0);
 }
 #endif
+
+void HWCON_ACQ_0_DRDY_EXTI_Handler(void)
+{
+    /*
+     * TODO: Do exti stuff here
+     */
+}
+
+void HWCON_ACQ_0_SPI_IRQ_Handler(void)
+{
+    spi_bus_isr(&HWCON_ACQ_0_SPI);
+}
+
+void HWCON_ACQ_1_DRDY_EXTI_Handler(void)
+{
+    /*
+     * TODO: Do exti stuff here
+     */
+}
+
+void HWCON_ACQ_1_SPI_IRQ_Handler(void)
+{
+    spi_bus_isr(&HWCON_ACQ_1_SPI);
+}
+
+void HWCON_ACQ_2_DRDY_EXTI_Handler(void)
+{
+    /*
+     * TODO: Do exti stuff here
+     */
+}
+
+void HWCON_ACQ_2_SPI_IRQ_Handler(void)
+{
+    spi_bus_isr(&HWCON_ACQ_2_SPI);
+}
 
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

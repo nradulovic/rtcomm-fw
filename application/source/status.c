@@ -19,8 +19,7 @@
 #define LOOP_COUNT                      (50ul * 100000ul)
 
 #define led_heartbeat_on()														\
-	HAL_GPIO_WritePin(HWCON_HEARTBEAT_PORT, HWCON_HEARTBEAT_PIN, 			\
-			GPIO_PIN_SET)
+	HAL_GPIO_WritePin(HWCON_HEARTBEAT_PORT, HWCON_HEARTBEAT_PIN, GPIO_PIN_SET)
 
 #define led_heartbeat_off()                                                     \
     	HAL_GPIO_WritePin(HWCON_HEARTBEAT_PORT, HWCON_HEARTBEAT_PIN, 			\

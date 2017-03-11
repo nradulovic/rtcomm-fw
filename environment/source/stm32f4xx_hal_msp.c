@@ -5,6 +5,7 @@
 #include "hwcon.h"
 #include "status.h"
 #include "rtcomm.h"
+#include "prim_spi.h"
 
 #if defined(HWCON_TEST_TIMER0_ENABLE)
 #include "test_timer0.h"
@@ -36,9 +37,12 @@ void setup_clock(void)
 	/* Enable Power Control clock */
 	__HAL_RCC_PWR_CLK_ENABLE();
 
-	/* The voltage scaling allows optimizing the power consumption when the device is
-	 clocked below the maximum system frequency, to update the voltage scaling value
-	 regarding system frequency refer to product datasheet.  */
+	/* NOTE:
+	 * The voltage scaling allows optimising the power consumption when the
+	 * device is clocked below the maximum system frequency, to update the
+	 * voltage scaling value regarding system frequency refer to product
+	 * data-sheet.
+	 */
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
 	/* Enable HSI Oscillator and activate PLL with HSI as source */
@@ -59,7 +63,8 @@ void setup_clock(void)
 	}
 
 	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
-	 clocks dividers */
+	 * clocks dividers
+	 */
 	RCC_ClkInitStruct.ClockType      = (RCC_CLOCKTYPE_SYSCLK |
 			RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
 	RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
@@ -70,6 +75,102 @@ void setup_clock(void)
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
 		status_panic(STATUS_HW_INIT_FAILED);
 	}
+
+    /* --  Notification GPIO  ----------------------------------------------- */
+    HWCON_NOTIFY_CLK_ENABLE();
+
+    /* --  Heartbeat LED GPIO  ---------------------------------------------- */
+    HWCON_HEARTBEAT_CLK_ENABLE();
+
+    /* --  SYNC GPIO  ------------------------------------------------------- */
+    HWCON_SYNC_CLK_ENABLE();
+
+    /* --  Protocol status LED GPIO  ---------------------------------------- */
+    HWCON_PROTOCOL_LED_CLK_ENABLE();
+
+    /* --  Trigger GPIO OUT ------------------------------------------------- */
+    HWCON_TRIGGER_OUT_CLK_ENABLE();
+
+    /* --  Trigger GPIO IN  ------------------------------------------------- */
+    HWCON_TRIGGER_IN_CLK_ENABLE();
+
+    /* --  SYNC pin  -------------------------------------------------------- */
+    HWCON_SYNC_CLK_ENABLE();
+
+    /* --  RTCOMM: MOSI pin  ------------------------------------------------ */
+    HWCON_RTCOMM_MOSI_CLK_ENABLE();
+
+    /* --  RTCOMM: MISO pin  ------------------------------------------------ */
+    HWCON_RTCOMM_MISO_CLK_ENABLE();
+
+    /* --  RTCOMM: SCK pin  ------------------------------------------------- */
+    HWCON_RTCOMM_SCK_CLK_ENABLE();
+
+    /* --  RTCOMM: NSS pin  ------------------------------------------------- */
+    HWCON_RTCOMM_NSS_CLK_ENABLE();
+
+    /* --  RTCOMM SPI & DMA  ------------------------------------------------ */
+    HWCON_RTCOMM_SPI_CLK_ENABLE();
+    HWCON_RTCOMM_SPI_DMA_CLK_ENABLE();
+
+    /* --  ACQ0: SPI  ------------------------------------------------------- */
+    HWCON_ACQ_0_SPI_CLK_ENABLE();
+
+    /* --  ACQ0: NSS pin  --------------------------------------------------- */
+    HWCON_ACQ_0_SPI_NSS_CLK_ENABLE();
+
+    /* --  ACQ0: MISO pin  -------------------------------------------------- */
+    HWCON_ACQ_0_SPI_MISO_CLK_ENABLE();
+
+    /* --  ACQ0: MOSI pin  -------------------------------------------------- */
+    HWCON_ACQ_0_SPI_MOSI_CLK_ENABLE();
+
+    /* --  ACQ0: SCK pin  --------------------------------------------------- */
+    HWCON_ACQ_0_SPI_SCK_CLK_ENABLE();
+
+    /* --  ACQ0: DRDY pin  -------------------------------------------------- */
+    HWCON_ACQ_0_DRDY_CLK_ENABLE();
+
+    /* --  ACQ1: SPI  ------------------------------------------------------- */
+    HWCON_ACQ_1_SPI_CLK_ENABLE();
+
+    /* --  ACQ1: NSS pin  --------------------------------------------------- */
+    HWCON_ACQ_1_SPI_NSS_CLK_ENABLE();
+
+    /* --  ACQ1: MISO pin  -------------------------------------------------- */
+    HWCON_ACQ_1_SPI_MISO_CLK_ENABLE();
+
+    /* --  ACQ1: MOSI pin  -------------------------------------------------- */
+    HWCON_ACQ_1_SPI_MOSI_CLK_ENABLE();
+
+    /* --  ACQ0: SCK pin  --------------------------------------------------- */
+    HWCON_ACQ_1_SPI_SCK_CLK_ENABLE();
+
+    /* --  ACQ1: DRDY pin  -------------------------------------------------- */
+    HWCON_ACQ_1_DRDY_CLK_ENABLE();
+
+    /* --  ACQ2: SPI  ------------------------------------------------------- */
+    HWCON_ACQ_2_SPI_CLK_ENABLE();
+
+    /* --  ACQ1: NSS pin  --------------------------------------------------- */
+    HWCON_ACQ_2_SPI_NSS_CLK_ENABLE();
+
+    /* --  ACQ2: MISO pin  -------------------------------------------------- */
+    HWCON_ACQ_2_SPI_MISO_CLK_ENABLE();
+
+    /* --  ACQ1: MOSI pin  -------------------------------------------------- */
+    HWCON_ACQ_2_SPI_MOSI_CLK_ENABLE();
+
+    /* --  ACQ2: SCK pin  --------------------------------------------------- */
+    HWCON_ACQ_2_SPI_SCK_CLK_ENABLE();
+
+    /* --  ACQ2: DRDY pin  -------------------------------------------------- */
+    HWCON_ACQ_2_DRDY_CLK_ENABLE();
+#if defined(HWCON_TEST_TIMER0_ENABLE)
+
+    /* --  TEST TIMER0  ----------------------------------------------------- */
+    HWCON_TEST_TIMER0_CLK_ENABLE();
+#endif
 }
 
 static
@@ -83,10 +184,7 @@ void setup_gpio(void)
 {
 	GPIO_InitTypeDef 			pin_config;
 
-	/*
-	 * --  Notification GPIO  -------------------------------------------------
-	 */
-	HWCON_NOTIFY_CLK_ENABLE();
+    /* --  Notification GPIO  ----------------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
 	pin_config.Pin   = HWCON_NOTIFY_PIN;
@@ -95,10 +193,7 @@ void setup_gpio(void)
 	HAL_GPIO_Init(HWCON_NOTIFY_PORT, &pin_config);
 	HAL_GPIO_WritePin(HWCON_NOTIFY_PORT, HWCON_NOTIFY_PIN, GPIO_PIN_RESET);
 
-	/*
-	 * --  Heartbeat LED GPIO  ------------------------------------------------
-	 */
-	HWCON_HEARTBEAT_CLK_ENABLE();
+    /* --  Heartbeat LED GPIO  ---------------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
 	pin_config.Pin   = HWCON_HEARTBEAT_PIN;
@@ -108,10 +203,7 @@ void setup_gpio(void)
 	HAL_GPIO_WritePin(HWCON_HEARTBEAT_PORT, HWCON_HEARTBEAT_PIN,
 			GPIO_PIN_RESET);
 
-	/*
-	 * --  SYNC GPIO  ---------------------------------------------------------
-	 */
-	HWCON_SYNC_CLK_ENABLE();
+    /* --  SYNC GPIO  ------------------------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
 	pin_config.Pin   = HWCON_SYNC_PIN;
@@ -120,10 +212,7 @@ void setup_gpio(void)
 	HAL_GPIO_Init(HWCON_SYNC_PORT, &pin_config);
 	HAL_GPIO_WritePin(HWCON_SYNC_PORT, HWCON_SYNC_PIN, GPIO_PIN_RESET);
 
-	/*
-	 * --  Protocol status LED GPIO  ------------------------------------------
-	 */
-	HWCON_PROTOCOL_LED_CLK_ENABLE();
+    /* --  Protocol status LED GPIO  ---------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
 	pin_config.Pin   = HWCON_PROTOCOL_LED_PIN;
@@ -133,10 +222,7 @@ void setup_gpio(void)
 	HAL_GPIO_WritePin(HWCON_PROTOCOL_LED_PORT, HWCON_PROTOCOL_LED_PIN,
 			GPIO_PIN_RESET);
 
-	/*
-	 * --  Trigger GPIO OUT ---------------------------------------------------
-	 */
-	HWCON_TRIGGER_OUT_CLK_ENABLE();
+    /* --  Trigger GPIO OUT ------------------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
 	pin_config.Pin   = HWCON_TRIGGER_OUT_PIN;
@@ -146,33 +232,73 @@ void setup_gpio(void)
 	HAL_GPIO_WritePin(HWCON_TRIGGER_OUT_PORT, HWCON_TRIGGER_OUT_PIN,
 			GPIO_PIN_RESET);
 
-	/*
-	 * --  Trigger GPIO IN  ---------------------------------------------------
-	 */
-	HWCON_TRIGGER_IN_CLK_ENABLE();
+	/* --  Trigger GPIO IN  ------------------------------------------------- */
 	reset_config(&pin_config);
-	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
+	pin_config.Mode  = GPIO_MODE_INPUT;
 	pin_config.Pin   = HWCON_TRIGGER_IN_PIN;
 	pin_config.Pull  = GPIO_NOPULL;
 	pin_config.Speed = GPIO_SPEED_HIGH;
 	HAL_GPIO_Init(HWCON_TRIGGER_IN_PORT, &pin_config);
 
-	/*
-	 * --  ACQ0: NSS pin  -----------------------------------------------------
-	 */
-	HWCON_ACQ_0_SPI_NSS_CLK_ENABLE();
+	/* --  SYNC pin  -------------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
+    pin_config.Pin   = HWCON_SYNC_PIN;
+    pin_config.Pull  = GPIO_NOPULL;
+    pin_config.Speed = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(HWCON_SYNC_PORT, &pin_config);
+    HAL_GPIO_WritePin(HWCON_SYNC_PORT, HWCON_SYNC_PIN, GPIO_PIN_RESET);
+    /*
+     * TODO: move this stuff to some other place
+     */
+    HAL_Delay(10);
+    HAL_GPIO_WritePin(HWCON_SYNC_PORT, HWCON_SYNC_PIN, GPIO_PIN_SET);
+
+    /* --  RTCOMM: MOSI pin  ------------------------------------------------ */
+    reset_config(&pin_config);
+    pin_config.Pin          = HWCON_RTCOMM_MOSI_PIN;
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pull         = GPIO_PULLUP;
+    pin_config.Speed        = GPIO_SPEED_FAST;
+    pin_config.Alternate    = HWCON_RTCOMM_MOSI_AF;
+    HAL_GPIO_Init(HWCON_RTCOMM_MOSI_PORT, &pin_config);
+
+    /* --  RTCOMM: MISO pin  ------------------------------------------------ */
+    reset_config(&pin_config);
+    pin_config.Pin          = HWCON_RTCOMM_MISO_PIN;
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pull         = GPIO_PULLUP;
+    pin_config.Speed        = GPIO_SPEED_FAST;
+    pin_config.Alternate    = HWCON_RTCOMM_MISO_AF;
+    HAL_GPIO_Init(HWCON_RTCOMM_MISO_PORT, &pin_config);
+
+    /* --  RTCOMM: SCK pin  ------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Pin          = HWCON_RTCOMM_SCK_PIN;
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pull         = GPIO_PULLUP;
+    pin_config.Speed        = GPIO_SPEED_FAST;
+    pin_config.Alternate    = HWCON_RTCOMM_SCK_AF;
+    HAL_GPIO_Init(HWCON_RTCOMM_SCK_PORT, &pin_config);
+
+    /* --  RTCOMM: NSS pin  ------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pin          = HWCON_RTCOMM_NSS_PIN;
+    pin_config.Pull         = GPIO_PULLUP;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    pin_config.Alternate    = HWCON_RTCOMM_NSS_AF;
+    HAL_GPIO_Init(HWCON_RTCOMM_NSS_PORT, &pin_config);
+
+	/* --  ACQ0: NSS pin  --------------------------------------------------- */
 	reset_config(&pin_config);
-	pin_config.Mode  = GPIO_MODE_AF_PP;
+	pin_config.Mode  = GPIO_MODE_OUTPUT_PP;
 	pin_config.Pin   = HWCON_ACQ_0_SPI_NSS_PIN;
 	pin_config.Pull  = GPIO_NOPULL;
 	pin_config.Speed = GPIO_SPEED_HIGH;
-	pin_config.Alternate = HWCON_ACQ_0_SPI_NSS_AF;
 	HAL_GPIO_Init(HWCON_ACQ_0_SPI_NSS_PORT, &pin_config);
 
-	/*
-	 * --  ACQ0: MISO pin  ----------------------------------------------------
-	 */
-	HWCON_ACQ_0_SPI_MISO_CLK_ENABLE();
+	/* --  ACQ0: MISO pin  -------------------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_AF_PP;
 	pin_config.Pin   = HWCON_ACQ_0_SPI_MISO_PIN;
@@ -181,10 +307,7 @@ void setup_gpio(void)
 	pin_config.Alternate = HWCON_ACQ_0_SPI_MISO_AF;
 	HAL_GPIO_Init(HWCON_ACQ_0_SPI_MISO_PORT, &pin_config);
 
-	/*
-	 * --  ACQ0: MOSI pin  ----------------------------------------------------
-	 */
-	HWCON_ACQ_0_SPI_MOSI_CLK_ENABLE();
+	/* --  ACQ0: MOSI pin  -------------------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_AF_PP;
 	pin_config.Pin   = HWCON_ACQ_0_SPI_MOSI_PIN;
@@ -193,10 +316,7 @@ void setup_gpio(void)
 	pin_config.Alternate = HWCON_ACQ_0_SPI_MOSI_AF;
 	HAL_GPIO_Init(HWCON_ACQ_0_SPI_MOSI_PORT, &pin_config);
 
-	/*
-	 * --  ACQ0: SCK pin  -----------------------------------------------------
-	 */
-	HWCON_ACQ_0_SPI_SCK_ENABLE();
+	/* --  ACQ0: SCK pin  --------------------------------------------------- */
 	reset_config(&pin_config);
 	pin_config.Mode  = GPIO_MODE_AF_PP;
 	pin_config.Pin   = HWCON_ACQ_0_SPI_SCK_PIN;
@@ -205,73 +325,122 @@ void setup_gpio(void)
 	pin_config.Alternate = HWCON_ACQ_0_SPI_SCK_AF;
 	HAL_GPIO_Init(HWCON_ACQ_0_SPI_SCK_PORT, &pin_config);
 
-	/*
-	 * --  ACQ0: DRDY pin  ----------------------------------------------------
-	 */
+	/* --  ACQ0: DRDY pin  -------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_IT_FALLING;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Pin          = HWCON_ACQ_0_DRDY_PIN;
+    HAL_GPIO_Init(HWCON_ACQ_0_DRDY_PORT, &pin_config);
 
-	/*
-	 * --  RTCOMM: MOSI pin  --------------------------------------------------
-	 */
-	SPI_MS_MOSI_GPIO_CLK_ENABLE();
-	reset_config(&pin_config);
-    pin_config.Pin			= SPI_MS_MOSI_PIN;
-    pin_config.Mode			= GPIO_MODE_AF_PP;
-    pin_config.Pull			= GPIO_PULLUP;
-    pin_config.Speed		= GPIO_SPEED_FAST;
-    pin_config.Alternate    = SPI_MS_MOSI_AF;
-    HAL_GPIO_Init(SPI_MS_MOSI_GPIO_PORT, &pin_config);
+    /* --  ACQ1: NSS pin  --------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_OUTPUT_PP;
+    pin_config.Pin          = HWCON_ACQ_1_SPI_NSS_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(HWCON_ACQ_1_SPI_NSS_PORT, &pin_config);
 
-	/*
-	 * --  RTCOMM: MISO pin  --------------------------------------------------
-	 */
-	SPI_MS_MISO_GPIO_CLK_ENABLE();
-	reset_config(&pin_config);
-	pin_config.Pin			= SPI_MS_MISO_PIN;
-	pin_config.Mode			= GPIO_MODE_AF_PP;
-	pin_config.Pull			= GPIO_PULLUP;
-	pin_config.Speed		= GPIO_SPEED_FAST;
-	pin_config.Alternate    = SPI_MS_MISO_AF;
-	HAL_GPIO_Init(SPI_MS_MISO_GPIO_PORT, &pin_config);
+    /* --  ACQ1: MISO pin  -------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pin          = HWCON_ACQ_1_SPI_MISO_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    pin_config.Alternate    = HWCON_ACQ_1_SPI_MISO_AF;
+    HAL_GPIO_Init(HWCON_ACQ_1_SPI_MISO_PORT, &pin_config);
 
-	/*
-	 * --  RTCOMM: SCK pin  ---------------------------------------------------
-	 */
-	SPI_MS_SCK_GPIO_CLK_ENABLE();
-	reset_config(&pin_config);
-	pin_config.Pin			= SPI_MS_SCK_PIN;
-	pin_config.Mode			= GPIO_MODE_AF_PP;
-	pin_config.Pull			= GPIO_PULLUP;
-	pin_config.Speed		= GPIO_SPEED_FAST;
-	pin_config.Alternate    = SPI_MS_SCK_AF;
-	HAL_GPIO_Init(SPI_MS_SCK_GPIO_PORT, &pin_config);
+    /* --  ACQ1: MOSI pin  -------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pin          = HWCON_ACQ_1_SPI_MOSI_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    pin_config.Alternate    = HWCON_ACQ_1_SPI_MOSI_AF;
+    HAL_GPIO_Init(HWCON_ACQ_1_SPI_MOSI_PORT, &pin_config);
 
-	/*
-	 * --  RTCOMM: NSS pin  ---------------------------------------------------
-	 */
-	SPI_MS_NSS_GPIO_CLK_ENABLE();
-	reset_config(&pin_config);
-	pin_config.Mode  		= GPIO_MODE_AF_PP;
-	pin_config.Pin   		= SPI_MS_NSS_PIN;
-	pin_config.Pull  		= GPIO_PULLUP;
-	pin_config.Speed 		= GPIO_SPEED_HIGH;
-	pin_config.Alternate	= SPI_MS_NSS_AF;
-	HAL_GPIO_Init(SPI_MS_NSS_GPIO_PORT, &pin_config);
+    /* --  ACQ1: SCK pin  --------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pin          = HWCON_ACQ_1_SPI_SCK_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    pin_config.Alternate    = HWCON_ACQ_1_SPI_SCK_AF;
+    HAL_GPIO_Init(HWCON_ACQ_1_SPI_SCK_PORT, &pin_config);
+
+    /* --  ACQ1: DRDY pin  -------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_IT_FALLING;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Pin          = HWCON_ACQ_1_DRDY_PIN;
+    HAL_GPIO_Init(HWCON_ACQ_1_DRDY_PORT, &pin_config);
+
+    /* --  ACQ2: NSS pin  --------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_OUTPUT_PP;
+    pin_config.Pin          = HWCON_ACQ_2_SPI_NSS_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(HWCON_ACQ_2_SPI_NSS_PORT, &pin_config);
+
+    /* --  ACQ2: MISO pin  -------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pin          = HWCON_ACQ_2_SPI_MISO_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    pin_config.Alternate    = HWCON_ACQ_2_SPI_MISO_AF;
+    HAL_GPIO_Init(HWCON_ACQ_2_SPI_MISO_PORT, &pin_config);
+
+    /* --  ACQ2: MOSI pin  -------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pin          = HWCON_ACQ_2_SPI_MOSI_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    pin_config.Alternate    = HWCON_ACQ_2_SPI_MOSI_AF;
+    HAL_GPIO_Init(HWCON_ACQ_2_SPI_MOSI_PORT, &pin_config);
+
+    /* --  ACQ2: SCK pin  --------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_AF_PP;
+    pin_config.Pin          = HWCON_ACQ_2_SPI_SCK_PIN;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Speed        = GPIO_SPEED_HIGH;
+    pin_config.Alternate    = HWCON_ACQ_2_SPI_SCK_AF;
+    HAL_GPIO_Init(HWCON_ACQ_2_SPI_SCK_PORT, &pin_config);
+
+    /* --  ACQ2: DRDY pin  -------------------------------------------------- */
+    reset_config(&pin_config);
+    pin_config.Mode         = GPIO_MODE_IT_FALLING;
+    pin_config.Pull         = GPIO_NOPULL;
+    pin_config.Pin          = HWCON_ACQ_2_DRDY_PIN;
+    HAL_GPIO_Init(HWCON_ACQ_2_DRDY_PORT, &pin_config);
 }
 
 static
 void setup_exti(void)
 {
+    /* --  ACQ0: DRDY pin  -------------------------------------------------- */
+    HAL_NVIC_SetPriority(HWCON_ACQ_0_DRDY_EXTI, HWCON_IRQ_PRIO_ACQ_x_EXTI, 0);
 
+    /* --  ACQ1: DRDY pin  -------------------------------------------------- */
+    HAL_NVIC_SetPriority(HWCON_ACQ_1_DRDY_EXTI, HWCON_IRQ_PRIO_ACQ_x_EXTI, 0);
+
+    /* --  ACQ2: DRDY pin  -------------------------------------------------- */
+    HAL_NVIC_SetPriority(HWCON_ACQ_2_DRDY_EXTI, HWCON_IRQ_PRIO_ACQ_x_EXTI, 0);
 }
 
 static
 void setup_spi(void)
 {
+    struct spi_config config;
+
 	/* NOTE:
-	 * 1. Multiplexer configuration is set in stm32f4xx_hal_msp.c:setup_gpios()
-	 * 2. DMA is set in stm32f4xx_hal_msp.c:HAL_SPI_MspInit()
+	 * 1. Multiplexer configuration is set in setup_gpios()
+	 * 2. DMA is set in HAL_SPI_MspInit()
+	 * 3. Clocks and resets are set in setup_clock()
 	 */
-    g_rtcomm.spi.Instance = SPI_MS;
+    g_rtcomm.spi.Instance               = HWCON_RTCOMM_SPI;
     g_rtcomm.spi.Init.BaudRatePrescaler = HWCON_RTCOMM_SPI_BAUD_CLOCK;
     g_rtcomm.spi.Init.Direction         = SPI_DIRECTION_2LINES;
     g_rtcomm.spi.Init.CLKPhase          = HWCON_RTCOMM_SPI_CLK_PHASE;
@@ -284,6 +453,30 @@ void setup_spi(void)
     g_rtcomm.spi.Init.TIMode            = SPI_TIMODE_DISABLED;
     g_rtcomm.spi.Init.Mode              = SPI_MODE_SLAVE;
     HAL_SPI_Init(&g_rtcomm.spi);
+
+    /* --  ACQ0: SPI  ------------------------------------------------------- */
+    config.flags = SPI_TRANSFER_TX   | SPI_TRANSFER_RX   | SPI_CLK_POL_LOW   |
+                   SPI_CLK_PHA_2EDGE | SPI_MODE_MS       | SPI_SS_SOFTWARE   |
+                   SPI_DATA_8BIT;
+    config.prescaler = HWCON_ACQ_0_SPI_BAUD_CLOCK;
+    spi_bus_init(&HWCON_ACQ_0_SPI, &config);
+    HAL_NVIC_SetPriority(HWCON_ACQ_0_SPI_IRQ, HWCON_IRQ_PRIO_ACQ_x_SPI, 0);
+    HAL_NVIC_ClearPendingIRQ(HWCON_ACQ_0_SPI_IRQ);
+    HAL_NVIC_EnableIRQ(HWCON_ACQ_0_SPI_IRQ);
+
+    /* --  ACQ1: SPI  ------------------------------------------------------- */
+    config.prescaler = HWCON_ACQ_1_SPI_BAUD_CLOCK;
+    spi_bus_init(&HWCON_ACQ_1_SPI, &config);
+    HAL_NVIC_SetPriority(HWCON_ACQ_1_SPI_IRQ, HWCON_IRQ_PRIO_ACQ_x_SPI, 0);
+    HAL_NVIC_ClearPendingIRQ(HWCON_ACQ_1_SPI_IRQ);
+    HAL_NVIC_EnableIRQ(HWCON_ACQ_1_SPI_IRQ);
+
+    /* --  ACQ2: SPI  ------------------------------------------------------- */
+    config.prescaler = HWCON_ACQ_2_SPI_BAUD_CLOCK;
+    spi_bus_init(&HWCON_ACQ_2_SPI, &config);
+    HAL_NVIC_SetPriority(HWCON_ACQ_2_SPI_IRQ, HWCON_IRQ_PRIO_ACQ_x_SPI, 0);
+    HAL_NVIC_ClearPendingIRQ(HWCON_ACQ_2_SPI_IRQ);
+    HAL_NVIC_EnableIRQ(HWCON_ACQ_2_SPI_IRQ);
 }
 
 static
@@ -374,9 +567,6 @@ void HAL_MspDeInit(void)
 void HAL_SPI_MspInit(SPI_HandleTypeDef * hspi)
 {
 	if (hspi == &g_rtcomm.spi) {
-		HWCON_RTCOMM_SPI_CLK_ENABLE();
-		HWCON_RTCOMM_SPI_DMA_CLK_ENABLE();
-
 		/* DMA */
 		g_rtcomm.dma_tx.Instance = HWCON_RTCOMM_SPI_DMA_TX_STREAM;
 		g_rtcomm.dma_tx.Init.Channel = HWCON_RTCOMM_SPI_DMA_TX_CHANNEL;
@@ -416,8 +606,6 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef * htim)
 {
 #if defined(HWCON_TEST_TIMER0_ENABLE)
 	if (htim == &g_test_timer0) {
-		/* Enable clock */
-		HWCON_TEST_TIMER0_CLK_ENABLE();
 
 		/*Configure the IRQ priority */
 		HAL_NVIC_SetPriority(HWCON_TEST_TIMER0_IRQn, HWCON_TEST_TIMER0_IRQ_PRIO,

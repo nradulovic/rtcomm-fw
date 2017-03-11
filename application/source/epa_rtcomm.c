@@ -165,8 +165,8 @@ static naction state_init(struct nsm * sm, const nevent * event)
                     .content = 1,
                     .name = "z_gain"
                 }, {
-
-                }
+                    .name = '\0'
+                },
             };
             rtcomm_init(&g_rtcomm, &ws->buffer[0], &ws->buffer[1],
                     sizeof(ws->buffer[0]));
