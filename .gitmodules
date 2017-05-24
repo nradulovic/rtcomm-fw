@@ -3,4 +3,5 @@
 	url = https://nradulovic@bitbucket.org/netico-dev/teslameter_3mhx-cdi.git
 [submodule "neon"]
 	path = neon
-	url = https://github.org/nradulovic/neon.git
+	url = https://github.com/nradulovic/neon.git
+	branch = master
