@@ -33,7 +33,7 @@ struct rtcomm_handle
 	enum rtcomm_state			state;
 	SPI_HandleTypeDef			spi;
 	DMA_HandleTypeDef			dma_tx;
-	struct rtcomm_stats         counter;
+	struct rtcomm_stats         counters;
 };
 
 extern struct rtcomm_handle		g_rtcomm;
@@ -62,7 +62,7 @@ void * rtcomm_peek(struct rtcomm_handle * handle)
 
         return (handle->storage_b);
     } else {
-        handle->counter.skipped_err++;
+        handle->counters.skipped_err++;
 
         return (NULL);
     }

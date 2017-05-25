@@ -73,9 +73,9 @@ void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 	handle->storage_b = storage_b;
 	handle->size = size;
 	handle->state = STATE_IDLE;
-	handle->counter.complete_err = 0u;
-	handle->counter.transfer_err = 0u;
-	handle->counter.skipped_err = 0u;
+	handle->counters.complete_err = 0u;
+	handle->counters.transfer_err = 0u;
+	handle->counters.skipped_err = 0u;
 }
 
 
@@ -92,7 +92,7 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
         handle->storage_a = handle->storage_b;
         handle->storage_b = tmp;
     } else {
-        handle->counter.skipped_err++;
+        handle->counters.skipped_err++;
         /*
          * We are trying to send new buffer to consumer but the consumer has not
          * read us yet. In this case do the following:
@@ -109,7 +109,7 @@ void rtcomm_emit(struct rtcomm_handle * handle)
 	if (handle->state == STATE_PREP_DATA) {
 		setup_dma(handle);
 	} else {
-		handle->counter.skipped_err++;
+		handle->counters.skipped_err++;
         /*
          * We are trying to send new buffer to consumer but the consumer has not
          * read us yet. In this case do the following:
@@ -125,7 +125,7 @@ void rtcomm_emit(struct rtcomm_handle * handle)
 void rtcomm_isr_complete(struct rtcomm_handle * handle)
 {
 	if (handle->state != STATE_SENDING) {
-		handle->counter.complete_err++;
+		handle->counters.complete_err++;
 	}
 	notify_reset();
 	handle->state = STATE_IDLE;
@@ -136,7 +136,7 @@ void rtcomm_isr_complete(struct rtcomm_handle * handle)
 void rtcomm_isr_error(struct rtcomm_handle * handle)
 {
 	if (handle->state != STATE_IDLE) {
-		handle->counter.transfer_err++;
+		handle->counters.transfer_err++;
 
 		if (handle->state == STATE_SENDING) {
 			reset_dma(handle);

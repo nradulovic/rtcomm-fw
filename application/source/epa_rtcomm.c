@@ -196,7 +196,7 @@ static naction state_run(struct nsm * sm, const nevent * event)
 
             if (buffer) {
                 rtcomm_header_pack(&buffer->header, sizeof(struct acq_buffer),
-                        1, ws->frame++, 1, 2, &g_rtcomm.counter);
+                        1, ws->frame++, &g_rtcomm.counters);
             }
             rtcomm_emit(&g_rtcomm);
 
