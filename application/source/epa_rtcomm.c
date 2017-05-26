@@ -44,7 +44,7 @@
 struct rtcs_wspace
 {
     uint32_t                    frame;
-    struct acq_buffer           buffer[2];
+    struct io_buffer           buffer[2];
 };
 
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -58,7 +58,7 @@ static naction state_run(struct nsm *, const nevent *);
 
 static struct rtcs_wspace       g_rtcs_wspace;
 static struct nevent *          g_rtcs_event_queue[EPA_RTCS_SERVER_QUEUE_SIZE];
-static struct acq_buffer        g_storage[2];
+static struct io_buffer        g_storage[2];
 static struct nsched_deferred   g_deferred;
 
 /*======================================================  GLOBAL VARIABLES  ==*/
@@ -84,13 +84,13 @@ static void deferred(void * arg)
 void test_timer0_callback(void)
 {
     static uint32_t sample_idx;
-    struct acq_buffer * buffer;
+    struct io_buffer * buffer;
 
     buffer = rtcomm_request_new(&g_rtcomm);
 
-    buffer->sample[0][ACQ_CHANNEL_X] = 1;
-    buffer->sample[0][ACQ_CHANNEL_Y] = 2;
-    buffer->sample[0][ACQ_CHANNEL_Z] = 3;
+    buffer->sample[0][IO_CHANNEL_X] = 1;
+    buffer->sample[0][IO_CHANNEL_Y] = 2;
+    buffer->sample[0][IO_CHANNEL_Z] = 3;
     sample_idx +=30;
 
     if (sample_idx == NARRAY_DIMENSION(g_storage[0].sample)) {
@@ -108,72 +108,9 @@ static naction state_init(struct nsm * sm, const nevent * event)
 
     switch (nevent_id(event)) {
         case NSM_INIT: {
-            static const struct rtcomm_channel_data channels[] =
-            {
-                {
-                    .elements = 3000,
-                    .addr_offset = offsetof(struct acq_buffer, sample[0][0]),
-                    .addr_mul = 12,
-                    .bit_offset = 0,
-                    .bit_mul = 0,
-                    .mask = 24,
-                    .content = 1,
-                    .name = "x_data"
-                }, {
-                    .elements = 3000,
-                    .addr_offset = offsetof(struct acq_buffer, sample[0][1]),
-                    .addr_mul = 12,
-                    .bit_offset = 0,
-                    .bit_mul = 0,
-                    .mask = 24,
-                    .content = 1,
-                    .name = "y_data"
-                }, {
-                    .elements = 3000,
-                    .addr_offset = offsetof(struct acq_buffer, sample[0][2]),
-                    .addr_mul = 12,
-                    .bit_offset = 0,
-                    .bit_mul = 0,
-                    .mask = 24,
-                    .content = 1,
-                    .name = "z_data"
-                }, {
-                    .elements = 3000,
-                    .addr_offset = offsetof(struct acq_buffer, sample[0][0]),
-                    .addr_mul = 12,
-                    .bit_offset = 24,
-                    .bit_mul = 0,
-                    .mask = 8,
-                    .content = 1,
-                    .name = "x_gain"
-                }, {
-                    .elements = 3000,
-                    .addr_offset = offsetof(struct acq_buffer, sample[0][1]),
-                    .addr_mul = 12,
-                    .bit_offset = 24,
-                    .bit_mul = 0,
-                    .mask = 8,
-                    .content = 1,
-                    .name = "y_gain"
-                }, {
-                    .elements = 3000,
-                    .addr_offset = offsetof(struct acq_buffer, sample[0][2]),
-                    .addr_mul = 12,
-                    .bit_offset = 24,
-                    .bit_mul = 0,
-                    .mask = 8,
-                    .content = 1,
-                    .name = "z_gain"
-                }, {
-                    .name = '\0'
-                },
-            };
             rtcomm_init(&g_rtcomm, &ws->buffer[0], &ws->buffer[1],
                     sizeof(ws->buffer[0]));
             nsched_deferred_init(&g_deferred, deferred, NULL);
-
-            rtcomm_header_define_channel(&ws->buffer[0].header, channels);
-            rtcomm_header_define_channel(&ws->buffer[1].header, channels);
 #if defined(HWCON_TEST_TIMER0_ENABLE)
             test_timer0_enable();
 #endif
@@ -192,11 +129,11 @@ static naction state_run(struct nsm * sm, const nevent * event)
 
     switch (nevent_id(event)) {
         case RTCOMM_PUSH: {
-            struct acq_buffer * buffer = rtcomm_peek(&g_rtcomm);
+            struct io_buffer * buffer = rtcomm_peek(&g_rtcomm);
 
             if (buffer) {
-                rtcomm_header_pack(&buffer->header, sizeof(struct acq_buffer),
-                        1, ws->frame++, &g_rtcomm.counters);
+                rtcomm_header_pack(&buffer->header, sizeof(struct io_buffer),
+                        ws->frame++, &g_rtcomm.counters);
             }
             rtcomm_emit(&g_rtcomm);
 

@@ -5,8 +5,8 @@
  *      Author: nenad
  */
 
-#ifndef APPLICATION_INCLUDE_ACQ_CHANNELS_H_
-#define APPLICATION_INCLUDE_ACQ_CHANNELS_H_
+#ifndef APPLICATION_INCLUDE_PROBE_CHANNELS_H_
+#define APPLICATION_INCLUDE_PROBE_CHANNELS_H_
 
 /*=========================================================  INCLUDE FILES  ==*/
 
@@ -44,10 +44,10 @@ void acq_x_reset(void);
 
 nerror acq_x_set_config(const struct acq_x_config * config);
 
-extern void acq_x_callback(const uint32_t * data[ACQUNITY_ACQ_CHANNELS]);
+extern void acq_x_callback(const uint32_t * data[IO_PROBE_CHANNELS]);
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
 /** @endcond *//***************************************************************
  * END of acq_channels.h
  ******************************************************************************/
-#endif /* APPLICATION_INCLUDE_ACQ_CHANNELS_H_ */
+#endif /* APPLICATION_INCLUDE_PROBE_CHANNELS_H_ */
