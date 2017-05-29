@@ -32,6 +32,7 @@
 #include "neon_eds.h"
 #include "epa_rtcomm.h"
 #include "rtcomm.h"
+#include "probe_channels.h"
 #include "cdi/io.h"
 
 #if defined(HWCON_TEST_TIMER0_ENABLE)
@@ -44,7 +45,7 @@
 struct rtcs_wspace
 {
     uint32_t                    frame;
-    struct io_buffer           buffer[2];
+    struct io_buffer           	buffer[2];
 };
 
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -58,7 +59,7 @@ static naction state_run(struct nsm *, const nevent *);
 
 static struct rtcs_wspace       g_rtcs_wspace;
 static struct nevent *          g_rtcs_event_queue[EPA_RTCS_SERVER_QUEUE_SIZE];
-static struct io_buffer        g_storage[2];
+static struct io_buffer         g_storage[2];
 static struct nsched_deferred   g_deferred;
 
 /*======================================================  GLOBAL VARIABLES  ==*/
@@ -80,34 +81,13 @@ static void deferred(void * arg)
     nepa_send_event_i(&g_rtcs_epa, &rtcomm_push);
 }
 
-#if defined(HWCON_TEST_TIMER0_ENABLE)
-void test_timer0_callback(void)
-{
-    static uint32_t sample_idx;
-    struct io_buffer * buffer;
-
-    buffer = rtcomm_request_new(&g_rtcomm);
-
-    buffer->sample[0][IO_CHANNEL_X] = 1;
-    buffer->sample[0][IO_CHANNEL_Y] = 2;
-    buffer->sample[0][IO_CHANNEL_Z] = 3;
-    sample_idx +=30;
-
-    if (sample_idx == NARRAY_DIMENSION(g_storage[0].sample)) {
-        sample_idx = 0;
-        rtcomm_release_new(&g_rtcomm);
-        nsched_deferred_do(&g_deferred);
-    }
-}
-#endif
-
-
 static naction state_init(struct nsm * sm, const nevent * event)
 {
     struct rtcs_wspace *      ws = nsm_wspace(sm);
 
     switch (nevent_id(event)) {
         case NSM_INIT: {
+        	probe_init();
             rtcomm_init(&g_rtcomm, &ws->buffer[0], &ws->buffer[1],
                     sizeof(ws->buffer[0]));
             nsched_deferred_init(&g_deferred, deferred, NULL);
@@ -145,6 +125,42 @@ static naction state_run(struct nsm * sm, const nevent * event)
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
+
+#if defined(HWCON_TEST_TIMER0_ENABLE)
+void test_timer0_callback(void)
+{
+    static uint32_t sample_idx;
+    struct io_buffer * buffer;
+
+    buffer = rtcomm_request_new(&g_rtcomm);
+
+    buffer->sample[0][IO_CHANNEL_X] = 1;
+    buffer->sample[0][IO_CHANNEL_Y] = 2;
+    buffer->sample[0][IO_CHANNEL_Z] = 3;
+    sample_idx +=30;
+
+    if (sample_idx == NARRAY_DIMENSION(g_storage[0].sample)) {
+        sample_idx = 0;
+        rtcomm_release_new(&g_rtcomm);
+        nsched_deferred_do(&g_deferred);
+    }
+}
+#endif
+
+void probe_axis_x_reader(void * arg)
+{
+	(void)arg;
+}
+
+void probe_axis_y_reader(void * arg)
+{
+	(void)arg;
+}
+
+void probe_axis_z_reader(void * arg)
+{
+	(void)arg;
+}
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
 /** @endcond *//** @} *//** @} *//*********************************************
  * END of epa_rtcomm.c

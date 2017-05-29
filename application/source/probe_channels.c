@@ -1,264 +1,202 @@
 /*
- * acq_channels.c
+ * probe_channels.c
  *
- *  Created on: May 25, 2015
+ *  Created on: May 25, 2016
  *//***********************************************************************//**
  * @file
  * @author      Nenad Radulovic
- * @brief       Acquisition channel code
+ * @brief       Probe channels code
  *********************************************************************//** @{ */
 
 /*=========================================================  INCLUDE FILES  ==*/
 
-#include <stddef.h>
 #include "probe_channels.h"
+#include "ads1256.h"
+#include "prim_gpio.h"
+#include "cdi/io.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
-
-#define gpio_set(port, pin)             (port)->BSRR = (pin);
-
-#define gpio_clr(port, pin)             (port)->BSRR = (uint32_t)(pin) << 16u;
-
-#define gpio_read(port, pin)            ((port)->IDR & pin)
-
 /*======================================================  LOCAL DATA TYPES  ==*/
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
 
-static void acq_x_drdy_isr_enable(void);
-static void acq_x_drdy_isr_disable(void);
-static bool acq_x_drdy_is_active(void);
-static void acq_x_cs_enable(void);
-static void acq_x_cs_disable(void);
+static void axis_x_drdy_isr_enable(void);
+static void axis_x_drdy_isr_disable(void);
+static void axis_x_nss_activate(void);
+static void axis_x_nss_deactivate(void);
 
-static void acq_1_drdy_isr_enable(void);
-static void acq_1_drdy_isr_disable(void);
-static bool acq_1_drdy_is_active(void);
-static void acq_1_cs_enable(void);
-static void acq_1_cs_disable(void);
+static void axis_y_drdy_isr_enable(void);
+static void axis_y_drdy_isr_disable(void);
+static void axis_y_nss_activate(void);
+static void axis_y_nss_deactivate(void);
 
-static void acq_2_drdy_isr_enable(void);
-static void acq_2_drdy_isr_disable(void);
-static bool acq_2_drdy_is_active(void);
-static void acq_2_cs_enable(void);
-static void acq_2_cs_disable(void);
+static void axis_z_drdy_isr_enable(void);
+static void axis_z_drdy_isr_disable(void);
+static void axis_z_nss_activate(void);
+static void axis_z_nss_deactivate(void);
+
+static void power_activate(void);
+static void power_deactivate(void);
 
 /*=======================================================  LOCAL VARIABLES  ==*/
 
-static struct ads1256_chip g_acq_chip[IO_PROBE_CHANNELS];
+static struct ads1256_chip g_probe_chip[IO_PROBE_CHANNELS];
 
-static const struct ads1256_chip_vt g_acq_chip_vt[IO_PROBE_CHANNELS] =
+static const struct ads1256_chip_vt g_probe_chip_vt[IO_PROBE_CHANNELS] =
 {
-    {
-        acq_x_drdy_is_active,
-        acq_x_drdy_isr_enable,
-        acq_x_drdy_isr_disable,
-        acq_x_cs_enable,
-        acq_x_cs_disable
+    [IO_CHANNEL_X] = {
+        .drdy_isr_enable 	= axis_x_drdy_isr_enable,
+		.drdy_isr_disable 	= axis_x_drdy_isr_disable,
+        .nss_activate 		= axis_x_nss_activate,
+        .nss_deactivate 	= axis_x_nss_deactivate,
+		.reader             = probe_axis_x_reader
     },
-    {
-        acq_1_drdy_is_active,
-        acq_1_drdy_isr_enable,
-        acq_1_drdy_isr_disable,
-        acq_1_cs_enable,
-        acq_1_cs_disable
+    [IO_CHANNEL_Y] = {
+		.drdy_isr_enable 	= axis_y_drdy_isr_enable,
+		.drdy_isr_disable 	= axis_y_drdy_isr_disable,
+        .nss_activate		= axis_y_nss_activate,
+        .nss_deactivate		= axis_y_nss_deactivate,
+		.reader             = probe_axis_y_reader
     },
-    {
-        acq_2_drdy_is_active,
-        acq_2_drdy_isr_enable,
-        acq_2_drdy_isr_disable,
-        acq_2_cs_enable,
-        acq_2_cs_disable
+	[IO_CHANNEL_Z] = {
+		.drdy_isr_enable 	= axis_z_drdy_isr_enable,
+		.drdy_isr_disable 	= axis_z_drdy_isr_disable,
+		.nss_activate		= axis_z_nss_activate,
+		.nss_deactivate		= axis_z_nss_deactivate,
+		.reader             = probe_axis_z_reader
     }
 };
 
-static struct spi_bus * const g_acq_chip_spi_bus[IO_PROBE_CHANNELS] =
+static struct spi_bus * const g_probe_chip_spi_bus[IO_PROBE_CHANNELS] =
 {
-    &HWCON_ACQ_0_SPI,
-    &HWCON_ACQ_1_SPI,
-    &HWCON_ACQ_2_SPI,
+	[IO_CHANNEL_X] = &HWCON_PROBE_X_SPI,
+	[IO_CHANNEL_Y] = &HWCON_PROBE_Y_SPI,
+	[IO_CHANNEL_Z] = &HWCON_PROBE_Z_SPI,
+};
+
+static struct ads1256_group g_probe_group;
+
+static struct ads1256_group_vt g_probe_group_vt =
+{
+	.power_activate = power_activate,
+	.power_deactivate = power_deactivate,
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
 /* -------------------------------------------------------------------------- *
- * Channel 0 methods
+ * Axis X methods
  * -------------------------------------------------------------------------- */
 
-
-static void acq_x_drdy_isr_enable(void)
+static void axis_x_drdy_isr_enable(void)
 {
 	/* Clear EXTI controller interrupt bit, because this is holding interrupt.
 	 */
-	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_ACQ_0_DRDY_PIN);
-    NVIC_ClearPendingIRQ(HWCON_ACQ_0_DRDY_EXTI);
-    NVIC_EnableIRQ(HWCON_ACQ_0_DRDY_EXTI);
+	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_X_DRDY_PIN);
+    NVIC_ClearPendingIRQ(HWCON_PROBE_X_DRDY_EXTI);
+    NVIC_EnableIRQ(HWCON_PROBE_X_DRDY_EXTI);
 }
 
-
-
-static void acq_x_drdy_isr_disable(void)
+static void axis_x_drdy_isr_disable(void)
 {
-    NVIC_DisableIRQ(HWCON_ACQ_0_DRDY_EXTI);
+	NVIC_ClearPendingIRQ(HWCON_PROBE_X_DRDY_EXTI);
+    NVIC_DisableIRQ(HWCON_PROBE_X_DRDY_EXTI);
 }
 
-
-
-static bool acq_x_drdy_is_active(void)
+static void axis_x_nss_activate(void)
 {
-    if (gpio_read(HWCON_ACQ_0_DRDY_PORT, HWCON_ACQ_0_DRDY_PIN)) {
-        return (true);
-    } else {
-        return (false);
-    }
+    gpio_clr(HWCON_PROBE_X_NSS_PORT, HWCON_PROBE_X_NSS_PIN);
 }
 
-
-
-static void acq_x_cs_enable(void)
+static void axis_x_nss_deactivate(void)
 {
-    gpio_clr(HWCON_ACQ_0_SPI_NSS_PORT, HWCON_ACQ_0_SPI_NSS_PIN);
-}
-
-
-
-static void acq_x_cs_disable(void)
-{
-    gpio_set(HWCON_ACQ_0_SPI_NSS_PORT, HWCON_ACQ_0_SPI_NSS_PIN);
+    gpio_set(HWCON_PROBE_X_NSS_PORT, HWCON_PROBE_X_NSS_PIN);
 }
 
 /* -------------------------------------------------------------------------- *
- * Channel 1 methods
+ * Axis Y methods
  * -------------------------------------------------------------------------- */
 
-
-static void acq_1_drdy_isr_enable(void)
+static void axis_y_drdy_isr_enable(void)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_ACQ_1_DRDY_PIN);
-	NVIC_ClearPendingIRQ(HWCON_ACQ_1_DRDY_EXTI);
-    NVIC_EnableIRQ(HWCON_ACQ_1_DRDY_EXTI);
+	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Y_DRDY_PIN);
+	NVIC_ClearPendingIRQ(HWCON_PROBE_Y_DRDY_EXTI);
+    NVIC_EnableIRQ(HWCON_PROBE_Y_DRDY_EXTI);
 }
 
-
-
-static void acq_1_drdy_isr_disable(void)
+static void axis_y_drdy_isr_disable(void)
 {
-    NVIC_DisableIRQ(HWCON_ACQ_1_DRDY_EXTI);
+	NVIC_ClearPendingIRQ(HWCON_PROBE_Y_DRDY_EXTI);
+    NVIC_DisableIRQ(HWCON_PROBE_Y_DRDY_EXTI);
 }
 
-
-
-static bool acq_1_drdy_is_active(void)
+static void axis_y_nss_activate(void)
 {
-    if (gpio_read(HWCON_ACQ_1_DRDY_PORT, HWCON_ACQ_1_DRDY_PIN)) {
-        return (true);
-    } else {
-        return (false);
-    }
+    gpio_clr(HWCON_PROBE_Y_NSS_PORT, HWCON_PROBE_Y_NSS_PIN);
 }
 
-
-
-static void acq_1_cs_enable(void)
+static void axis_y_nss_deactivate(void)
 {
-    gpio_clr(HWCON_ACQ_1_SPI_NSS_PORT, HWCON_ACQ_1_SPI_NSS_PIN);
-}
-
-
-
-static void acq_1_cs_disable(void)
-{
-    gpio_set(HWCON_ACQ_1_SPI_NSS_PORT, HWCON_ACQ_1_SPI_NSS_PIN);
+    gpio_set(HWCON_PROBE_Y_NSS_PORT, HWCON_PROBE_Y_NSS_PIN);
 }
 
 /* -------------------------------------------------------------------------- *
- * Channel 2 methods
+ * Axis Z methods
  * -------------------------------------------------------------------------- */
 
-
-static void acq_2_drdy_isr_enable(void)
+static void axis_z_drdy_isr_enable(void)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_ACQ_2_DRDY_PIN);
-	NVIC_ClearPendingIRQ(HWCON_ACQ_2_DRDY_EXTI);
-    NVIC_EnableIRQ(HWCON_ACQ_2_DRDY_EXTI);
+	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Z_DRDY_PIN);
+	NVIC_ClearPendingIRQ(HWCON_PROBE_Z_DRDY_EXTI);
+    NVIC_EnableIRQ(HWCON_PROBE_Z_DRDY_EXTI);
 }
 
-
-
-static void acq_2_drdy_isr_disable(void)
+static void axis_z_drdy_isr_disable(void)
 {
-    NVIC_DisableIRQ(HWCON_ACQ_2_DRDY_EXTI);
+	NVIC_ClearPendingIRQ(HWCON_PROBE_Z_DRDY_EXTI);
+    NVIC_DisableIRQ(HWCON_PROBE_Z_DRDY_EXTI);
 }
 
-
-
-static bool acq_2_drdy_is_active(void)
+static void axis_z_nss_activate(void)
 {
-    if (gpio_read(HWCON_ACQ_2_DRDY_PORT, HWCON_ACQ_2_DRDY_PIN)) {
-        return (true);
-    } else {
-        return (false);
-    }
+    gpio_clr(HWCON_PROBE_Z_NSS_PORT, HWCON_PROBE_Z_NSS_PIN);
 }
 
-
-
-static void acq_2_cs_enable(void)
+static void axis_z_nss_deactivate(void)
 {
-    gpio_clr(HWCON_ACQ_2_SPI_NSS_PORT, HWCON_ACQ_2_SPI_NSS_PIN);
+    gpio_set(HWCON_PROBE_Z_NSS_PORT, HWCON_PROBE_Z_NSS_PIN);
 }
 
+/* -------------------------------------------------------------------------- *
+ * Common probe methods
+ * -------------------------------------------------------------------------- */
 
-
-static void acq_2_cs_disable(void)
+static void power_activate(void)
 {
-    gpio_set(HWCON_ACQ_2_SPI_NSS_PORT, HWCON_ACQ_2_SPI_NSS_PIN);
+	gpio_set(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
+}
+
+static void power_deactivate(void)
+{
+	gpio_clr(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
-void acq_x_init(void)
+void probe_init(void)
 {
     uint32_t                    index;
 
-    for (index = 0; index < IO_PROBE_CHANNELS; index++) {
-        ads1256_init(&g_acq_chip[index], g_acq_chip_spi_bus[index],
-                &g_acq_chip_vt[index]);
-    }
-    acq_x_reset();
-}
-
-void acq_x_reset(void)
-{
-    uint32_t                    index;
+    ads1256_group_init(&g_probe_group, &g_probe_group_vt);
 
     for (index = 0; index < IO_PROBE_CHANNELS; index++) {
-        ads1256_wait_ready(&g_acq_chip[index]);
-        ads1256_reset_sync(&g_acq_chip[index]);
+        ads1256_init_chip(&g_probe_chip[index], g_probe_chip_spi_bus[index],
+                &g_probe_chip_vt[index]);
+        ads1256_group_add_chip(&g_probe_group, &g_probe_chip[index]);
     }
-}
-
-nerror acq_x_set_config(const struct acq_x_config * config)
-{
-    static const uint8_t sps_table[] =
-    {
-        [ACQ_X_SPS_10] = ADS_DRATE_10SPS,
-        [ACQ_X_SPS_1000] = ADS_DRATE_100SPS
-    };
-    uint32_t                    index;
-
-    acq_x_reset();
-
-    for (index = 0; index < IO_PROBE_CHANNELS; index++) {
-        ads1256_wait_ready(&g_acq_chip[index]);
-        ads1256_write_reg_sync(&g_acq_chip[index], ADS_REG_DRATE,
-                sps_table[config->sps]);
-    }
-
-    return (NERROR_NONE);
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
 /** @endcond *//***************************************************************
- * END of acq_channels.c
+ * END of probe_channels.c
  ******************************************************************************/

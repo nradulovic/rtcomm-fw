@@ -90,40 +90,40 @@ void HWCON_TEST_TIMER0_IRQHandler(void)
 }
 #endif
 
-void HWCON_ACQ_0_DRDY_EXTI_Handler(void)
+void HWCON_PROBE_X_DRDY_EXTI_Handler(void)
 {
     /*
      * TODO: Do exti stuff here
      */
 }
 
-void HWCON_ACQ_0_SPI_IRQ_Handler(void)
+void HWCON_PROBE_X_SPI_IRQ_Handler(void)
 {
-    spi_bus_isr(&HWCON_ACQ_0_SPI);
+    spi_bus_isr(&HWCON_PROBE_X_SPI);
 }
 
-void HWCON_ACQ_1_DRDY_EXTI_Handler(void)
+void HWCON_PROBE_Y_DRDY_EXTI_Handler(void)
 {
     /*
      * TODO: Do exti stuff here
      */
 }
 
-void HWCON_ACQ_1_SPI_IRQ_Handler(void)
+void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
 {
-    spi_bus_isr(&HWCON_ACQ_1_SPI);
+    spi_bus_isr(&HWCON_PROBE_Y_SPI);
 }
 
-void HWCON_ACQ_2_DRDY_EXTI_Handler(void)
+void HWCON_PROBE_Z_DRDY_EXTI_Handler(void)
 {
     /*
      * TODO: Do exti stuff here
      */
 }
 
-void HWCON_ACQ_2_SPI_IRQ_Handler(void)
+void HWCON_PROBE_Z_IRQ_Handler(void)
 {
-    spi_bus_isr(&HWCON_ACQ_2_SPI);
+    spi_bus_isr(&HWCON_PROBE_Z_SPI);
 }
 
 

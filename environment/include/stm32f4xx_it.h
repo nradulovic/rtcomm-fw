@@ -26,12 +26,12 @@ void SysTick_Handler(void);
  */
 void HWCON_RTCOMM_SPI_DMA_TX_IRQHandler(void);
 void HWCON_TEST_TIMER0_IRQHandler(void);
-void HWCON_ACQ_0_DRDY_EXTI_Handler(void);
-void HWCON_ACQ_0_SPI_IRQ_Handler(void);
-void HWCON_ACQ_1_DRDY_EXTI_Handler(void);
-void HWCON_ACQ_1_SPI_IRQ_Handler(void);
-void HWCON_ACQ_2_DRDY_EXTI_Handler(void);
-void HWCON_ACQ_2_SPI_IRQ_Handler(void);
+void HWCON_PROBE_X_DRDY_EXTI_Handler(void);
+void HWCON_PROBE_X_SPI_IRQ_Handler(void);
+void HWCON_PROBE_Y_DRDY_EXTI_Handler(void);
+void HWCON_PROBE_Y_SPI_IRQ_Handler(void);
+void HWCON_PROBE_Z_DRDY_EXTI_Handler(void);
+void HWCON_PROBE_Z_IRQ_Handler(void);
 
 #ifdef __cplusplus
 }

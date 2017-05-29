@@ -13,6 +13,7 @@
 #include "hwcon.h"
 #include "rtcomm.h"
 #include "status.h"
+#include "prim_gpio.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -27,13 +28,13 @@ struct rtcomm_handle			g_rtcomm;
 static
 void notify_set(void)
 {
-	HAL_GPIO_WritePin(HWCON_NOTIFY_PORT, HWCON_NOTIFY_PIN, GPIO_PIN_SET);
+	gpio_set(HWCON_RTCOMM_RRQ_PORT, HWCON_RTCOMM_RRQ_PIN);
 }
 
 static
 void notify_reset(void)
 {
-	HAL_GPIO_WritePin(HWCON_NOTIFY_PORT, HWCON_NOTIFY_PIN, GPIO_PIN_RESET);
+	gpio_clr(HWCON_RTCOMM_RRQ_PORT, HWCON_RTCOMM_RRQ_PIN);
 }
 
 static
