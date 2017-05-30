@@ -10,17 +10,19 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include "ctrl.h"
+#include "hwcon.h"
 #include "status.h"
+#include "rtcomm.h"
+#include "ads1256.h"
+#include "probe_channels.h"
+#include "prim_spi.h"
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
-#include "rtcomm.h"
-#include "prim_spi.h"
-#include "hwcon.h"
 
 #if defined(HWCON_TEST_TIMER0_ENABLE)
 #include "test_timer0.h"
 #endif
-
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -32,39 +34,43 @@
 
 void NMI_Handler(void)
 {
-    status_panic(STATUS_UNHANDLED_EXCP);
+    status_error(STATUS_UNHANDLED_EXCP);
 }
 
 void HardFault_Handler(void)
 {
-	status_panic(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_UNHANDLED_EXCP);
 }
 
 void MemManage_Handler(void)
 {
-	status_panic(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_UNHANDLED_EXCP);
 }
 
 void BusFault_Handler(void)
 {
-	status_panic(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_UNHANDLED_EXCP);
 }
 
 void UsageFault_Handler(void)
 {
-	status_panic(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_UNHANDLED_EXCP);
 }
 
 void SVC_Handler(void)
 {
+	status_error(STATUS_UNHANDLED_EXCP);
 }
 
 void DebugMon_Handler(void)
 {
+	/* NOTE:
+	 * Leave this ISR free.
+	 */
 }
 
-/*
- * This interrupt is defined inside Neon
+/* NOTE:
+ * This interrupt is defined inside Neon so leave it undefined here.
  */
 #if 0
 void PendSV_Handler(void)
@@ -92,9 +98,7 @@ void HWCON_TEST_TIMER0_IRQHandler(void)
 
 void HWCON_PROBE_X_DRDY_EXTI_Handler(void)
 {
-    /*
-     * TODO: Do exti stuff here
-     */
+	ads1256_drdy_isr(&g_probe_group);
 }
 
 void HWCON_PROBE_X_SPI_IRQ_Handler(void)
@@ -104,9 +108,7 @@ void HWCON_PROBE_X_SPI_IRQ_Handler(void)
 
 void HWCON_PROBE_Y_DRDY_EXTI_Handler(void)
 {
-    /*
-     * TODO: Do exti stuff here
-     */
+	ads1256_drdy_isr(&g_probe_group);
 }
 
 void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
@@ -116,9 +118,7 @@ void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
 
 void HWCON_PROBE_Z_DRDY_EXTI_Handler(void)
 {
-    /*
-     * TODO: Do exti stuff here
-     */
+	ads1256_drdy_isr(&g_probe_group);
 }
 
 void HWCON_PROBE_Z_IRQ_Handler(void)
@@ -126,6 +126,15 @@ void HWCON_PROBE_Z_IRQ_Handler(void)
     spi_bus_isr(&HWCON_PROBE_Z_SPI);
 }
 
+void HWCON_CTRL_I2C_EV_IRQHandler(void)
+{
+	HAL_I2C_EV_IRQHandler(&g_ctrl.i2c);
+}
+
+void HWCON_CTRL_I2C_ER_IRQHandler(void)
+{
+	HAL_I2C_ER_IRQHandler(&g_ctrl.i2c);
+}
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
 /** @endcond *//***************************************************************

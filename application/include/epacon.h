@@ -33,8 +33,12 @@
 /*===============================================================  MACRO's  ==*/
 
 #define EPA_RTCOMM_PRIO                 31
-#define EPA_RTCS_SERVER_QUEUE_SIZE           10
+#define EPA_RTCOMM_QUEUE_SIZE           10
 #define EPA_RTCOMM_EVENT_BASE           1000
+
+#define EPA_CTRL_PRIO					30
+#define EPA_CTRL_QUEUE_SIZE				10
+#define EPA_CTRL_EVENT_BASE				2000
 
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus

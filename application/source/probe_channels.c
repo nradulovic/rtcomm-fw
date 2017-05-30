@@ -73,8 +73,6 @@ static struct spi_bus * const g_probe_chip_spi_bus[IO_PROBE_CHANNELS] =
 	[IO_CHANNEL_Z] = &HWCON_PROBE_Z_SPI,
 };
 
-static struct ads1256_group g_probe_group;
-
 static struct ads1256_group_vt g_probe_group_vt =
 {
 	.power_activate = power_activate,
@@ -82,6 +80,9 @@ static struct ads1256_group_vt g_probe_group_vt =
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
+
+struct ads1256_group g_probe_group;
+
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
 /* -------------------------------------------------------------------------- *

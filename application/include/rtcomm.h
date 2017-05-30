@@ -1,5 +1,5 @@
 /*
- * ms_bus.h
+ * rtcomm.h
  *
  *  Created on: May 27, 2015
  *      Author: nenad
@@ -8,12 +8,22 @@
 #ifndef APPLICATION_INCLUDE_RTCOMM_H_
 #define APPLICATION_INCLUDE_RTCOMM_H_
 
+/*=========================================================  INCLUDE FILES  ==*/
+
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "cdi/cdi_rtcomm.h"
 
 #include "stm32f4xx_hal.h"
+
+/*===============================================================  MACRO's  ==*/
+
+/*------------------------------------------------------  C++ extern begin  --*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*============================================================  DATA TYPES  ==*/
 
 enum rtcomm_state
 {
@@ -36,7 +46,11 @@ struct rtcomm_handle
 	struct rtcomm_stats         counters;
 };
 
+/*======================================================  GLOBAL VARIABLES  ==*/
+
 extern struct rtcomm_handle		g_rtcomm;
+
+/*===================================================  FUNCTION PROTOTYPES  ==*/
 
 void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 		void * storage_b, uint16_t size);
@@ -72,4 +86,13 @@ void rtcomm_emit(struct rtcomm_handle * handle);
 void rtcomm_isr_complete(struct rtcomm_handle * handle);
 void rtcomm_isr_error(struct rtcomm_handle * handle);
 
+/*--------------------------------------------------------  C++ extern end  --*/
+#ifdef __cplusplus
+}
+#endif
+
+/*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
+/** @endcond *//** @} *//** @} *//*********************************************
+ * END of rtcomm.h
+ ******************************************************************************/
 #endif /* APPLICATION_INCLUDE_RTCOMM_H_ */

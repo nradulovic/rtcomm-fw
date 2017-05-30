@@ -7,11 +7,6 @@
 #include <stdint.h>
 
 /*===============================================================  MACRO's  ==*/
-
-#define gpio_set(port, pin)             (port)->BSRR = (pin);
-
-#define gpio_clr(port, pin)             (port)->BSRR = (uint32_t)(pin) << 16u;
-
 /*------------------------------------------------------  C++ extern begin  --*/
 #ifdef __cplusplus
 extern "C" {

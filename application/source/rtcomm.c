@@ -38,7 +38,7 @@ void notify_reset(void)
 }
 
 static
-void reset_dma(struct rtcomm_handle * handle)
+void unlock_dma(struct rtcomm_handle * handle)
 {
 	handle->state = STATE_RESET_DMA;
 
@@ -60,7 +60,7 @@ void setup_dma(struct rtcomm_handle * handle)
 	error = HAL_SPI_Transmit_DMA(&handle->spi, handle->storage_b, handle->size);
 
 	if (error) {
-		status_panic(STATUS_RUNTIME_CHECK_FAILED);
+		status_error(STATUS_RUNTIME_CHECK_FAILED);
 	}
 	handle->state = STATE_SENDING;
 }
@@ -140,7 +140,7 @@ void rtcomm_isr_error(struct rtcomm_handle * handle)
 		handle->counters.transfer_err++;
 
 		if (handle->state == STATE_SENDING) {
-			reset_dma(handle);
+			unlock_dma(handle);
 		}
 	}
 }

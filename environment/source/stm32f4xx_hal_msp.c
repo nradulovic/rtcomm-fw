@@ -2,7 +2,9 @@
 #include <string.h>
 
 #include "stm32f4xx_hal.h"
+#include "cdi/io.h"
 #include "hwcon.h"
+#include "ctrl.h"
 #include "status.h"
 #include "rtcomm.h"
 #include "prim_spi.h"
@@ -14,14 +16,14 @@
 struct gpio_setup
 {
 	void * 						port;
-	uint32_t					pin;
+	uint16_t					pin;
 	uint32_t					mode;
 	uint32_t					pull;
 	uint32_t					func;
 	uint32_t					default_state;
 };
 
-static struct gpio_setup		g_gpio_pins =
+static struct gpio_setup		g_gpio_pins[] =
 {
 	/* Outputs */
 	{HWCON_HEARTBEAT_PORT,		HWCON_HEARTBEAT_PIN,	GPIO_MODE_OUTPUT_PP, 	GPIO_NOPULL,	0,						GPIO_PIN_RESET},
@@ -57,8 +59,9 @@ static struct gpio_setup		g_gpio_pins =
 	{HWCON_PROBE_Z_NSS_PORT, 	HWCON_PROBE_Z_NSS_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,						GPIO_PIN_SET},
 	{HWCON_PROBE_Z_DRDY_PORT,	HWCON_PROBE_Z_DRDY_PIN,	GPIO_MODE_IT_FALLING,	GPIO_NOPULL,	0,						0},
 
-	{},
-	{}
+	{HWCON_CTRL_SCL_PORT,		HWCON_CTRL_SCL_PIN,		GPIO_MODE_AF_OD,		GPIO_PULLUP,	HWCON_CTRL_SCL_AF,		0},
+	{HWCON_CTRL_SDA_PORT,		HWCON_CTRL_SDA_PIN,		GPIO_MODE_AF_OD,		GPIO_PULLUP,	HWCON_CTRL_SDA_AF,		0},
+	{NULL,						0,						0,						0,				0,						0}
 };
 
 /* The system Clock is configured as follow :
@@ -109,7 +112,7 @@ void setup_clock(void)
 	RCC_OscInitStruct.PLL.PLLQ       = 4;
 
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		status_panic(STATUS_HW_INIT_FAILED);
+		status_error(STATUS_HW_INIT_FAILED);
 	}
 
 	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -123,7 +126,7 @@ void setup_clock(void)
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
-		status_panic(STATUS_HW_INIT_FAILED);
+		status_error(STATUS_HW_INIT_FAILED);
 	}
 
     /* --  Heartbeat LED GPIO  ---------------------------------------------- */
@@ -136,16 +139,16 @@ void setup_clock(void)
     HWCON_TRIGGER_OUT_CLK_ENABLE();
     HWCON_TRIGGER_IN_CLK_ENABLE();
 
-    /* --  RTCOMM  ---------------------------------------------------------- */
+    /* --  RTCOMM SPI & DMA  ------------------------------------------------ */
+    HWCON_RTCOMM_SPI_CLK_ENABLE();
     HWCON_RTCOMM_MOSI_CLK_ENABLE();
     HWCON_RTCOMM_MISO_CLK_ENABLE();
     HWCON_RTCOMM_SCK_CLK_ENABLE();
     HWCON_RTCOMM_NSS_CLK_ENABLE();
-    HWCON_RTCOMM_RRQ_CLK_ENABLE();
 
-    /* --  RTCOMM SPI & DMA  ------------------------------------------------ */
-    HWCON_RTCOMM_SPI_CLK_ENABLE();
     HWCON_RTCOMM_SPI_DMA_CLK_ENABLE();
+
+    HWCON_RTCOMM_RRQ_CLK_ENABLE();
 
     /* --  Probe  ----------------------------------------------------------- */
     HWCON_PROBE_SYNC_CLK_ENABLE();
@@ -171,6 +174,9 @@ void setup_clock(void)
     HWCON_PROBE_Z_NSS_CLK_ENABLE();
     HWCON_PROBE_Z_DRDY_CLK_ENABLE();
 
+    HWCON_CTRL_I2C_CLK_ENABLE();
+    HWCON_CTRL_SCL_CLK_ENABLE();
+    HWCON_CTRL_SDA_CLK_ENABLE();
 #if defined(HWCON_TEST_TIMER0_ENABLE)
     /* --  TEST TIMER0  ----------------------------------------------------- */
     HWCON_TEST_TIMER0_CLK_ENABLE();
@@ -191,7 +197,7 @@ void setup_gpio(void)
 		pin_config.Pull 		= current_setup->pull;
 		pin_config.Speed 		= GPIO_SPEED_HIGH;
 		pin_config.Alternate	= current_setup->func;
-		HAL_GPIO_Init(current_setup->port, current_setup->pin);
+		HAL_GPIO_Init(current_setup->port, &pin_config);
 
 		if ((current_setup->mode == GPIO_MODE_OUTPUT_OD) ||
 			(current_setup->mode == GPIO_MODE_OUTPUT_PP)) {
@@ -220,9 +226,10 @@ void setup_spi(void)
     struct spi_config config;
 
 	/* NOTE:
-	 * 1. Multiplexer configuration is set in setup_gpios()
-	 * 2. DMA is set in HAL_SPI_MspInit()
-	 * 3. Clocks and resets are set in setup_clock()
+	 * 1. Clocks and resets are set in setup_clock()
+	 * 2. Multiplexer configuration is set in setup_gpios()
+	 * 3. SPI peripherals are setup here
+	 * 4. DMA is set in HAL_SPI_MspInit()
 	 */
     g_rtcomm.spi.Instance               = HWCON_RTCOMM_SPI;
     g_rtcomm.spi.Init.BaudRatePrescaler = HWCON_RTCOMM_SPI_BAUD_CLOCK;
@@ -266,7 +273,17 @@ void setup_spi(void)
 static
 void setup_i2c(void)
 {
+	g_ctrl.i2c.Instance              = HWCON_CTRL_I2C;
+	g_ctrl.i2c.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
+	g_ctrl.i2c.Init.ClockSpeed       = 100000;
+	g_ctrl.i2c.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
+	g_ctrl.i2c.Init.DutyCycle        = I2C_DUTYCYCLE_2;
+	g_ctrl.i2c.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
+	g_ctrl.i2c.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
+	g_ctrl.i2c.Init.OwnAddress1      = IO_ID;
+	g_ctrl.i2c.Init.OwnAddress2      = 0xFE;
 
+	HAL_I2C_Init(&g_ctrl.i2c);
 }
 
 static
@@ -369,7 +386,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef * hspi)
 		__HAL_LINKDMA(&g_rtcomm.spi, hdmatx, g_rtcomm.dma_tx);
 
 		/* DMA IRQ */
-		HAL_NVIC_SetPriority(HWCON_RTCOMM_SPI_DMA_TX_IRQn, HWCON_RTCOMM_SPI_DMA_TX_IRQ_PRIO, 0);
+		HAL_NVIC_SetPriority(HWCON_RTCOMM_SPI_DMA_TX_IRQn,
+				HWCON_IRQ_PRIO_RTCOMM_SPI_DMA_TX, 0);
 		HAL_NVIC_EnableIRQ(HWCON_RTCOMM_SPI_DMA_TX_IRQn);
 	}
 }
@@ -378,10 +396,27 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef * hspi)
 
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 {
-    /* NOTE:
-     * DeInit is not used for SPI
-     */
 	(void)hspi;
+}
+
+
+
+
+void HAL_I2C_MspInit(I2C_HandleTypeDef * hi2c)
+{
+	if (hi2c == &g_ctrl.i2c) {
+		HAL_NVIC_SetPriority(HWCON_CTRL_I2C_ER_IRQn, HWCON_IRQ_PRIO_CTRL, 0);
+		HAL_NVIC_EnableIRQ(HWCON_CTRL_I2C_ER_IRQn);
+		HAL_NVIC_SetPriority(HWCON_CTRL_I2C_EV_IRQn, HWCON_IRQ_PRIO_CTRL, 0);
+		HAL_NVIC_EnableIRQ(HWCON_CTRL_I2C_EV_IRQn);
+	}
+}
+
+
+
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef * hi2c)
+{
+	(void)hi2c;
 }
 
 

@@ -23,11 +23,11 @@
 #define IRQ_PRIO_TRIGGER_OUT_TIM        2
 #define IRQ_PRIO_SYSTICK                3
 #define IRQ_PRIO_NEON					4
-#define HWCON_RTCOMM_SPI_DMA_TX_IRQ_PRIO             1
+#define HWCON_IRQ_PRIO_RTCOMM_SPI_DMA_TX             1
 #define IRQ_PRIO_ACQ_AUX_SPI            4
 #define IRQ_PRIO_ACQ_AUX_EXTI           4
 #define IRQ_PRIO_USB_OTG				6
-#define IRQ_PRIO_I2C_CTRL               8
+#define HWCON_IRQ_PRIO_CTRL               8
 
 #define HWCON_TEST_TIMER0_IRQ_PRIO		1
 
@@ -258,25 +258,22 @@
 /*
  * --  Control I2C description  -----------------------------------------------
  */
-#define I2C_CTRL						I2C1
-#define I2C_CTRL_CLK_ENABLE()			__HAL_RCC_I2C1_CLK_ENABLE()
-#define I2C_CTRL_SDA_GPIO_CLK_ENABLE()  __HAL_RCC_GPIOB_CLK_ENABLE()
-#define I2C_CTRL_SCL_GPIO_CLK_ENABLE()  __HAL_RCC_GPIOB_CLK_ENABLE()
+#define HWCON_CTRL_I2C						I2C1
+#define HWCON_CTRL_I2C_CLK_ENABLE()			__HAL_RCC_I2C1_CLK_ENABLE()
+#define HWCON_CTRL_SDA_CLK_ENABLE()  		__HAL_RCC_GPIOB_CLK_ENABLE()
+#define HWCON_CTRL_SCL_CLK_ENABLE()  		__HAL_RCC_GPIOB_CLK_ENABLE()
 
-#define I2C_CTRL_SCL_PIN                GPIO_PIN_6
-#define I2C_CTRL_SCL_GPIO_PORT          GPIOB
-#define I2C_CTRL_SCL_AF                 GPIO_AF4_I2C1
-#define I2C_CTRL_SDA_PIN                GPIO_PIN_7
-#define I2C_CTRL_SDA_GPIO_PORT          GPIOB
-#define I2C_CTRL_SDA_AF                 GPIO_AF4_I2C1
+#define HWCON_CTRL_SCL_PIN                	GPIO_PIN_6
+#define HWCON_CTRL_SCL_PORT          		GPIOB
+#define HWCON_CTRL_SCL_AF                 	GPIO_AF4_I2C1
+#define HWCON_CTRL_SDA_PIN                	GPIO_PIN_7
+#define HWCON_CTRL_SDA_PORT          		GPIOB
+#define HWCON_CTRL_SDA_AF                 	GPIO_AF4_I2C1
 
-#define I2C_CTRL_EV_IRQn                I2C1_EV_IRQn
-#define I2C_CTRL_EV_IRQHandler          I2C1_EV_IRQHandler
-#define I2C_CTRL_ER_IRQn                I2C1_ER_IRQn
-#define I2C_CTRL_ER_IRQHandler          I2C1_ER_IRQHandler
-
-#define I2C_CTRL_FORCE_RESET()          __HAL_RCC_I2C1_FORCE_RESET()
-#define I2C_CTRL_RELEASE_RESET()        __HAL_RCC_I2C1_RELEASE_RESET()
+#define HWCON_CTRL_I2C_EV_IRQn              I2C1_EV_IRQn
+#define HWCON_CTRL_I2C_EV_IRQHandler        I2C1_EV_IRQHandler
+#define HWCON_CTRL_I2C_ER_IRQn              I2C1_ER_IRQn
+#define HWCON_CTRL_I2C_ER_IRQHandler        I2C1_ER_IRQHandler
 
 /*
  * --  Timer for trigger out generation  ----------------------------

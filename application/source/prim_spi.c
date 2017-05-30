@@ -203,7 +203,7 @@ void isr_tx_only(struct spi_bus * bus)
             break;
         }
         default: {
-            status_panic(STATUS_RUNTIME_CHECK_FAILED);
+            status_error(STATUS_RUNTIME_CHECK_FAILED);
         }
     }
 }

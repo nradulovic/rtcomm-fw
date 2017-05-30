@@ -42,7 +42,7 @@
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
 
-struct rtcs_wspace
+struct rtcomm_wspace
 {
     uint32_t                    frame;
     struct io_buffer           	buffer[2];
@@ -57,18 +57,17 @@ static naction state_run(struct nsm *, const nevent *);
 
 /*=======================================================  LOCAL VARIABLES  ==*/
 
-static struct rtcs_wspace       g_rtcs_wspace;
-static struct nevent *          g_rtcs_event_queue[EPA_RTCS_SERVER_QUEUE_SIZE];
-static struct io_buffer         g_storage[2];
+static struct rtcomm_wspace     g_rtcomm_wspace;
+static struct nevent *          g_rtcomm_event_queue[EPA_RTCOMM_QUEUE_SIZE];
 static struct nsched_deferred   g_deferred;
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-struct nepa_define              g_rtcs_epa_define = NEPA_DEF_INIT(
-        &g_rtcs_wspace, state_init, NSM_TYPE_FSM, g_rtcs_event_queue,
-        sizeof(g_rtcs_event_queue), "rt-c server", EPA_RTCOMM_PRIO);
+struct nepa_define              g_rtcomm_epa_define = NEPA_DEF_INIT(
+        &g_rtcomm_wspace, state_init, NSM_TYPE_FSM, g_rtcomm_event_queue,
+        sizeof(g_rtcomm_event_queue), "rtcomm", EPA_RTCOMM_PRIO);
 
-struct nepa                     g_rtcs_epa;
+struct nepa                     g_rtcomm_epa;
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
@@ -78,12 +77,12 @@ static void deferred(void * arg)
 
     static const struct nevent rtcomm_push = NEVENT_INITIALIZER(RTCOMM_PUSH,
             NULL, 0);
-    nepa_send_event_i(&g_rtcs_epa, &rtcomm_push);
+    nepa_send_event_i(&g_rtcomm_epa, &rtcomm_push);
 }
 
 static naction state_init(struct nsm * sm, const nevent * event)
 {
-    struct rtcs_wspace *      ws = nsm_wspace(sm);
+    struct rtcomm_wspace *      ws = nsm_wspace(sm);
 
     switch (nevent_id(event)) {
         case NSM_INIT: {
@@ -105,7 +104,7 @@ static naction state_init(struct nsm * sm, const nevent * event)
 
 static naction state_run(struct nsm * sm, const nevent * event)
 {
-    struct rtcs_wspace *      ws = nsm_wspace(sm);
+    struct rtcomm_wspace *      ws = nsm_wspace(sm);
 
     switch (nevent_id(event)) {
         case RTCOMM_PUSH: {
@@ -139,7 +138,7 @@ void test_timer0_callback(void)
     buffer->sample[0][IO_CHANNEL_Z] = 3;
     sample_idx +=30;
 
-    if (sample_idx == NARRAY_DIMENSION(g_storage[0].sample)) {
+    if (sample_idx == IO_BUFF_SIZE) {
         sample_idx = 0;
         rtcomm_release_new(&g_rtcomm);
         nsched_deferred_do(&g_deferred);

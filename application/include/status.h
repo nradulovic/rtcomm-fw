@@ -22,6 +22,9 @@
 #define STATUS_ASSERT_FAILED			2
 #define STATUS_HW_INIT_FAILED			3
 #define STATUS_RUNTIME_CHECK_FAILED		4
+#define STATUS_RTCOMM_FAILED			5
+#define STATUS_CTRL_FAILED				6
+#define STATUS_RESOURCE_FAILED			7
 
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus
@@ -30,9 +33,14 @@ extern "C" {
 
 /*============================================================  DATA TYPES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
+
+extern uint32_t							g_status_counters[];
+
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 
-void status_panic(uint32_t error);
+void status_warn(uint32_t error);
+
+void status_error(uint32_t error);
 
 /*--------------------------------------------------------  C++ extern end  --*/
 #ifdef __cplusplus

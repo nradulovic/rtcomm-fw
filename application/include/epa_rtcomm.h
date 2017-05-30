@@ -45,10 +45,11 @@ enum rtcomm_epa_events
 {
     RTCOMM_PUSH = EPA_RTCOMM_EVENT_BASE
 };
+
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-extern struct nepa_define g_rtcs_epa_define;
-extern struct nepa g_rtcs_epa;
+extern struct nepa_define g_rtcomm_epa_define;
+extern struct nepa g_rtcomm_epa;
 
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 /*--------------------------------------------------------  C++ extern end  --*/
