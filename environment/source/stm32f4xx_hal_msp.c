@@ -3,8 +3,8 @@
 
 #include "stm32f4xx_hal.h"
 #include "cdi/io.h"
-#include "hwcon.h"
-#include "ctrl.h"
+#include "config/hwcon.h"
+#include "epa_ctrl.h"
 #include "status.h"
 #include "rtcomm.h"
 #include "prim_spi.h"
@@ -27,7 +27,7 @@ static struct gpio_setup		g_gpio_pins[] =
 {
 	/* Outputs */
 	{HWCON_HEARTBEAT_PORT,		HWCON_HEARTBEAT_PIN,	GPIO_MODE_OUTPUT_PP, 	GPIO_NOPULL,	0,						GPIO_PIN_RESET},
-	{HWCON_PROTOCOL_LED_PORT,	HWCON_PROTOCOL_LED_PIN, GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL, 	0,						GPIO_PIN_RESET},
+	{HWCON_PROTOCOL_LED_PORT,	HWCON_PROTOCOL_LED_PIN, GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL, 	0,						GPIO_PIN_SET},
 
 	{HWCON_TRIGGER_OUT_PORT,	HWCON_TRIGGER_OUT_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,						GPIO_PIN_RESET},
 	{HWCON_TRIGGER_IN_PORT,		HWCON_TRIGGER_IN_PIN,	GPIO_MODE_INPUT,		GPIO_NOPULL,	0,						0},
@@ -433,6 +433,8 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef * htim)
 		/* Enable the global Interrupt */
 		HAL_NVIC_EnableIRQ(HWCON_TEST_TIMER0_IRQn);
 	}
+#else
+	(void)htim;
 #endif
 }
 
