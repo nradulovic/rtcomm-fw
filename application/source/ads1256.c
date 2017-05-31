@@ -362,6 +362,7 @@ void ads1256_group_add_chip(struct ads1256_group * group,
 		}
 		current->next = chip;
 	}
+	chip->group = group;
 }
 
 
