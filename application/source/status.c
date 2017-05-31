@@ -11,7 +11,7 @@
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include "status.h"
-#include "hwcon.h"
+#include "config/hwcon.h"
 #include "prim_gpio.h"
 #include "base/bitop.h"
 
