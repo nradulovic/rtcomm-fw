@@ -6,8 +6,8 @@
  */
 
 
-#include "ctrl.h"
-#include "hwcon.h"
+#include "epa_ctrl.h"
+#include "config/hwcon.h"
 #include "rtcomm.h"
 #include "stm32f4xx_hal_callback.h"
 
@@ -66,5 +66,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 	if (htim == &g_test_timer0) {
 		test_timer0_callback();
 	}
+#else
+	(void)htim;
 #endif
 }

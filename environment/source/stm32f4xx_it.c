@@ -10,12 +10,11 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
-#include "ctrl.h"
-#include "hwcon.h"
+#include "epa_ctrl.h"
+#include "config/hwcon.h"
 #include "status.h"
 #include "rtcomm.h"
-#include "ads1256.h"
-#include "probe_channels.h"
+#include "acquisition.h"
 #include "prim_spi.h"
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
@@ -98,7 +97,7 @@ void HWCON_TEST_TIMER0_IRQHandler(void)
 
 void HWCON_PROBE_X_DRDY_EXTI_Handler(void)
 {
-	ads1256_drdy_isr(&g_probe_group);
+	acquisition_probe_drdy_isr(&g_probe);
 }
 
 void HWCON_PROBE_X_SPI_IRQ_Handler(void)
@@ -108,7 +107,7 @@ void HWCON_PROBE_X_SPI_IRQ_Handler(void)
 
 void HWCON_PROBE_Y_DRDY_EXTI_Handler(void)
 {
-	ads1256_drdy_isr(&g_probe_group);
+	acquisition_probe_drdy_isr(&g_probe);
 }
 
 void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
@@ -118,7 +117,7 @@ void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
 
 void HWCON_PROBE_Z_DRDY_EXTI_Handler(void)
 {
-	ads1256_drdy_isr(&g_probe_group);
+	acquisition_probe_drdy_isr(&g_probe);
 }
 
 void HWCON_PROBE_Z_IRQ_Handler(void)

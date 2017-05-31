@@ -2,7 +2,7 @@
 #define __STM32F4xx_IT_H
 
 
-#include <hwcon.h>
+#include "config/hwcon.h"
 
 #ifdef __cplusplus
  extern "C" {
