@@ -40,6 +40,14 @@
 #define EPA_CTRL_QUEUE_SIZE				10
 #define EPA_CTRL_EVENT_BASE				2000
 
+#define EPA_CONTROLLER_PRIO				29
+#define EPA_CONTROLLER_QUEUE_SIZE		10
+#define EPA_CONTROLLER_EVENT_BASE		3000
+
+#define EPA_PROBE_PRIO					28
+#define EPA_PROBE_QUEUE_SIZE			10
+#define EPA_PROBE_EVENT_BASE			4000
+
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus
 extern "C" {

@@ -5,8 +5,8 @@
  *      Author: nenad
  */
 
-#ifndef HW_CONFIG_H_
-#define HW_CONFIG_H_
+#ifndef HWCON_H_
+#define HWCON_H_
 
 #include "stm32f4xx_hal.h"
 
@@ -22,12 +22,12 @@
 #define HWCON_IRQ_PRIO_PROBE_EXTI           1
 #define IRQ_PRIO_TRIGGER_OUT_TIM        2
 #define IRQ_PRIO_SYSTICK                3
-#define IRQ_PRIO_NEON					4
+#define HWCON_IRQ_PRIO_NEON					4
 #define HWCON_IRQ_PRIO_RTCOMM_SPI_DMA_TX             1
 #define IRQ_PRIO_ACQ_AUX_SPI            4
 #define IRQ_PRIO_ACQ_AUX_EXTI           4
 #define IRQ_PRIO_USB_OTG				6
-#define HWCON_IRQ_PRIO_CTRL               8
+#define HWCON_IRQ_PRIO_CTRL               	8
 
 #define HWCON_TEST_TIMER0_IRQ_PRIO		1
 
@@ -41,7 +41,7 @@
 /*
  * --  Protocol status LED ----------------------------------------------------
  */
-#define HWCON_PROTOCOL_LED_CLK_ENABLE()		__HAL_RCC_GPIOD_CLK_ENABLE()
+#define HWCON_PROTOCOL_LED_CLK_ENABLE()		__GPIOD_CLK_ENABLE()
 #define HWCON_PROTOCOL_LED_PORT				GPIOD
 #define HWCON_PROTOCOL_LED_PIN				GPIO_PIN_6
 
@@ -259,9 +259,9 @@
  * --  Control I2C description  -----------------------------------------------
  */
 #define HWCON_CTRL_I2C						I2C1
-#define HWCON_CTRL_I2C_CLK_ENABLE()			__HAL_RCC_I2C1_CLK_ENABLE()
-#define HWCON_CTRL_SDA_CLK_ENABLE()  		__HAL_RCC_GPIOB_CLK_ENABLE()
-#define HWCON_CTRL_SCL_CLK_ENABLE()  		__HAL_RCC_GPIOB_CLK_ENABLE()
+#define HWCON_CTRL_I2C_CLK_ENABLE()			__I2C1_CLK_ENABLE()
+#define HWCON_CTRL_SDA_CLK_ENABLE()  		__GPIOB_CLK_ENABLE()
+#define HWCON_CTRL_SCL_CLK_ENABLE()  		__GPIOB_CLK_ENABLE()
 
 #define HWCON_CTRL_SCL_PIN                	GPIO_PIN_6
 #define HWCON_CTRL_SCL_PORT          		GPIOB
@@ -276,35 +276,40 @@
 #define HWCON_CTRL_I2C_ER_IRQHandler        I2C1_ER_IRQHandler
 
 /*
- * --  Timer for trigger out generation  ----------------------------
+ * --  Timer for trigger out generation  --------------------------------------
  */
-#define TRIGGER_OUT_TIM_CLK_ENABLE()    __HAL_RCC_TIM3_CLK_ENABLE()
-#define TRIGGER_OUT_TIM_CLK_DISABLE()   __HAL_RCC_TIM3_CLK_DISABLE()
+#define TRIGGER_OUT_TIM_CLK_ENABLE()    __TIM3_CLK_ENABLE()
+#define TRIGGER_OUT_TIM_CLK_DISABLE()   __TIM3_CLK_DISABLE()
+/* check this */
+#define TRIGGER_OUT_TIM_APB				1
 #define TRIGGER_OUT_TIM_IRQn			TIM3_IRQn
 #define TRIGGER_OUT_TIM_IRQHandler		TIM3_IRQHandler
 #define TRIGGER_OUT_TIM_INSTANCE		TIM3
 
 /*
- * --  Timer for trigger in protection ----------------------------
+ * --  Timer for trigger in protection ----------------------------------------
  */
-#define TRIGGER_IN_TIM_CLK_ENABLE()     __HAL_RCC_TIM4_CLK_ENABLE()
-#define TRIGGER_IN_TIM_CLK_DISABLE()    __HAL_RCC_TIM4_CLK_DISABLE()
+#define TRIGGER_IN_TIM_CLK_ENABLE()     __TIM4_CLK_ENABLE()
+#define TRIGGER_IN_TIM_CLK_DISABLE()    __TIM4_CLK_DISABLE()
+/* check this */
+#define TRIGGER_IN_TIM_APB				1
 #define TRIGGER_IN_TIM_IRQn             TIM4_IRQn
 #define TRIGGER_IN_TIM_IRQHandler       TIM4_IRQHandler
 #define TRIGGER_IN_TIM_INSTANCE         TIM4
 
 /*
- * --  Test timer --------------------------------------------------
+ * --  Test timer -------------------------------------------------------------
  */
-#define HWCON_TEST_TIMER0				TIM2
-#define HWCON_TEST_TIMER0_IRQn			TIM2_IRQn
-#define HWCON_TEST_TIMER0_CLK_ENABLE()	__HAL_RCC_TIM2_CLK_ENABLE()
-#define HWCON_TEST_TIMER0_APB			1
-#define HWCON_TEST_TIMER0_IRQHandler	TIM2_IRQHandler
+
+#define HWCON_TEST_TIMER0_CLK_ENABLE()		__TIM2_CLK_ENABLE()
+#define HWCON_TEST_TIMER0_APB				1
+#define HWCON_TEST_TIMER0_IRQn				TIM2_IRQn
+#define HWCON_TEST_TIMER0_IRQHandler		TIM2_IRQHandler
+#define HWCON_TEST_TIMER0					TIM2
 
 
 #if defined(TEST_MS_BUS_INCS)
 #define HWCON_TEST_TIMER0_ENABLE
 #endif
 
-#endif /* HW_CONFIG_H_ */
+#endif /* HWCON_H_ */
