@@ -1,7 +1,7 @@
 
-#include <test_timer0.h>
+#include "test_timer0.h"
 #include "stm32f4xx_hal.h"
-#include "hwcon.h"
+#include "config/hwcon.h"
 
 TIM_HandleTypeDef        g_test_timer0;
 
