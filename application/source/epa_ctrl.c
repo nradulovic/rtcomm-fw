@@ -203,6 +203,15 @@ static naction state_wait_config(struct nsm * sm, const nevent * event)
 
 				return (naction_transit_to(sm, state_wait_config));
 			} else {
+				{
+					nepa_send_signal(&g_ctrl_epa, SIG_XFER_COMPLETE);
+
+					ctrl_header_pack(&ws->buff.config.header, sizeof(ws->buff.param));
+					ws->buff.param.en_autorange = 0;
+					ws->buff.param.probe_gain = 0;
+					ws->buff.param.vspeed = 9;
+					ws->buff.param.workmode = IO_WORKMODE_NORMAL;
+				}
 				return (naction_transit_to(sm, state_wait_param));
 			}
 		}
