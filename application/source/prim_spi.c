@@ -188,6 +188,7 @@ void isr_tx_only(struct spi_bus * bus)
             break;
         }
         case STATE_TX_WAIT: {
+        	ncore_dummy_rd(bus->regs->DR);
             bus->state = STATE_TX_COMPLETE;
             break;
         }
@@ -196,7 +197,6 @@ void isr_tx_only(struct spi_bus * bus)
 
             if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
                 /* Deactivate CS pin */
-                delay_us(1);
                 bus->device->cs_deactivate();
             }
             bus->transfer->complete(bus->transfer->arg);
@@ -339,8 +339,8 @@ void spi_transfer_sync(struct spi_device * device,
     }
 
     while (!is_done) {
-        ncore_idle();
-    }
+		ncore_idle();
+	}
 
     if (old_complete) {
         old_complete(old_arg);
