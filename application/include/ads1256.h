@@ -1,21 +1,50 @@
 /*
- * ads1256.h
+ *  teslameter_3mhx-fw - 2017
+ *
+ *  ads1256.h
  *
  *  Created on: Jan 19, 2015
- *      Author: nenad
- */
+ * ----------------------------------------------------------------------------
+ *  This file is part of teslameter_3mhx-fw.
+ *
+ *  teslameter_3mhx-fw is free software: you can redistribute it and/or modify
+ *  it under the terms of the Lesser GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  teslameter_3mhx-fw is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with teslameter_3mhx-fw.  If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------- *//**
+ * @file
+ * @author      Nenad Radulovic
+ * @brief       ADS1256
+ *********************************************************************//** @{ */
 
 #ifndef APPLICATION_INCLUDE_ADS1256_H_
 #define APPLICATION_INCLUDE_ADS1256_H_
 
+/*=========================================================  INCLUDE FILES  ==*/
 
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "prim_spi.h"
 
+/*===============================================================  MACRO's  ==*/
+
 #define ADS1256_SAMPLE_MODE_REQ			0u
 #define ADS1256_SAMPLE_MODE_CONT		1u
+
+/*------------------------------------------------------  C++ extern begin  --*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*============================================================  DATA TYPES  ==*/
 
 struct ads1256_chip_vt
 {
@@ -74,6 +103,9 @@ struct ads1256_group
 								vt;
 };
 
+/*======================================================  GLOBAL VARIABLES  ==*/
+/*===================================================  FUNCTION PROTOTYPES  ==*/
+
 void ads1256_init_chip(struct ads1256_chip * chip, struct spi_bus * bus,
         const struct ads1256_chip_vt * vt);
 
@@ -97,4 +129,13 @@ int ads1256_stop_sampling(struct ads1256_group * group);
 
 void ads1256_drdy_isr(struct ads1256_group * group);
 
+/*--------------------------------------------------------  C++ extern end  --*/
+#ifdef __cplusplus
+}
+#endif
+
+/*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
+/** @endcond *//** @} *//** @} *//*********************************************
+ * END of ads1256.h
+ ******************************************************************************/
 #endif /* APPLICATION_INCLUDE_ADS1256_H_ */

@@ -1,9 +1,29 @@
 /*
- * rtcomm.h
+ *  teslameter_3mhx-fw - 2017
+ *
+ *  main.h
  *
  *  Created on: May 27, 2015
- *      Author: nenad
- */
+ * ----------------------------------------------------------------------------
+ *  This file is part of teslameter_3mhx-fw.
+ *
+ *  teslameter_3mhx-fw is free software: you can redistribute it and/or modify
+ *  it under the terms of the Lesser GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  teslameter_3mhx-fw is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with teslameter_3mhx-fw.  If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------- *//**
+ * @file
+ * @author      Nenad Radulovic
+ * @brief       Real-time communication interface
+ *********************************************************************//** @{ */
 
 #ifndef APPLICATION_INCLUDE_RTCOMM_H_
 #define APPLICATION_INCLUDE_RTCOMM_H_

@@ -1,15 +1,29 @@
 /*
- * ads1256.c
+ *  teslameter_3mhx-fw - 2017
+ *
+ *  ads1256.c
  *
  *  Created on: May 29, 2017
- *//***********************************************************************//**
+ * ----------------------------------------------------------------------------
+ *  This file is part of teslameter_3mhx-fw.
+ *
+ *  teslameter_3mhx-fw is free software: you can redistribute it and/or modify
+ *  it under the terms of the Lesser GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  teslameter_3mhx-fw is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with teslameter_3mhx-fw.  If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------- *//**
  * @file
  * @author      Nenad Radulovic
- * @brief       ADS1256 driver
+ * @brief       Driver for ADS1256 ADC from TI
  *********************************************************************//** @{ */
-/*
- *
- */
 
 /*=========================================================  INCLUDE FILES  ==*/
 
@@ -130,8 +144,6 @@ void delay_us(uint32_t __attribute__((unused)) delay)
 	: "r0", "r1", "r2");
 }
 
-
-
 static uint8_t map_sample_rate_to_reg(uint32_t speed_int)
 {
 	switch (speed_int) {
@@ -154,8 +166,6 @@ static uint8_t map_sample_rate_to_reg(uint32_t speed_int)
 	}
 }
 
-
-
 static void ads_chip_spi_write(struct ads1256_chip * chip)
 {
 	delay_us(ADS_READ_WRITE_DELAY);
@@ -163,16 +173,12 @@ static void ads_chip_spi_write(struct ads1256_chip * chip)
 	delay_us(ADS_READ_WRITE_DELAY);
 }
 
-
-
 static void ads_chip_spi_read(struct ads1256_chip * chip)
 {
 	delay_us(ADS_READ_WRITE_DELAY);
 	spi_read_sync(&chip->device, &chip->transfer);
 	delay_us(ADS_READ_WRITE_DELAY);
 }
-
-
 
 static void ads_chip_write_reg_sync(struct ads1256_chip * chip, uint32_t reg,
          uint8_t data)
@@ -185,8 +191,6 @@ static void ads_chip_write_reg_sync(struct ads1256_chip * chip, uint32_t reg,
  	ads_chip_spi_write(chip);
 }
 
-
-
 static void ads_chip_set_cmd_sync(struct ads1256_chip * chip, uint8_t cmd)
 {
     chip->l_buffer[0] 		 = cmd;
@@ -194,8 +198,6 @@ static void ads_chip_set_cmd_sync(struct ads1256_chip * chip, uint8_t cmd)
     chip->transfer.complete = NULL;
     ads_chip_spi_write(chip);
 }
-
-
 
 static void ads_chip_read_data_sync(struct ads1256_chip * chip)
 {
@@ -208,8 +210,6 @@ static void ads_chip_read_data_sync(struct ads1256_chip * chip)
  	chip->vt->reader(chip->l_buffer);
 }
 
-
-
 static void ads_chip_read_data_async(struct ads1256_chip * chip)
 {
 	chip->transfer.size     = 3;
@@ -217,8 +217,6 @@ static void ads_chip_read_data_async(struct ads1256_chip * chip)
 	chip->transfer.arg      = chip->l_buffer;
 	spi_read_async(&chip->device, &chip->transfer);
 }
-
-
 
 static int ads_chip_apply_config(struct ads1256_chip * chip)
 {
@@ -253,8 +251,6 @@ static int ads_chip_apply_config(struct ads1256_chip * chip)
 	return (0);
 }
 
-
-
 static void ads_chip_sampling_prepare(struct ads1256_chip * chip)
 {
 	if (chip->group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
@@ -262,8 +258,6 @@ static void ads_chip_sampling_prepare(struct ads1256_chip * chip)
 		ads_chip_set_cmd_sync(chip, ADS_CMD_RDATAC);
 	}
 }
-
-
 
 static void ads_chip_sampling_enable(struct ads1256_chip * chip)
 {
@@ -305,8 +299,6 @@ static void ads_group_power_deactivate(struct ads1256_group * group)
 	}
 }
 
-
-
 static int ads_group_apply_config(struct ads1256_group * group)
 {
 	struct ads1256_chip * 		chip;
@@ -325,7 +317,6 @@ static int ads_group_apply_config(struct ads1256_group * group)
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
-
 void ads1256_init_chip(struct ads1256_chip * chip, struct spi_bus * bus,
 		const struct ads1256_chip_vt * vt)
 {
@@ -335,8 +326,6 @@ void ads1256_init_chip(struct ads1256_chip * chip, struct spi_bus * bus,
 	chip->vt = vt;
 }
 
-
-
 void ads1256_group_init(struct ads1256_group * group,
 		const struct ads1256_group_vt * vt)
 {
@@ -344,8 +333,6 @@ void ads1256_group_init(struct ads1256_group * group,
 	group->vt = vt;
 	group->state = ADS_DRV_STATE_INIT;
 }
-
-
 
 void ads1256_group_add_chip(struct ads1256_group * group,
 		struct ads1256_chip * chip)
@@ -365,23 +352,17 @@ void ads1256_group_add_chip(struct ads1256_group * group,
 	chip->group = group;
 }
 
-
-
 void ads1256_set_per_chip_config(struct ads1256_chip * chip,
 		const struct ads1256_chip_config * config)
 {
 	chip->config = config;
 }
 
-
-
 void ads1256_set_group_config(struct ads1256_group * group,
 		const struct ads1256_group_config * config)
 {
 	group->config = config;
 }
-
-
 
 int ads1256_apply_group_config(struct ads1256_group * group)
 {
@@ -435,8 +416,6 @@ int ads1256_apply_group_config(struct ads1256_group * group)
 	return (retval);
 }
 
-
-
 int ads1256_start_sampling(struct ads1256_group * group)
 {
 	struct ads1256_chip * chip;
@@ -467,8 +446,6 @@ int ads1256_start_sampling(struct ads1256_group * group)
 	return (0);
 }
 
-
-
 int ads1256_stop_sampling(struct ads1256_group * group)
 {
 	struct ads1256_chip * chip;
@@ -490,8 +467,6 @@ int ads1256_stop_sampling(struct ads1256_group * group)
 
 	return (0);
 }
-
-
 
 void ads1256_drdy_isr(struct ads1256_group * group)
 {

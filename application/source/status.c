@@ -1,11 +1,28 @@
 /*
- * app_stat.c
+ *  teslameter_3mhx-fw - 2017
+ *
+ *  status.c (former app_stat.c)
  *
  *  Created on: May 26, 2015
- *//***********************************************************************//**
+ * ----------------------------------------------------------------------------
+ *  This file is part of teslameter_3mhx-fw.
+ *
+ *  teslameter_3mhx-fw is free software: you can redistribute it and/or modify
+ *  it under the terms of the Lesser GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  teslameter_3mhx-fw is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with teslameter_3mhx-fw.  If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------- *//**
  * @file
  * @author      Nenad Radulovic
- * @brief       Application status
+ * @brief       Status
  *********************************************************************//** @{ */
 
 /*=========================================================  INCLUDE FILES  ==*/
@@ -68,5 +85,5 @@ void status_error(uint32_t error)
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
 /** @endcond *//** @} *//******************************************************
- * END of app_stat.c
+ * END of status.c
  ******************************************************************************/

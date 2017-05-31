@@ -1,11 +1,29 @@
-/* 
- * teslameter_3mhx-fw - 2017
+/*
+ *  teslameter_3mhx-fw - 2017
  *
- * epa_controller.c
+ *  epa_controller.c
  *
- * Created on: May 30, 2017
- *     Author: nenad
- */
+ *  Created on: May 29, 2017
+ * ----------------------------------------------------------------------------
+ *  This file is part of teslameter_3mhx-fw.
+ *
+ *  teslameter_3mhx-fw is free software: you can redistribute it and/or modify
+ *  it under the terms of the Lesser GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  teslameter_3mhx-fw is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with teslameter_3mhx-fw.  If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------- *//**
+ * @file
+ * @author      Nenad Radulovic
+ * @brief       Controller EPA
+ *********************************************************************//** @{ */
 
 /*=========================================================  INCLUDE FILES  ==*/
 
@@ -38,13 +56,15 @@ static naction state_initialized(struct nsm *, const nevent *);
 /*=======================================================  LOCAL VARIABLES  ==*/
 
 static struct controller_wspace g_controller_wspace;
-static struct nevent *          g_controller_event_queue[EPA_CONTROLLER_QUEUE_SIZE];
+static struct nevent *          g_controller_event_queue[
+									 EPA_CONTROLLER_QUEUE_SIZE];
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
 struct nepa_define              g_controller_epa_define = NEPA_DEF_INIT(
-        &g_controller_wspace, state_init, NSM_TYPE_FSM, g_controller_event_queue,
-        sizeof(g_controller_event_queue), "controller", EPA_CONTROLLER_PRIO);
+        &g_controller_wspace, state_init, NSM_TYPE_FSM,
+		g_controller_event_queue, sizeof(g_controller_event_queue),
+		"controller", EPA_CONTROLLER_PRIO);
 
 struct nepa                     g_controller_epa;
 
