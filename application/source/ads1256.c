@@ -205,7 +205,7 @@ static void ads_chip_read_data_sync(struct ads1256_chip * chip)
  	chip->transfer.complete = NULL;
  	spi_nss_release_active(&chip->device);
  	ads_chip_spi_read(chip);
- 	chip->vt->reader(chip->vt->reader_arg);
+ 	chip->vt->reader(chip->l_buffer);
 }
 
 
@@ -214,34 +214,41 @@ static void ads_chip_read_data_async(struct ads1256_chip * chip)
 {
 	chip->transfer.size     = 3;
 	chip->transfer.complete = chip->vt->reader;
-	chip->transfer.arg      = chip->vt->reader_arg;
+	chip->transfer.arg      = chip->l_buffer;
 	spi_read_async(&chip->device, &chip->transfer);
 }
 
 
 
-static int ads_chip_set_config(struct ads1256_chip * chip,
-		const struct ads1256_chip_config * config)
+static int ads_chip_apply_config(struct ads1256_chip * chip)
 {
 	uint8_t					reg_val;
 
+	if (!chip->config) {
+		return (-2);
+	}
 	/* Setup MUX */
-	reg_val = (uint8_t)(((config->mux_hi & 0x0fu) << 4u) |
-			             (config->mux_lo & 0x0fu));
+	reg_val = ADS_MUX(chip->config->mux_hi, chip->config->mux_lo);
 	ads_chip_write_reg_sync(chip, ADS_REG_MUX, reg_val);
 
 	/* Setup OSC */
-	reg_val = config->enable_ext_osc ? ADS_ADCON_CLKOUT_FCLKIN : 0u;
+	reg_val = chip->config->enable_ext_osc ? ADS_ADCON_CLKOUT_FCLKIN : 0u;
 	ads_chip_write_reg_sync(chip, ADS_REG_ADCON, reg_val);
 
 	/* Setup GPIO */
-	ads_chip_write_reg_sync(chip, ADS_REG_IO, config->gpio);
+	ads_chip_write_reg_sync(chip, ADS_REG_IO, chip->config->gpio);
 
 	/* Setup buffer */
-	reg_val = config->enable_buffer ? ADS_STATUS_BUFEN_ENABLED : 0u;
+	reg_val = chip->config->enable_buffer ? ADS_STATUS_BUFEN_ENABLED : 0u;
 	ads_chip_write_reg_sync(chip, ADS_REG_STATUS, reg_val);
 
-	memcpy(&chip->config, config, sizeof(chip->config));
+	/* Setup sampling frequency */
+	reg_val = map_sample_rate_to_reg(chip->group->config->sampling_rate);
+
+	if (reg_val == 0) {
+		return (-1);
+	}
+	ads_chip_write_reg_sync(chip, ADS_REG_DRATE, reg_val);
 
 	return (0);
 }
@@ -250,7 +257,7 @@ static int ads_chip_set_config(struct ads1256_chip * chip,
 
 static void ads_chip_sampling_prepare(struct ads1256_chip * chip)
 {
-	if (chip->group->config.sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
+	if (chip->group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
 		/* Continuous mode */
 		ads_chip_set_cmd_sync(chip, ADS_CMD_RDATAC);
 	}
@@ -260,9 +267,9 @@ static void ads_chip_sampling_prepare(struct ads1256_chip * chip)
 
 static void ads_chip_sampling_enable(struct ads1256_chip * chip)
 {
-	if (chip->group->config.sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
+	if (chip->group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
 		/* Continuous mode */
-		if (chip->config.is_master) {
+		if (chip->config->is_master) {
 			chip->vt->drdy_isr_enable();
 		}
 	} else {
@@ -278,7 +285,7 @@ static void ads_chip_sampling_disable(struct ads1256_chip * chip)
 
 static void ads_chip_sampling_unprepare(struct ads1256_chip * chip)
 {
-	if (chip->group->config.sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
+	if (chip->group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
 		/* Continuous mode */
 		ads_chip_set_cmd_sync(chip, ADS_CMD_SDATAC);
 	}
@@ -300,25 +307,20 @@ static void ads_group_power_deactivate(struct ads1256_group * group)
 
 
 
-static int ads_group_set_config(struct ads1256_group * group,
-		const struct ads1256_group_config * config)
+static int ads_group_apply_config(struct ads1256_group * group)
 {
 	struct ads1256_chip * 		chip;
+	int							retval = -3;
 
 	for (chip = group->chips; chip != NULL; chip = chip->next) {
-		uint8_t					reg_val;
+		retval = ads_chip_apply_config(chip);
 
-		/* Setup sampling frequency */
-		reg_val = map_sample_rate_to_reg(config->sampling_rate);
-
-		if (reg_val == 0) {
-			return (-1);
+		if (retval != 0) {
+			break;
 		}
-		ads_chip_write_reg_sync(chip, ADS_REG_DRATE, reg_val);
 	}
-	memcpy(&group->config, config, sizeof(group->config));
 
-	return (0);
+	return (retval);
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
@@ -345,7 +347,7 @@ void ads1256_group_init(struct ads1256_group * group,
 
 
 
-int ads1256_group_add_chip(struct ads1256_group * group,
+void ads1256_group_add_chip(struct ads1256_group * group,
 		struct ads1256_chip * chip)
 {
 	if (group->chips == NULL) {
@@ -360,57 +362,33 @@ int ads1256_group_add_chip(struct ads1256_group * group,
 		}
 		current->next = chip;
 	}
-
-	return (0);
 }
 
 
 
-int ads1256_set_per_chip_config(struct ads1256_chip * chip,
+void ads1256_set_per_chip_config(struct ads1256_chip * chip,
 		const struct ads1256_chip_config * config)
 {
-	int							retval = -1;
-	struct ads1256_group * 		group;
-
-	if (chip->group == NULL) {
-		return (-1);
-	}
-	group = chip->group;
-
-	switch (group->state) {
-		case ADS_DRV_STATE_INIT: {
-			break;
-		}
-		case ADS_DRV_STATE_CONFIG: {
-			retval = ads_chip_set_config(chip, config);
-			break;
-		}
-		case ADS_DRV_STATE_SAMPLING: {
-			retval = ads1256_stop_sampling(chip->group);
-
-			if (retval != 0) {
-				break;
-			}
-			retval = ads_chip_set_config(chip, config);
-			break;
-		}
-	default:
-		break;
-	}
-
-	if (retval != 0) {
-		group->state = ADS_DRV_STATE_INIT;
-	}
-
-	return (retval);
+	chip->config = config;
 }
 
 
 
-int ads1256_set_group_config(struct ads1256_group * group,
+void ads1256_set_group_config(struct ads1256_group * group,
 		const struct ads1256_group_config * config)
 {
+	group->config = config;
+}
+
+
+
+int ads1256_apply_group_config(struct ads1256_group * group)
+{
 	int							retval = -1;
+
+	if (!group->config) {
+		return (-2);
+	}
 
 	switch (group->state) {
 		case ADS_DRV_STATE_INIT: {
@@ -425,7 +403,7 @@ int ads1256_set_group_config(struct ads1256_group * group,
 			}
 			/* Wait for reset cycle */
 			HAL_Delay(10);
-			retval = ads_group_set_config(group, config);
+			retval = ads_group_apply_config(group);
 
 			if (retval == 0) {
 				group->state = ADS_DRV_STATE_CONFIG;
@@ -433,7 +411,7 @@ int ads1256_set_group_config(struct ads1256_group * group,
 			break;
 		}
 		case ADS_DRV_STATE_CONFIG: {
-			retval = ads_group_set_config(group, config);
+			retval = ads_group_apply_config(group);
 			break;
 		}
 		case ADS_DRV_STATE_SAMPLING: {
@@ -442,11 +420,11 @@ int ads1256_set_group_config(struct ads1256_group * group,
 			if (retval != 0) {
 				break;
 			}
-			retval = ads_group_set_config(group, config);
+			retval = ads_group_apply_config(group);
 			break;
 		}
-	default:
-		break;
+		default:
+			break;
 	}
 
 	if (retval != 0) {
@@ -471,7 +449,6 @@ int ads1256_start_sampling(struct ads1256_group * group)
 	}
 
 	/* Setup chips for sampling */
-
 	for (chip = group->chips; chip != NULL; chip = chip->next) {
 		ads_chip_sampling_prepare(chip);
 	}
@@ -520,7 +497,7 @@ void ads1256_drdy_isr(struct ads1256_group * group)
 	struct ads1256_chip * chip;
 
 	for (chip = group->chips; chip != NULL; chip = chip->next) {
-		if (group->config.sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
+		if (group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
 			/* Continuous mode */
 			ads_chip_read_data_async(chip);
 		} else {

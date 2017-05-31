@@ -24,7 +24,6 @@ struct ads1256_chip_vt
 	void                     (* nss_activate)(void);
 	void                     (* nss_deactivate)(void);
 	void				     (* reader)(void *);
-	void					  * reader_arg;
 };
 
 struct ads1256_group_vt
@@ -48,27 +47,31 @@ struct ads1256_group_config
 	/* 0 - mode RDATA
 	 * 1 - mode RDATAC
 	 */
-	uint8_t					sampling_mode;
-	uint8_t					sampling_rate;
+	uint8_t						sampling_mode;
+	uint32_t					sampling_rate;
 };
 
 struct ads1256_chip
 {
-    struct spi_transfer     transfer;
-	struct spi_device    	device;
-	const struct ads1256_chip_vt * vt;
-	uint8_t                 l_buffer[4];
-	struct ads1256_chip_config	config;
-	struct ads1256_group *	group;
-	struct ads1256_chip *	next;
+    struct spi_transfer     	transfer;
+	struct spi_device    		device;
+	const struct ads1256_chip_vt *
+								vt;
+	uint8_t                 	l_buffer[4];
+	const struct ads1256_chip_config *
+								config;
+	struct ads1256_group *		group;
+	struct ads1256_chip *		next;
 };
 
 struct ads1256_group
 {
-	struct ads1256_chip *	chips;
-	uint32_t				state;
-	struct ads1256_group_config config;
-	const struct ads1256_group_vt * vt;
+	struct ads1256_chip *		chips;
+	uint32_t					state;
+	const struct ads1256_group_config *
+								config;
+	const struct ads1256_group_vt *
+								vt;
 };
 
 void ads1256_init_chip(struct ads1256_chip * chip, struct spi_bus * bus,
@@ -77,14 +80,16 @@ void ads1256_init_chip(struct ads1256_chip * chip, struct spi_bus * bus,
 void ads1256_group_init(struct ads1256_group * group,
 		const struct ads1256_group_vt * vt);
 
-int ads1256_group_add_chip(struct ads1256_group * group,
+void ads1256_group_add_chip(struct ads1256_group * group,
 		struct ads1256_chip * chip);
 
-int ads1256_set_per_chip_config(struct ads1256_chip * chip,
+void ads1256_set_per_chip_config(struct ads1256_chip * chip,
 		const struct ads1256_chip_config * config);
 
-int ads1256_set_group_config(struct ads1256_group * group,
+void ads1256_set_group_config(struct ads1256_group * group,
 		const struct ads1256_group_config * config);
+
+int ads1256_apply_group_config(struct ads1256_group * group);
 
 int ads1256_start_sampling(struct ads1256_group * group);
 
