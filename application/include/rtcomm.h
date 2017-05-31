@@ -14,8 +14,8 @@
 #include <stdbool.h>
 
 #include "cdi/cdi_rtcomm.h"
-
 #include "stm32f4xx_hal.h"
+#include "neon_eds.h"
 
 /*===============================================================  MACRO's  ==*/
 
@@ -44,6 +44,8 @@ struct rtcomm_handle
 	SPI_HandleTypeDef			spi;
 	DMA_HandleTypeDef			dma_tx;
 	struct rtcomm_stats         counters;
+	struct ntask				sending_task;
+	struct nsched_deferred		invoke_sending_task;
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
@@ -68,19 +70,7 @@ void * rtcomm_request_new(struct rtcomm_handle * handle)
  */
 void rtcomm_release_new(struct rtcomm_handle * handle);
 
-static inline
-void * rtcomm_peek(struct rtcomm_handle * handle)
-{
-    if (handle->state == STATE_IDLE) {
-        handle->state = STATE_PREP_DATA;
-
-        return (handle->storage_b);
-    } else {
-        handle->counters.skipped_err++;
-
-        return (NULL);
-    }
-}
+extern void rtcomm_pre_send(void * buffer);
 
 void rtcomm_emit(struct rtcomm_handle * handle);
 void rtcomm_isr_complete(struct rtcomm_handle * handle);
