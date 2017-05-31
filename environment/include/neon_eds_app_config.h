@@ -31,13 +31,15 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
-#include "hwcon.h"
+#include "config/hwcon.h"
 
 /*===============================================================  MACRO's  ==*/
 
 #define CONFIG_DEBUG                    1
 #define CONFIG_API_VALIDATION           1
 #define CONFIG_ASSERT_INTERNAL          1
+
+#define CONFIG_EVENT_SIZE				1
 
 #define CONFIG_CORE_TIMER_SOURCE        5
 
@@ -51,7 +53,7 @@
 /* NOTE:
  * Some ISR will have higher level of priority than Neon ISRs
  */
-#define CONFIG_CORE_LOCK_MAX_LEVEL      NCORE_CODE_TO_LOCK(IRQ_PRIO_NEON)
+#define CONFIG_CORE_LOCK_MAX_LEVEL      NCORE_CODE_TO_LOCK(HWCON_IRQ_PRIO_NEON)
 
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus
