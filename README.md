@@ -2,22 +2,23 @@
 
 ## How do I get set up? ###
 
+See the below sections to setup the project for STM32F411VE using Eclipse IDE
+and arm-none-eabi toolchain.
+
 ### Defines and macros
   - STM32F411xE
   - USE_HAL_DRIVER
-  - USE_USB_FS
   
 ### Libraries
-  - libm
+  None
   
 ### Source directories
   - remove: neon/eds/port
-  - remove: lib/ST32_USB_Device_Library/Class
+  - remove: neon/drivers
   - remove: application/environment/startup
+  - remove: hal/BSP
+  - remove: hal/CMSIS/{Device,DSP_Lib,Lib,RTOS}
   - add: neon/eds/port/stm32f4xx-none-gcc
-  - add: lib/STM32_USB_Device_Library/Class/CDC
-  - add: application/environment/startup/gcc with filter set only to
-         startup_stm32f411xe.S
 
 ### Linker file
-  - application/environment/linker/stm32f411re_flash.ld
+  - environment/stm32f411re_flash.ld
