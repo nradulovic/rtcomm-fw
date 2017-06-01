@@ -30,32 +30,38 @@
 #include "acquisition.h"
 #include "prim_gpio.h"
 #include "protocol.h"
+#include "prim_spi.h"
 #include "rtcomm.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
+
+struct acquisition
+{
+	uint32_t					buffer_size;
+	uint32_t					current_sample;
+};
+
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
 
 static void axis_x_drdy_isr_enable(void);
 static void axis_x_drdy_isr_disable(void);
 static void axis_x_nss_activate(void);
 static void axis_x_nss_deactivate(void);
-static void axis_x_reader(void *);
 
 static void axis_y_drdy_isr_enable(void);
 static void axis_y_drdy_isr_disable(void);
 static void axis_y_nss_activate(void);
 static void axis_y_nss_deactivate(void);
-static void axis_y_reader(void *);
 
 static void axis_z_drdy_isr_enable(void);
 static void axis_z_drdy_isr_disable(void);
 static void axis_z_nss_activate(void);
 static void axis_z_nss_deactivate(void);
-static void axis_z_reader(void *);
 
 static void power_activate(void);
 static void power_deactivate(void);
+static void probe_sample_finished(const struct ads1256_group * group);
 
 /*=======================================================  LOCAL VARIABLES  ==*/
 
@@ -66,21 +72,18 @@ static const struct ads1256_chip_vt g_probe_chip_vt[IO_PROBE_CHANNELS] =
 		.drdy_isr_disable 	= axis_x_drdy_isr_disable,
         .nss_activate 		= axis_x_nss_activate,
         .nss_deactivate 	= axis_x_nss_deactivate,
-		.reader             = axis_x_reader
     },
     [IO_CHANNEL_Y] = {
 		.drdy_isr_enable 	= axis_y_drdy_isr_enable,
 		.drdy_isr_disable 	= axis_y_drdy_isr_disable,
         .nss_activate		= axis_y_nss_activate,
         .nss_deactivate		= axis_y_nss_deactivate,
-		.reader             = axis_y_reader
     },
 	[IO_CHANNEL_Z] = {
 		.drdy_isr_enable 	= axis_z_drdy_isr_enable,
 		.drdy_isr_disable 	= axis_z_drdy_isr_disable,
 		.nss_activate		= axis_z_nss_activate,
 		.nss_deactivate		= axis_z_nss_deactivate,
-		.reader             = axis_z_reader
     }
 };
 
@@ -95,6 +98,7 @@ static const struct ads1256_group_vt g_probe_group_vt =
 {
 	.power_activate = power_activate,
 	.power_deactivate = power_deactivate,
+	.sample_finished = probe_sample_finished
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
@@ -102,6 +106,7 @@ static const struct ads1256_group_vt g_probe_group_vt =
 struct probe					g_probe;
 struct aux						g_aux;
 struct autorange				g_autorange;
+struct acquisition 				g_acquisition;
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
@@ -120,7 +125,7 @@ static void axis_x_drdy_isr_enable(void)
 
 static void axis_x_drdy_isr_disable(void)
 {
-	NVIC_ClearPendingIRQ(HWCON_PROBE_X_DRDY_EXTI);
+	//NVIC_ClearPendingIRQ(HWCON_PROBE_X_DRDY_EXTI);
     NVIC_DisableIRQ(HWCON_PROBE_X_DRDY_EXTI);
 }
 
@@ -132,14 +137,6 @@ static void axis_x_nss_activate(void)
 static void axis_x_nss_deactivate(void)
 {
     gpio_set(HWCON_PROBE_X_NSS_PORT, HWCON_PROBE_X_NSS_PIN);
-}
-
-static void axis_x_reader(void * arg)
-{
-	(void)arg;
-	/*
-	 * TODO: Write something here
-	 */
 }
 
 /*
@@ -169,14 +166,6 @@ static void axis_y_nss_deactivate(void)
     gpio_set(HWCON_PROBE_Y_NSS_PORT, HWCON_PROBE_Y_NSS_PIN);
 }
 
-static void axis_y_reader(void * arg)
-{
-	(void)arg;
-	/*
-	 * TODO: Write something here
-	 */
-}
-
 /*
  * Axis Z methods
  */
@@ -204,14 +193,6 @@ static void axis_z_nss_deactivate(void)
     gpio_set(HWCON_PROBE_Z_NSS_PORT, HWCON_PROBE_Z_NSS_PIN);
 }
 
-static void axis_z_reader(void * arg)
-{
-	(void)arg;
-	/*
-	 * TODO: Write something here
-	 */
-}
-
 /*
  * Common probe methods
  */
@@ -224,6 +205,24 @@ static void power_activate(void)
 static void power_deactivate(void)
 {
 	gpio_clr(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
+}
+
+static void probe_sample_finished(const struct ads1256_group * group)
+{
+	struct ads1256_chip *		chip;
+
+	struct io_buffer * buffer = rtcomm_request_new(&g_rtcomm);
+
+	for (chip = group->chips; chip != NULL; chip = chip->next) {
+		buffer->sample[g_acquisition.current_sample][chip->id] =
+				ads1256_get_value(chip);
+	}
+	g_acquisition.current_sample++;
+
+	if (g_acquisition.current_sample == g_acquisition.buffer_size) {
+		g_acquisition.current_sample = 0u;
+		rtcomm_release_new(&g_rtcomm);
+	}
 }
 
 /*
@@ -239,13 +238,13 @@ void acquisition_init(void)
 	ads1256_group_init(&g_probe.group, &g_probe_group_vt);
 	ads1256_init_chip(&g_probe.chip[IO_CHANNEL_X],
 			g_probe_chip_spi_bus[IO_CHANNEL_X],
-			&g_probe_chip_vt[IO_CHANNEL_X]);
+			&g_probe_chip_vt[IO_CHANNEL_X], IO_CHANNEL_X);
 	ads1256_init_chip(&g_probe.chip[IO_CHANNEL_Y],
 			g_probe_chip_spi_bus[IO_CHANNEL_Y],
-			&g_probe_chip_vt[IO_CHANNEL_Y]);
+			&g_probe_chip_vt[IO_CHANNEL_Y], IO_CHANNEL_Y);
 	ads1256_init_chip(&g_probe.chip[IO_CHANNEL_Z],
 			g_probe_chip_spi_bus[IO_CHANNEL_Z],
-			&g_probe_chip_vt[IO_CHANNEL_Z]);
+			&g_probe_chip_vt[IO_CHANNEL_Z], IO_CHANNEL_Z);
     rtcomm_init(&g_rtcomm, &buffer[0], &buffer[1], sizeof(buffer[0]));
 }
 
@@ -314,6 +313,15 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 			protocol_from_vspeed(param);
 	retval = ads1256_apply_group_config(&g_probe.group);
 
+	if (retval) {
+		return (retval);
+	}
+	/* NOTE:
+	 * Set buffer size ten times smaller then sample rate. We want 10 buffers
+	 * per second which are sent from firmware to application processor.
+	 */
+	g_acquisition.buffer_size = protocol_from_vspeed(param) / 10u;
+
 	return (retval);
 }
 
@@ -340,6 +348,8 @@ int acquisition_start_sampling(void)
 {
 	int							retval;
 
+	g_acquisition.current_sample = 0u;
+
 	retval = ads1256_start_sampling(&g_probe.group);
 
 	return (retval);
@@ -352,7 +362,11 @@ void rtcomm_pre_send(void * buffer)
 	 *
 	 * Here we can load some shared variables, counters, status etc.
 	 */
-	(void)buffer;
+	struct io_buffer *		io_buffer = buffer;
+	static uint32_t 		frame_count;
+
+	rtcomm_header_pack(&io_buffer->header, sizeof(struct io_buffer),
+			frame_count++);
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
