@@ -38,9 +38,12 @@
 #define STATUS_ASSERT_FAILED			2
 #define STATUS_HW_INIT_FAILED			3
 #define STATUS_RUNTIME_CHECK_FAILED		4
-#define STATUS_RTCOMM_FAILED			5
+#define STATUS_RTCOMM_COMPLETE_ERROR	5
 #define STATUS_CTRL_FAILED				6
 #define STATUS_RESOURCE_FAILED			7
+#define STATUS_ADS_OVR					8
+#define STATUS_RTCOMM_SKIPPED_ERROR		9
+#define STATUS_RTCOMM_TRANSFER_ERROR	10
 
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus

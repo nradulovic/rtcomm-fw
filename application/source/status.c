@@ -48,7 +48,7 @@
 /*=======================================================  LOCAL VARIABLES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-uint32_t 						g_status_counters[7];
+uint32_t 						g_status_counters[10];
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
