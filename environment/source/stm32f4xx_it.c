@@ -98,6 +98,7 @@ void HWCON_TEST_TIMER0_IRQHandler(void)
 void HWCON_PROBE_X_DRDY_EXTI_Handler(void)
 {
 	acquisition_probe_drdy_isr(&g_probe);
+	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_X_DRDY_PIN);
 }
 
 void HWCON_PROBE_X_SPI_IRQ_Handler(void)
@@ -108,6 +109,7 @@ void HWCON_PROBE_X_SPI_IRQ_Handler(void)
 void HWCON_PROBE_Y_DRDY_EXTI_Handler(void)
 {
 	acquisition_probe_drdy_isr(&g_probe);
+	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Y_DRDY_PIN);
 }
 
 void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
@@ -118,6 +120,7 @@ void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
 void HWCON_PROBE_Z_DRDY_EXTI_Handler(void)
 {
 	acquisition_probe_drdy_isr(&g_probe);
+	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Z_DRDY_PIN);
 }
 
 void HWCON_PROBE_Z_IRQ_Handler(void)
