@@ -63,7 +63,6 @@ struct rtcomm_handle
 	enum rtcomm_state			state;
 	SPI_HandleTypeDef			spi;
 	DMA_HandleTypeDef			dma_tx;
-	struct rtcomm_stats         counters;
 	struct ntask				sending_task;
 	struct nsched_deferred		invoke_sending_task;
 };
@@ -84,7 +83,7 @@ void * rtcomm_request_new(struct rtcomm_handle * handle)
 }
 
 /*
- * At this point a producer needs new buffer to write to. It is RTCOMMs
+ * At this point a producer needs ne	w buffer to write to. It is RTCOMMs
  * responsibility to obtain a new buffer while sending the current one to the
  * consumer.
  */
@@ -92,7 +91,6 @@ void rtcomm_release_new(struct rtcomm_handle * handle);
 
 extern void rtcomm_pre_send(void * buffer);
 
-void rtcomm_emit(struct rtcomm_handle * handle);
 void rtcomm_isr_complete(struct rtcomm_handle * handle);
 void rtcomm_isr_error(struct rtcomm_handle * handle);
 

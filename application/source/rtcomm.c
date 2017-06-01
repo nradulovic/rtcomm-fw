@@ -28,9 +28,10 @@
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include "config/hwcon.h"
+#include "prim_gpio.h"
+#include "status.h"
 #include "rtcomm.h"
 #include "status.h"
-#include "prim_gpio.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -78,14 +79,14 @@ static void setup_dma(struct rtcomm_handle * handle)
 	handle->state = STATE_SENDING;
 }
 
-static void * rtcomm_peek(struct rtcomm_handle * handle)
+static void * peek_buffer(struct rtcomm_handle * handle)
 {
     if (handle->state == STATE_IDLE) {
         handle->state = STATE_PREP_DATA;
 
         return (handle->storage_b);
     } else {
-        handle->counters.skipped_err++;
+    	status_warn(STATUS_RTCOMM_SKIPPED_ERROR);
 
         return (NULL);
     }
@@ -98,15 +99,33 @@ static void invoke_sending_task_fn(void * arg)
 	ntask_ready_i(&rtcomm->sending_task);
 }
 
+static void emit_buffer(struct rtcomm_handle * handle)
+{
+	notify_reset();
+
+	if (handle->state == STATE_PREP_DATA) {
+		setup_dma(handle);
+	} else {
+		status_warn(STATUS_RTCOMM_SKIPPED_ERROR);
+        /*
+         * We are trying to send new buffer to consumer but the consumer has not
+         * read us yet. In this case do the following:
+         * - do NOT reset DMA
+         * - do NOT setup DMA since it is already setup
+         */
+	}
+	notify_set();
+}
+
 static void sending_task_fn(struct ntask * task, void * arg)
 {
 	struct rtcomm_handle *		rtcomm = arg;
-    void * 						buffer = rtcomm_peek(rtcomm);
+    void * 						buffer = peek_buffer(rtcomm);
 
     if (buffer) {
     	rtcomm_pre_send(buffer);
     }
-    rtcomm_emit(rtcomm);
+    emit_buffer(rtcomm);
     ntask_block(task);
 }
 
@@ -125,9 +144,6 @@ void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 	handle->storage_b = storage_b;
 	handle->size = size;
 	handle->state = STATE_IDLE;
-	handle->counters.complete_err = 0u;
-	handle->counters.transfer_err = 0u;
-	handle->counters.skipped_err = 0u;
 	ntask_init(&handle->sending_task, &sending_task_define, handle);
 	nsched_deferred_init(&handle->invoke_sending_task, invoke_sending_task_fn,
 			handle);
@@ -147,7 +163,7 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
         handle->storage_a = handle->storage_b;
         handle->storage_b = tmp;
     } else {
-        handle->counters.skipped_err++;
+    	status_warn(STATUS_RTCOMM_SKIPPED_ERROR);
         /*
          * We are trying to send new buffer to consumer but the consumer has not
          * read us yet. In this case do the following:
@@ -158,30 +174,11 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
 }
 
 
-void rtcomm_emit(struct rtcomm_handle * handle)
-{
-	notify_reset();
-
-	if (handle->state == STATE_PREP_DATA) {
-		setup_dma(handle);
-	} else {
-		handle->counters.skipped_err++;
-        /*
-         * We are trying to send new buffer to consumer but the consumer has not
-         * read us yet. In this case do the following:
-         * - do NOT reset DMA
-         * - do NOT setup DMA since it is already setup
-         */
-	}
-	notify_set();
-}
-
-
 
 void rtcomm_isr_complete(struct rtcomm_handle * handle)
 {
 	if (handle->state != STATE_SENDING) {
-		handle->counters.complete_err++;
+		status_warn(STATUS_RTCOMM_COMPLETE_ERROR);
 	}
 	notify_reset();
 	handle->state = STATE_IDLE;
@@ -192,7 +189,7 @@ void rtcomm_isr_complete(struct rtcomm_handle * handle)
 void rtcomm_isr_error(struct rtcomm_handle * handle)
 {
 	if (handle->state != STATE_IDLE) {
-		handle->counters.transfer_err++;
+		status_warn(STATUS_RTCOMM_TRANSFER_ERROR);
 
 		if (handle->state == STATE_SENDING) {
 			unlock_dma(handle);
