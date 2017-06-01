@@ -81,8 +81,7 @@ enum spi_state
 struct spi_bus
 {
     SPI_TypeDef *               regs;
-    size_t                      tx_count;
-    size_t						rx_count;
+    size_t						count;
     struct spi_device *         device;
     struct spi_transfer *       transfer;
     enum spi_state              state;
@@ -166,9 +165,9 @@ void isr_tx_only(struct spi_bus * bus)
 
     switch (bus->state) {
         case STATE_TX_CONT: {
-            bus->regs->DR = bus->transfer->buff[bus->tx_count++];
+            bus->regs->DR = bus->transfer->buff[bus->count++];
 
-            if (bus->transfer->size == bus->tx_count) {
+            if (bus->transfer->size == bus->count) {
                 ncore_dummy_rd(bus->regs->DR);
                 bus->regs->CR2 = SPI_CR2_RXNEIE;
                 bus->state = STATE_TX_WAIT;
@@ -189,6 +188,7 @@ void isr_tx_only(struct spi_bus * bus)
                 bus->device->cs_deactivate();
             }
             bus->transfer->complete(bus->transfer->arg);
+            bus->transfer = NULL;
             break;
         }
         default: {
@@ -203,44 +203,37 @@ static
 void isr_rx_only(struct spi_bus * bus)
 {
     struct spi_transfer * 		transfer = bus->transfer;
-    uint32_t					itflag = bus->regs->SR;
-    uint32_t					itmask = bus->regs->CR2;
+    uint32_t					itflag;
 
-    if (itflag & (SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF)) {
-    	if (itflag & SPI_SR_OVR) {
-    		bus_clear_overrun(bus);
-    		transfer->error = NERROR_DEVICE_FAIL;
-    	} else {
-    		/*
-    		 * TODO: clear other errors
-    		 */
-    		transfer->error = NERROR_DEVICE_NO_COMM;
-    	}
+	itflag = bus->regs->SR;
 
-        return;
-    }
+	if (itflag & SPI_SR_RXNE) {
+		transfer->buff[bus->count++] = (uint8_t)bus->regs->DR;
 
-    if ((itmask & SPI_CR2_RXNEIE) && (itflag & SPI_SR_RXNE)) {
-    	transfer->buff[bus->rx_count++] = (uint8_t)bus->regs->DR;
+		if (bus->count != transfer->size) {
+			bus->regs->DR = 0u;
+		}
+	}
 
-    	if (bus->rx_count == transfer->size) {
-    		bus->regs->CR2 &= ~(SPI_CR2_TXEIE | SPI_CR2_RXNEIE | SPI_CR2_ERRIE);
+	if (itflag & (SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF)) {
+		if (itflag & SPI_SR_OVR) {
+			bus_clear_overrun(bus);
+			transfer->error = NERROR_DEVICE_FAIL;
+		} else {
+			/*
+			 * TODO: clear other errors
+			 */
+			transfer->error = NERROR_DEVICE_NO_COMM;
+		}
+	}
 
-    		if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
-				/* Deactivate CS pin */
-				bus->device->cs_deactivate();
-			}
-			transfer->complete(transfer->arg);
-    	}
-    }
-
-    if ((itmask & SPI_CR2_TXEIE) && (itflag & SPI_SR_TXE)) {
-    	bus->regs->DR = 0u;
-    	bus->tx_count++;
-
-    	if (bus->tx_count == transfer->size) {
-    		bus->regs->CR2 &= ~SPI_CR2_TXEIE;
-    	}
+	if (bus->count == transfer->size) {
+		if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
+			/* Deactivate CS pin */
+			bus->device->cs_deactivate();
+		}
+		bus->regs->CR2 &= ~(SPI_CR2_RXNEIE | SPI_CR2_ERRIE);
+		transfer->complete(transfer->arg);
 	}
 }
 
@@ -258,8 +251,7 @@ void spi_host_write_async(struct spi_bus * bus, struct spi_device * device,
     }
     bus->device   = device;
     bus->transfer = transfer;
-    bus->tx_count = 0u;
-    bus->rx_count = 0u;
+    bus->count = 0u;
     bus->transfer->error = NERROR_NONE;
     bus->isr_handler = isr_tx_only;
 
@@ -270,23 +262,23 @@ void spi_host_write_async(struct spi_bus * bus, struct spi_device * device,
 
     if (transfer->size == 1) {
         bus->state     = STATE_TX_COMPLETE;
-        bus->regs->DR  = transfer->buff[bus->tx_count++];
+        bus->regs->DR  = transfer->buff[bus->count++];
         bus->regs->CR2 = SPI_CR2_RXNEIE;
     } else if (transfer->size == 2) {
         bus->state     = STATE_TX_WAIT;
-        bus->regs->DR  = transfer->buff[bus->tx_count++];
+        bus->regs->DR  = transfer->buff[bus->count++];
 
         while (!is_tx_empty(bus));
 
-        bus->regs->DR  = transfer->buff[bus->tx_count++];
+        bus->regs->DR  = transfer->buff[bus->count++];
         bus->regs->CR2 = SPI_CR2_RXNEIE;
     } else {
         bus->state     = STATE_TX_CONT;
-        bus->regs->DR  = transfer->buff[bus->tx_count++];
+        bus->regs->DR  = transfer->buff[bus->count++];
 
         while (!is_tx_empty(bus));
 
-        bus->regs->DR  = transfer->buff[bus->tx_count++];
+        bus->regs->DR  = transfer->buff[bus->count++];
         bus->regs->CR2 = SPI_CR2_TXEIE;
     }
 }
@@ -299,24 +291,18 @@ void spi_host_read_async(struct spi_bus * bus, struct spi_device * device,
 {
     while (is_busy(bus));
 
-    bus->device   = device;
+    bus->device = device;
+    bus->count = 0u;
+	bus->isr_handler = isr_rx_only;
     bus->transfer = transfer;
-    bus->tx_count = 1u; /* 1u since one byte is always sent */
-    bus->rx_count = 0u;
     bus->transfer->error = NERROR_NONE;
-    bus->isr_handler = isr_rx_only;
-
-    /* Clear any overrun errors */
-    if (bus->regs->SR & SPI_SR_OVR) {
-    	bus_clear_overrun(bus);
-    }
 
     /* Activate CS pin */
     if (!(device->flags & SPI_TRANSFER_CS_DISABLE)) {
         device->cs_activate();
     }
-    bus->regs->DR = 0;
-    bus->regs->CR2 = SPI_CR2_TXEIE | SPI_CR2_RXNEIE | SPI_CR2_ERRIE;
+    bus->regs->DR = 0u;
+    bus->regs->CR2 |= SPI_CR2_RXNEIE | SPI_CR2_ERRIE;
 }
 
 
