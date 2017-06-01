@@ -43,7 +43,7 @@
 
 #define IRQ_PRIO_TRIGGER_IN             1
 #define HWCON_IRQ_PRIO_PROBE_SPI            1
-#define HWCON_IRQ_PRIO_PROBE_EXTI           1
+#define HWCON_IRQ_PRIO_PROBE_EXTI           2
 #define IRQ_PRIO_TRIGGER_OUT_TIM        2
 #define IRQ_PRIO_SYSTICK                3
 #define HWCON_IRQ_PRIO_NEON					4
