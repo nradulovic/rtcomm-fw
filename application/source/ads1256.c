@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "prim_spi.h"
+#include "status.h"
 #include "ads1256.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
@@ -183,9 +184,9 @@ static void ads_chip_spi_read(struct ads1256_chip * chip)
 static void ads_chip_write_reg_sync(struct ads1256_chip * chip, uint32_t reg,
          uint8_t data)
 {
- 	chip->l_buffer[0] = (uint8_t)(ADS_CMD_WREG | reg);
- 	chip->l_buffer[1] = 0;
- 	chip->l_buffer[2] = data;
+ 	chip->l.buffer[0] = (uint8_t)(ADS_CMD_WREG | reg);
+ 	chip->l.buffer[1] = 0;
+ 	chip->l.buffer[2] = data;
  	chip->transfer.size     = 3;
  	chip->transfer.complete = NULL;
  	ads_chip_spi_write(chip);
@@ -193,10 +194,28 @@ static void ads_chip_write_reg_sync(struct ads1256_chip * chip, uint32_t reg,
 
 static void ads_chip_set_cmd_sync(struct ads1256_chip * chip, uint8_t cmd)
 {
-    chip->l_buffer[0] 		 = cmd;
+    chip->l.buffer[0] 		= cmd;
     chip->transfer.size     = 1;
     chip->transfer.complete = NULL;
     ads_chip_spi_write(chip);
+}
+
+static void ads_data_reader(struct ads1256_chip * chip)
+{
+	struct ads1256_group *		group;
+
+	group = chip->group;
+	group->sampled |= chip->id_mask;
+
+	if (group->sampled == group->enabled) {
+		group->sampled = 0u;
+
+		group->vt->sample_finished(group);
+
+		if (group->state == ADS_DRV_STATE_SAMPLING) {
+			group->master->vt->drdy_isr_enable();
+		}
+	}
 }
 
 static void ads_chip_read_data_sync(struct ads1256_chip * chip)
@@ -207,14 +226,15 @@ static void ads_chip_read_data_sync(struct ads1256_chip * chip)
  	chip->transfer.complete = NULL;
  	spi_nss_release_active(&chip->device);
  	ads_chip_spi_read(chip);
- 	chip->vt->reader(chip->l_buffer);
+ 	ads_data_reader(chip);
 }
 
-static void ads_chip_read_data_async(struct ads1256_chip * chip)
+static inline
+void ads_chip_read_data_async(struct ads1256_chip * chip)
 {
 	chip->transfer.size     = 3;
-	chip->transfer.complete = chip->vt->reader;
-	chip->transfer.arg      = chip->l_buffer;
+	chip->transfer.complete = (void (* )(void * ))ads_data_reader;
+	chip->transfer.arg      = chip;
 	spi_read_async(&chip->device, &chip->transfer);
 }
 
@@ -264,6 +284,7 @@ static void ads_chip_sampling_enable(struct ads1256_chip * chip)
 	if (chip->group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
 		/* Continuous mode */
 		if (chip->config->is_master) {
+			chip->group->master = chip;
 			chip->vt->drdy_isr_enable();
 		}
 	} else {
@@ -318,12 +339,13 @@ static int ads_group_apply_config(struct ads1256_group * group)
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 void ads1256_init_chip(struct ads1256_chip * chip, struct spi_bus * bus,
-		const struct ads1256_chip_vt * vt)
+		const struct ads1256_chip_vt * vt, uint32_t id)
 {
 	memset(chip, 0, sizeof(*chip));
     spi_device_init(&chip->device, bus, vt->nss_activate, vt->nss_deactivate);
-	chip->transfer.buff = chip->l_buffer;
+	chip->transfer.buff = chip->l.buffer;
 	chip->vt = vt;
+	chip->id = id;
 }
 
 void ads1256_group_init(struct ads1256_group * group,
@@ -340,7 +362,7 @@ void ads1256_group_add_chip(struct ads1256_group * group,
 	if (group->chips == NULL) {
 		group->chips = chip;
 	} else {
-		struct ads1256_chip * current;
+		struct ads1256_chip * 	current;
 
 		current = group->chips;
 
@@ -350,6 +372,8 @@ void ads1256_group_add_chip(struct ads1256_group * group,
 		current->next = chip;
 	}
 	chip->group = group;
+	chip->id_mask = 0x1u << chip->id;
+	group->enabled |= chip->id_mask;
 }
 
 void ads1256_set_per_chip_config(struct ads1256_chip * chip,
@@ -438,7 +462,6 @@ int ads1256_start_sampling(struct ads1256_group * group)
 
 	for (chip = group->chips; chip != NULL; chip = chip->next) {
 		ads_chip_sampling_enable(chip);
-		chip = chip->next;
 	}
 	group->state = ADS_DRV_STATE_SAMPLING;
 	ads_group_power_activate(group);
@@ -472,12 +495,13 @@ void ads1256_drdy_isr(struct ads1256_group * group)
 {
 	struct ads1256_chip * chip;
 
-	for (chip = group->chips; chip != NULL; chip = chip->next) {
-		if (group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
-			/* Continuous mode */
+	if (group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
+		for (chip = group->chips; chip != NULL; chip = chip->next) {
 			ads_chip_read_data_async(chip);
-		} else {
-			/* Read by command */
+		}
+		group->master->vt->drdy_isr_disable();
+	} else {
+		for (chip = group->chips; chip != NULL; chip = chip->next) {
 			ads_chip_read_data_sync(chip);
 		}
 	}

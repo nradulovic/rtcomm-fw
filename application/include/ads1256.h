@@ -46,19 +46,22 @@ extern "C" {
 #endif
 /*============================================================  DATA TYPES  ==*/
 
+/* Forward declarations */
+struct ads1256_group;
+
 struct ads1256_chip_vt
 {
 	void 					 (* drdy_isr_enable)(void);
 	void					 (* drdy_isr_disable)(void);
 	void                     (* nss_activate)(void);
 	void                     (* nss_deactivate)(void);
-	void				     (* reader)(void *);
 };
 
 struct ads1256_group_vt
 {
 	void                     (* power_activate)(void);
 	void                     (* power_deactivate)(void);
+	void				 	 (* sample_finished)(const struct ads1256_group *);
 };
 
 struct ads1256_chip_config
@@ -86,17 +89,26 @@ struct ads1256_chip
 	struct spi_device    		device;
 	const struct ads1256_chip_vt *
 								vt;
-	uint8_t                 	l_buffer[4];
 	const struct ads1256_chip_config *
 								config;
 	struct ads1256_group *		group;
 	struct ads1256_chip *		next;
+	union local_buffer
+	{
+		uint8_t						buffer[4];
+		uint32_t					integer;
+	} 							l;
+	uint32_t					id;
+	uint32_t					id_mask;
 };
 
 struct ads1256_group
 {
 	struct ads1256_chip *		chips;
+	struct ads1256_chip *		master;
 	uint32_t					state;
+	uint32_t					sampled;
+	uint32_t					enabled;
 	const struct ads1256_group_config *
 								config;
 	const struct ads1256_group_vt *
@@ -107,7 +119,7 @@ struct ads1256_group
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 
 void ads1256_init_chip(struct ads1256_chip * chip, struct spi_bus * bus,
-        const struct ads1256_chip_vt * vt);
+		const struct ads1256_chip_vt * vt, uint32_t id);
 
 void ads1256_group_init(struct ads1256_group * group,
 		const struct ads1256_group_vt * vt);
@@ -126,6 +138,11 @@ int ads1256_apply_group_config(struct ads1256_group * group);
 int ads1256_start_sampling(struct ads1256_group * group);
 
 int ads1256_stop_sampling(struct ads1256_group * group);
+
+static inline int32_t ads1256_get_value(const struct ads1256_chip * chip)
+{
+	return (n_ext_i24((int32_t)(chip->l.integer)));
+}
 
 void ads1256_drdy_isr(struct ads1256_group * group);
 
