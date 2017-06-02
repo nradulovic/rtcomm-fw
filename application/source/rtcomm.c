@@ -151,6 +151,14 @@ void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 
 
 
+void rtcomm_clear(struct rtcomm_handle * handle)
+{
+	memset(handle->storage_a, 0, handle->size);
+	memset(handle->storage_b, 0, handle->size);
+}
+
+
+
 void rtcomm_release_new(struct rtcomm_handle * handle)
 {
     if (handle->state == STATE_IDLE) {

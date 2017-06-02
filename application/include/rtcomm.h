@@ -76,6 +76,8 @@ extern struct rtcomm_handle		g_rtcomm;
 void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 		void * storage_b, uint16_t size);
 
+void rtcomm_clear(struct rtcomm_handle * handle);
+
 static inline
 void * rtcomm_request_new(struct rtcomm_handle * handle)
 {

@@ -322,6 +322,9 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 	 */
 	g_acquisition.buffer_size = protocol_from_vspeed(param) / 10u;
 
+	/* Clear main buffers before using them */
+	rtcomm_clear(&g_rtcomm);
+
 	return (retval);
 }
 
