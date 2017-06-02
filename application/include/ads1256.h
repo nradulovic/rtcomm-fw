@@ -141,7 +141,7 @@ int ads1256_stop_sampling(struct ads1256_group * group);
 
 static inline int32_t ads1256_get_value(const struct ads1256_chip * chip)
 {
-	return (n_ext_i24((int32_t)(chip->l.integer)));
+	return (n_ext_i24((int32_t)(__REV(chip->l.integer) >> 8u)));
 }
 
 void ads1256_drdy_isr(struct ads1256_group * group);
