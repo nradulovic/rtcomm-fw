@@ -27,17 +27,22 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include <string.h>
+
 #include "acquisition.h"
 #include "prim_gpio.h"
 #include "protocol.h"
 #include "prim_spi.h"
 #include "rtcomm.h"
+#include "cdi/io.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
 
 struct acquisition
 {
+	struct io_ctrl_config		config;
+	struct io_ctrl_param 		param;
 	uint32_t					buffer_size;
 	uint32_t					current_sample;
 };
@@ -286,6 +291,10 @@ int acquisition_probe_set_config(const struct io_ctrl_config * config)
 	}
 	retval = ads1256_apply_group_config(&g_probe.group);
 
+	if (!retval) {
+		memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
+	}
+
 	return (retval);
 }
 
@@ -324,6 +333,8 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 
 	/* Clear main buffers before using them */
 	rtcomm_clear(&g_rtcomm);
+
+	memcpy(&g_acquisition.param, param, sizeof(g_acquisition.param));
 
 	return (retval);
 }
@@ -371,9 +382,8 @@ void rtcomm_pre_send(void * buffer)
 	rtcomm_header_pack(&io_buffer->header, sizeof(struct io_buffer),
 			frame_count++);
 	rtcomm_footer_pack(&io_buffer->footer, &io_buffer->header);
-	io_buffer->param.en_autorange = g_autorange.is_enabled;
-	io_buffer->param.probe_gain = 0u; /* TODO: This is still no supported. */
-	io_buffer->param.vspeed =
+	memcpy(&io_buffer->param, &g_acquisition.param.data,
+			sizeof(io_buffer->param));
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

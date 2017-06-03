@@ -56,7 +56,7 @@ uint8_t protocol_from_probe_mux_lo(const struct io_ctrl_config * config)
 
 uint8_t protocol_from_workmode(const struct io_ctrl_param * param)
 {
-	switch (param->workmode) {
+	switch (param->data.workmode) {
 		case IO_WORKMODE_NORMAL: 			return (ADS1256_SAMPLE_MODE_CONT);
 		case IO_WORKMODE_TRIG_CONTINUOUS: 	return (ADS1256_SAMPLE_MODE_CONT);
 		case IO_WORKMODE_TRIG_SINGLE_SHOT:	return (ADS1256_SAMPLE_MODE_CONT);
@@ -69,7 +69,7 @@ uint32_t protocol_from_vspeed(const struct io_ctrl_param * param)
 	/*
 	 * This follows JNI document.
 	 */
-	switch (param->vspeed) {
+	switch (param->data.vspeed) {
 		case 1:  	return (10);
 		case 4:		return (30);
 		case 5:		return (50);
@@ -86,14 +86,9 @@ uint32_t protocol_from_vspeed(const struct io_ctrl_param * param)
 	}
 }
 
-uint8_t protocol_to_vspeed(const struct io_ctrl_param * param)
-{
-
-}
-
 bool protocol_from_en_autorange(const struct io_ctrl_param * param)
 {
-	return (param->en_autorange == 1u ? true : false);
+	return (param->data.en_autorange == 1u ? true : false);
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
