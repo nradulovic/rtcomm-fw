@@ -90,7 +90,7 @@ static void ctrl_rx_complete(struct ctrl * ctrl, void * buffer, uint16_t size)
 	error = nepa_send_event_i(&g_ctrl_epa, &sig_xfer_complete);
 
 	if (error) {
-		status_warn(STATUS_RESOURCE_FAILED);
+		status_warn(STATUS_NO_RESOURCE_ERR);
 	}
 }
 
@@ -128,9 +128,9 @@ static void ctrl_error(struct ctrl * ctrl, uint32_t error)
 	}
 
 	if (neon_error) {
-		status_warn(STATUS_RESOURCE_FAILED);
+		status_warn(STATUS_NO_RESOURCE_ERR);
 	}
-	status_warn(STATUS_CTRL_FAILED);
+	status_warn(STATUS_CTRL_COMM_ERR);
 }
 
 static void ctrl_start_rx(struct ctrl * ctrl, void * buffer, uint16_t size)
@@ -206,7 +206,7 @@ static naction state_wait_config(struct nsm * sm, const nevent * event)
 			is_valid = ctrl_header_unpack(&ws->buff.config.header, &dummy);
 
 			if (is_valid == false) {
-				status_warn(STATUS_CTRL_FAILED);
+				status_warn(STATUS_CTRL_DATA_ERR);
 
 				return (naction_transit_to(sm, state_wait_config));
 			}
@@ -219,7 +219,7 @@ static naction state_wait_config(struct nsm * sm, const nevent * event)
 			}
 
 			if (neon_error) {
-				status_warn(STATUS_RESOURCE_FAILED);
+				status_warn(STATUS_NO_RESOURCE_ERR);
 
 				return (naction_transit_to(sm, state_wait_config));
 			} else {
@@ -273,7 +273,7 @@ static naction state_wait_param(struct nsm * sm, const nevent * event)
 			is_valid = ctrl_header_unpack(&ws->buff.config.header, &dummy);
 
 			if (is_valid == false) {
-				status_warn(STATUS_CTRL_FAILED);
+				status_warn(STATUS_CTRL_DATA_ERR);
 
 				return (naction_transit_to(sm, state_wait_param));
 			}
@@ -285,7 +285,7 @@ static naction state_wait_param(struct nsm * sm, const nevent * event)
 			}
 
 			if (neon_error) {
-				status_warn(STATUS_RESOURCE_FAILED);
+				status_warn(STATUS_NO_RESOURCE_ERR);
 			}
 
 			return (naction_transit_to(sm, state_wait_param));

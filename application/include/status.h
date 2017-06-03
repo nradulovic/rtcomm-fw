@@ -34,16 +34,20 @@
 
 /*===============================================================  MACRO's  ==*/
 
-#define STATUS_UNHANDLED_EXCP			1
-#define STATUS_ASSERT_FAILED			2
-#define STATUS_HW_INIT_FAILED			3
-#define STATUS_RUNTIME_CHECK_FAILED		4
-#define STATUS_RTCOMM_COMPLETE_ERROR	5
-#define STATUS_CTRL_FAILED				6
-#define STATUS_RESOURCE_FAILED			7
-#define STATUS_ADS_OVR					8
-#define STATUS_RTCOMM_SKIPPED_ERROR		9
-#define STATUS_RTCOMM_TRANSFER_ERROR	10
+enum status_msg
+{
+	STATUS_FATAL_UNHANDLED_EXCP,
+	STATUS_FATAL_HW_INIT_FAILED,
+	STATUS_RUNTIME_CHECK_FAILED,
+	STATUS_CTRL_COMM_ERR,
+	STATUS_CTRL_DATA_ERR,
+	STATUS_ADS_ERR,
+	STATUS_NO_RESOURCE_ERR,
+	STATUS_RTCOMM_SKIPPED_ERR,
+	STATUS_RTCOMM_TRANSFER_ERR,
+	STATUS_RTCOMM_COMPLETE_ERR,
+	_STATUS_LAST_ID
+};
 
 /*-------------------------------------------------------  C++ extern base  --*/
 #ifdef __cplusplus
@@ -53,13 +57,13 @@ extern "C" {
 /*============================================================  DATA TYPES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-extern uint32_t							g_status_counters[];
+extern enum status_msg			g_status_counters[];
 
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 
-void status_warn(uint32_t error);
+void status_warn(enum status_msg warn);
 
-void status_error(uint32_t error);
+void status_error(enum status_msg error);
 
 /*--------------------------------------------------------  C++ extern end  --*/
 #ifdef __cplusplus

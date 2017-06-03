@@ -112,7 +112,7 @@ void setup_clock(void)
 	RCC_OscInitStruct.PLL.PLLQ       = 4;
 
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		status_error(STATUS_HW_INIT_FAILED);
+		status_error(STATUS_FATAL_HW_INIT_FAILED);
 	}
 
 	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -126,7 +126,7 @@ void setup_clock(void)
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
-		status_error(STATUS_HW_INIT_FAILED);
+		status_error(STATUS_FATAL_HW_INIT_FAILED);
 	}
 
     /* --  Heartbeat LED GPIO  ---------------------------------------------- */

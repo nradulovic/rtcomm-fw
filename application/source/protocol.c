@@ -86,6 +86,11 @@ uint32_t protocol_from_vspeed(const struct io_ctrl_param * param)
 	}
 }
 
+uint8_t protocol_to_vspeed(const struct io_ctrl_param * param)
+{
+
+}
+
 bool protocol_from_en_autorange(const struct io_ctrl_param * param)
 {
 	return (param->en_autorange == 1u ? true : false);

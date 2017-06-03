@@ -33,32 +33,32 @@
 
 void NMI_Handler(void)
 {
-    status_error(STATUS_UNHANDLED_EXCP);
+    status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void HardFault_Handler(void)
 {
-	status_error(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void MemManage_Handler(void)
 {
-	status_error(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void BusFault_Handler(void)
 {
-	status_error(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void UsageFault_Handler(void)
 {
-	status_error(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void SVC_Handler(void)
 {
-	status_error(STATUS_UNHANDLED_EXCP);
+	status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void DebugMon_Handler(void)

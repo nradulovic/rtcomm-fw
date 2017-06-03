@@ -32,6 +32,7 @@
 #include "status.h"
 #include "rtcomm.h"
 #include "status.h"
+#include <string.h>
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -74,7 +75,7 @@ static void setup_dma(struct rtcomm_handle * handle)
 	error = HAL_SPI_Transmit_DMA(&handle->spi, handle->storage_b, handle->size);
 
 	if (error) {
-		status_error(STATUS_RUNTIME_CHECK_FAILED);
+		status_error(STATUS_RTCOMM_TRANSFER_ERR);
 	}
 	handle->state = STATE_SENDING;
 }
@@ -86,7 +87,7 @@ static void * peek_buffer(struct rtcomm_handle * handle)
 
         return (handle->storage_b);
     } else {
-    	status_warn(STATUS_RTCOMM_SKIPPED_ERROR);
+    	status_warn(STATUS_RTCOMM_SKIPPED_ERR);
 
         return (NULL);
     }
@@ -106,7 +107,7 @@ static void emit_buffer(struct rtcomm_handle * handle)
 	if (handle->state == STATE_PREP_DATA) {
 		setup_dma(handle);
 	} else {
-		status_warn(STATUS_RTCOMM_SKIPPED_ERROR);
+		status_warn(STATUS_RTCOMM_SKIPPED_ERR);
         /*
          * We are trying to send new buffer to consumer but the consumer has not
          * read us yet. In this case do the following:
@@ -171,10 +172,10 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
         handle->storage_a = handle->storage_b;
         handle->storage_b = tmp;
     } else {
-    	status_warn(STATUS_RTCOMM_SKIPPED_ERROR);
+    	status_warn(STATUS_RTCOMM_SKIPPED_ERR);
         /*
-         * We are trying to send new buffer to consumer but the consumer has not
-         * read us yet. In this case do the following:
+         * We are trying to publish new buffer but the consumer has not
+         * read the previous buffer yet. In this case do the following:
          * - return the pointer to the same buffer (no swap)
          */
     }
@@ -186,7 +187,7 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
 void rtcomm_isr_complete(struct rtcomm_handle * handle)
 {
 	if (handle->state != STATE_SENDING) {
-		status_warn(STATUS_RTCOMM_COMPLETE_ERROR);
+		status_warn(STATUS_RTCOMM_COMPLETE_ERR);
 	}
 	notify_reset();
 	handle->state = STATE_IDLE;
@@ -197,7 +198,7 @@ void rtcomm_isr_complete(struct rtcomm_handle * handle)
 void rtcomm_isr_error(struct rtcomm_handle * handle)
 {
 	if (handle->state != STATE_IDLE) {
-		status_warn(STATUS_RTCOMM_TRANSFER_ERROR);
+		status_warn(STATUS_RTCOMM_TRANSFER_ERR);
 
 		if (handle->state == STATE_SENDING) {
 			unlock_dma(handle);

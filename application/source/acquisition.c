@@ -370,6 +370,10 @@ void rtcomm_pre_send(void * buffer)
 
 	rtcomm_header_pack(&io_buffer->header, sizeof(struct io_buffer),
 			frame_count++);
+	rtcomm_footer_pack(&io_buffer->footer, &io_buffer->header);
+	io_buffer->param.en_autorange = g_autorange.is_enabled;
+	io_buffer->param.probe_gain = 0u; /* TODO: This is still no supported. */
+	io_buffer->param.vspeed =
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

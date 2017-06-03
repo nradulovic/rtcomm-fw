@@ -48,22 +48,21 @@
 /*=======================================================  LOCAL VARIABLES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-uint32_t 						g_status_counters[10];
+enum status_msg 				g_status_counters[_STATUS_LAST_ID];
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
-void status_warn(uint32_t error)
+void status_warn(enum status_msg warn)
 {
-	if (error > NARRAY_DIMENSION(g_status_counters)) {
-		g_status_counters[STATUS_RUNTIME_CHECK_FAILED]++;
-		g_status_counters[STATUS_UNHANDLED_EXCP]++;
+	if (warn > NARRAY_DIMENSION(g_status_counters)) {
+		g_status_counters[STATUS_FATAL_UNHANDLED_EXCP]++;
 	} else {
-		g_status_counters[error]++;
+		g_status_counters[warn]++;
 	}
 }
 
-void status_error(uint32_t error)
+void status_error(enum status_msg error)
 {
 	uint32_t					counter;
     volatile uint32_t           idx;
