@@ -56,15 +56,32 @@ extern "C" {
 
 /*============================================================  DATA TYPES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
-
-extern enum status_msg			g_status_counters[];
-
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 
 void status_warn(enum status_msg warn);
 
 void status_error(enum status_msg error);
 
+static inline
+uint32_t status_get(enum status_msg stat)
+{
+	extern uint32_t 			g_status_counters[];
+
+	return (g_status_counters[stat]);
+}
+
+static inline
+uint32_t status_get_total(void)
+{
+	uint32_t					stat_id;
+	uint32_t					retval;
+
+	for (stat_id = 0, retval =0; stat_id < _STATUS_LAST_ID; stat_id++) {
+		retval += status_get(stat_id);
+	}
+
+	return (retval);
+}
 /*--------------------------------------------------------  C++ extern end  --*/
 #ifdef __cplusplus
 }

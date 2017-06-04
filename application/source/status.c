@@ -48,7 +48,7 @@
 /*=======================================================  LOCAL VARIABLES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-enum status_msg 				g_status_counters[_STATUS_LAST_ID];
+uint32_t 						g_status_counters[_STATUS_LAST_ID];
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/

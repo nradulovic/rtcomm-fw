@@ -33,6 +33,7 @@
 #include "prim_gpio.h"
 #include "protocol.h"
 #include "prim_spi.h"
+#include "status.h"
 #include "rtcomm.h"
 #include "cdi/io.h"
 
@@ -371,17 +372,35 @@ int acquisition_start_sampling(void)
 
 void rtcomm_pre_send(void * buffer)
 {
-	/*
-	 * TODO: Prepare buffer here just before sending.
-	 *
-	 * Here we can load some shared variables, counters, status etc.
-	 */
 	struct io_buffer *		io_buffer = buffer;
 	static uint32_t 		frame_count;
 
+	/* Update header and footer */
 	rtcomm_header_pack(&io_buffer->header, sizeof(struct io_buffer),
 			frame_count++);
 	rtcomm_footer_pack(&io_buffer->footer, &io_buffer->header);
+
+	/* Get status */
+	io_buffer->stats.runtime_check_failed =
+			status_get(STATUS_RUNTIME_CHECK_FAILED);
+	io_buffer->stats.total_errors =
+			status_get_total();
+	io_buffer->stats.ctrl_comm_err =
+			status_get(STATUS_CTRL_COMM_ERR);
+	io_buffer->stats.ctrl_data_err =
+			status_get(STATUS_CTRL_DATA_ERR);
+	io_buffer->stats.ads_err =
+			status_get(STATUS_ADS_ERR);
+	io_buffer->stats.no_resource_err =
+			status_get(STATUS_NO_RESOURCE_ERR);
+	io_buffer->stats.rtcomm_skipped_err =
+			status_get(STATUS_RTCOMM_SKIPPED_ERR);
+	io_buffer->stats.rtcomm_transfer_err =
+			status_get(STATUS_RTCOMM_TRANSFER_ERR);
+	io_buffer->stats.rtcomm_complete_err =
+			status_get(STATUS_RTCOMM_COMPLETE_ERR);
+
+	/* Return parameters that were used for sampling */
 	memcpy(&io_buffer->param, &g_acquisition.param.data,
 			sizeof(io_buffer->param));
 }
