@@ -50,6 +50,7 @@ struct acquisition
 
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
 
+/* -- Probe callbacks for ADS1256 Module -- */
 static void axis_x_drdy_isr_enable(void);
 static void axis_x_drdy_isr_disable(void);
 static void axis_x_nss_activate(void);
@@ -65,13 +66,22 @@ static void axis_z_drdy_isr_disable(void);
 static void axis_z_nss_activate(void);
 static void axis_z_nss_deactivate(void);
 
-static void power_activate(void);
-static void power_deactivate(void);
+static void probe_power_activate(void);
+static void probe_power_deactivate(void);
 static void probe_sample_finished(const struct ads1256_group * group);
+
+/* -- AUX ADC callbacks for ADS1256 Module -- */
+static void aux_drdy_isr_enable(void);
+static void aux_drdy_isr_disable(void);
+static void aux_nss_activate(void);
+static void aux_nss_deactivate(void);
+
+static void aux_sample_finished(const struct ads1256_group * group);
 
 /*=======================================================  LOCAL VARIABLES  ==*/
 
-static const struct ads1256_chip_vt g_probe_chip_vt[IO_PROBE_CHANNELS] =
+static const struct ads1256_chip_vt
+								g_probe_chip_vt[IO_PROBE_CHANNELS] =
 {
     [IO_CHANNEL_X] = {
         .drdy_isr_enable 	= axis_x_drdy_isr_enable,
@@ -100,10 +110,11 @@ static struct spi_bus * const 	g_probe_chip_spi_bus[IO_PROBE_CHANNELS] =
 	[IO_CHANNEL_Z] = &HWCON_PROBE_Z_SPI,
 };
 
-static const struct ads1256_group_vt g_probe_group_vt =
+static const struct ads1256_group_vt
+								g_probe_group_vt =
 {
-	.power_activate = power_activate,
-	.power_deactivate = power_deactivate,
+	.power_activate = probe_power_activate,
+	.power_deactivate = probe_power_deactivate,
 	.sample_finished = probe_sample_finished
 };
 
@@ -117,7 +128,7 @@ struct acquisition 				g_acquisition;
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
 /*
- * Axis X methods
+ * Probe axis X methods
  */
 
 static void axis_x_drdy_isr_enable(void)
@@ -146,7 +157,7 @@ static void axis_x_nss_deactivate(void)
 }
 
 /*
- * Axis Y methods
+ * Probe axis Y methods
  */
 
 static void axis_y_drdy_isr_enable(void)
@@ -158,7 +169,6 @@ static void axis_y_drdy_isr_enable(void)
 
 static void axis_y_drdy_isr_disable(void)
 {
-	NVIC_ClearPendingIRQ(HWCON_PROBE_Y_DRDY_EXTI);
     NVIC_DisableIRQ(HWCON_PROBE_Y_DRDY_EXTI);
 }
 
@@ -173,7 +183,7 @@ static void axis_y_nss_deactivate(void)
 }
 
 /*
- * Axis Z methods
+ * Probe axis Z methods
  */
 
 static void axis_z_drdy_isr_enable(void)
@@ -185,7 +195,6 @@ static void axis_z_drdy_isr_enable(void)
 
 static void axis_z_drdy_isr_disable(void)
 {
-	NVIC_ClearPendingIRQ(HWCON_PROBE_Z_DRDY_EXTI);
     NVIC_DisableIRQ(HWCON_PROBE_Z_DRDY_EXTI);
 }
 
@@ -200,15 +209,15 @@ static void axis_z_nss_deactivate(void)
 }
 
 /*
- * Common probe methods
+ * Probe common methods
  */
 
-static void power_activate(void)
+static void probe_power_activate(void)
 {
 	gpio_set(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
 }
 
-static void power_deactivate(void)
+static void probe_power_deactivate(void)
 {
 	gpio_clr(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
 }
@@ -232,8 +241,43 @@ static void probe_sample_finished(const struct ads1256_group * group)
 }
 
 /*
- * Other helper functions
+ * Aux ADC methods
  */
+static void aux_drdy_isr_enable(void)
+{
+	/*
+	 * TODO: Fill this with appropriate code
+	 */
+}
+
+static void aux_drdy_isr_disable(void)
+{
+	/*
+	 * TODO: Fill this with appropriate code
+	 */
+}
+
+static void aux_nss_activate(void)
+{
+	/*
+	 * TODO: Fill this with appropriate code
+	 */
+}
+
+static void aux_nss_deactivate(void)
+{
+	/*
+	 * TODO: Fill this with appropriate code
+	 */
+}
+
+static void aux_sample_finished(const struct ads1256_group * group)
+{
+	(void)group;
+	/*
+	 * TODO: Fill this with appropriate code
+	 */
+}
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
