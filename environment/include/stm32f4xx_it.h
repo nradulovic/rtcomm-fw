@@ -36,6 +36,9 @@ void HWCON_PROBE_Y_SPI_IRQ_Handler(void);
 void HWCON_PROBE_Z_DRDY_EXTI_Handler(void);
 void HWCON_PROBE_Z_IRQ_Handler(void);
 
+void HWCON_AUX_DRDY_EXTI_Handler(void);
+void HWCON_AUX_SPI_IRQ_Handler(void);
+
 void HWCON_CTRL_I2C_EV_IRQHandler(void);
 void HWCON_CTRL_I2C_ER_IRQHandler(void);
 

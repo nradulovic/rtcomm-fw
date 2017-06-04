@@ -128,6 +128,20 @@ void HWCON_PROBE_Z_IRQ_Handler(void)
     spi_bus_isr(&HWCON_PROBE_Z_SPI);
 }
 
+void HWCON_AUX_DRDY_EXTI_Handler(void)
+{
+	/*
+	 * TODO: Fill this with appropriate ISR
+	 */
+}
+
+void HWCON_AUX_SPI_IRQ_Handler(void)
+{
+	/*
+	 * TODO: Fill this with appropriate ISR
+	 */
+}
+
 void HWCON_CTRL_I2C_EV_IRQHandler(void)
 {
 	HAL_I2C_EV_IRQHandler(&g_ctrl.i2c);

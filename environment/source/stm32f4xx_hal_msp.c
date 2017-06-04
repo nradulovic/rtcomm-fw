@@ -25,42 +25,61 @@ struct gpio_setup
 
 static struct gpio_setup		g_gpio_pins[] =
 {
-	/* Outputs */
+/* +---------------------------+-----------------------+-----------------------+---------------+-----------------------+---------------+ */
+/* | GPIO Port                 | GPIO Pin              | Mode                  | Pull up/down  | Alternate function    | Default state | */
+/* +---------------------------+-----------------------+-----------------------+---------------+-----------------------+---------------+ */
+
+	/* LED indicators */
 	{HWCON_HEARTBEAT_PORT,		HWCON_HEARTBEAT_PIN,	GPIO_MODE_OUTPUT_PP, 	GPIO_NOPULL,	0,						GPIO_PIN_RESET},
 	{HWCON_PROTOCOL_LED_PORT,	HWCON_PROTOCOL_LED_PIN, GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL, 	0,						GPIO_PIN_SET},
 
+	/* Trigger pins */
 	{HWCON_TRIGGER_OUT_PORT,	HWCON_TRIGGER_OUT_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,						GPIO_PIN_RESET},
 	{HWCON_TRIGGER_IN_PORT,		HWCON_TRIGGER_IN_PIN,	GPIO_MODE_INPUT,		GPIO_NOPULL,	0,						0},
 
-	/* Alternate function */
+	/* CDI RTCOMM bus pins */
 	{HWCON_RTCOMM_MOSI_PORT,	HWCON_RTCOMM_MOSI_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLUP,	HWCON_RTCOMM_MOSI_AF,	0},
 	{HWCON_RTCOMM_MISO_PORT,	HWCON_RTCOMM_MISO_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLUP,	HWCON_RTCOMM_MISO_AF,	0},
 	{HWCON_RTCOMM_SCK_PORT,		HWCON_RTCOMM_SCK_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLUP,	HWCON_RTCOMM_SCK_AF,	0},
 	{HWCON_RTCOMM_NSS_PORT,		HWCON_RTCOMM_NSS_PIN,	GPIO_MODE_AF_PP,		GPIO_NOPULL,	HWCON_RTCOMM_NSS_AF,	0},
 	{HWCON_RTCOMM_RRQ_PORT, 	HWCON_RTCOMM_RRQ_PIN,	GPIO_MODE_OUTPUT_PP, 	GPIO_NOPULL,	0,						GPIO_PIN_RESET},
 
+	/* Probe common pins */
 	{HWCON_PROBE_SYNC_PORT,		HWCON_PROBE_SYNC_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,  					GPIO_PIN_RESET},
 
+	/* Probe X axis pins */
 	{HWCON_PROBE_X_MOSI_PORT,	HWCON_PROBE_X_MOSI_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_X_MOSI_AF,	0},
 	{HWCON_PROBE_X_MISO_PORT,	HWCON_PROBE_X_MISO_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_X_MISO_AF,	0},
 	{HWCON_PROBE_X_SCK_PORT,	HWCON_PROBE_X_SCK_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_X_SCK_AF,	0},
 	{HWCON_PROBE_X_NSS_PORT, 	HWCON_PROBE_X_NSS_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,						GPIO_PIN_SET},
 	{HWCON_PROBE_X_DRDY_PORT,	HWCON_PROBE_X_DRDY_PIN,	GPIO_MODE_IT_FALLING,	GPIO_NOPULL,	0,						0},
 
+	/* Probe Y axis pins */
 	{HWCON_PROBE_Y_MOSI_PORT,	HWCON_PROBE_Y_MOSI_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_Y_MOSI_AF,	0},
 	{HWCON_PROBE_Y_MISO_PORT,	HWCON_PROBE_Y_MISO_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_Y_MISO_AF,	0},
 	{HWCON_PROBE_Y_SCK_PORT,	HWCON_PROBE_Y_SCK_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_Y_SCK_AF,	0},
 	{HWCON_PROBE_Y_NSS_PORT, 	HWCON_PROBE_Y_NSS_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,						GPIO_PIN_SET},
 	{HWCON_PROBE_Y_DRDY_PORT,	HWCON_PROBE_Y_DRDY_PIN,	GPIO_MODE_IT_FALLING,	GPIO_NOPULL,	0,						0},
 
+	/* Probe Z axis pins */
 	{HWCON_PROBE_Z_MOSI_PORT,	HWCON_PROBE_Z_MOSI_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_Z_MOSI_AF,	0},
 	{HWCON_PROBE_Z_MISO_PORT,	HWCON_PROBE_Z_MISO_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_Z_MISO_AF,	0},
 	{HWCON_PROBE_Z_SCK_PORT,	HWCON_PROBE_Z_SCK_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_PROBE_Z_SCK_AF,	0},
 	{HWCON_PROBE_Z_NSS_PORT, 	HWCON_PROBE_Z_NSS_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,						GPIO_PIN_SET},
 	{HWCON_PROBE_Z_DRDY_PORT,	HWCON_PROBE_Z_DRDY_PIN,	GPIO_MODE_IT_FALLING,	GPIO_NOPULL,	0,						0},
 
+	/* AUX pins */
+	{HWCON_AUX_SPI_MOSI_PORT,	HWCON_AUX_SPI_MOSI_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_AUX_SPI_MOSI_AF,	0},
+	{HWCON_AUX_SPI_MISO_PORT,	HWCON_AUX_SPI_MISO_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_AUX_SPI_MISO_AF,	0},
+	{HWCON_AUX_SPI_SCK_PORT,	HWCON_AUX_SPI_SCK_PIN,	GPIO_MODE_AF_PP,		GPIO_PULLDOWN,	HWCON_AUX_SPI_SCK_AF,	0},
+	{HWCON_AUX_SPI_NSS_PORT,	HWCON_AUX_SPI_NSS_PIN,	GPIO_MODE_OUTPUT_PP,	GPIO_NOPULL,	0,						GPIO_PIN_SET},
+	{HWCON_AUX_DRDY_PORT, 		HWCON_AUX_DRDY_PIN,		GPIO_MODE_IT_FALLING,	GPIO_NOPULL,	0,						0},
+
+	/* CDI CTRL bus pins */
 	{HWCON_CTRL_SCL_PORT,		HWCON_CTRL_SCL_PIN,		GPIO_MODE_AF_OD,		GPIO_PULLUP,	HWCON_CTRL_SCL_AF,		0},
 	{HWCON_CTRL_SDA_PORT,		HWCON_CTRL_SDA_PIN,		GPIO_MODE_AF_OD,		GPIO_PULLUP,	HWCON_CTRL_SDA_AF,		0},
+
+	/* -- Last setup entry needs to be zeroed -- */
 	{NULL,						0,						0,						0,				0,						0}
 };
 
@@ -150,9 +169,10 @@ void setup_clock(void)
 
     HWCON_RTCOMM_RRQ_CLK_ENABLE();
 
-    /* --  Probe  ----------------------------------------------------------- */
+    /* --  Probe common ----------------------------------------------------- */
     HWCON_PROBE_SYNC_CLK_ENABLE();
 
+    /* --  Probe X axis ----------------------------------------------------- */
     HWCON_PROBE_X_SPI_CLK_ENABLE();
     HWCON_PROBE_X_MOSI_CLK_ENABLE();
     HWCON_PROBE_X_MISO_CLK_ENABLE();
@@ -160,6 +180,7 @@ void setup_clock(void)
     HWCON_PROBE_X_NSS_CLK_ENABLE();
     HWCON_PROBE_X_DRDY_CLK_ENABLE();
 
+    /* --  Probe Y axis ----------------------------------------------------- */
     HWCON_PROBE_Y_SPI_CLK_ENABLE();
     HWCON_PROBE_Y_MOSI_CLK_ENABLE();
     HWCON_PROBE_Y_MISO_CLK_ENABLE();
@@ -167,6 +188,7 @@ void setup_clock(void)
     HWCON_PROBE_Y_NSS_CLK_ENABLE();
     HWCON_PROBE_Y_DRDY_CLK_ENABLE();
 
+    /* --  Probe Z axis ----------------------------------------------------- */
     HWCON_PROBE_Z_SPI_CLK_ENABLE();
     HWCON_PROBE_Z_MOSI_CLK_ENABLE();
 	HWCON_PROBE_Z_MISO_CLK_ENABLE();
@@ -174,9 +196,18 @@ void setup_clock(void)
     HWCON_PROBE_Z_NSS_CLK_ENABLE();
     HWCON_PROBE_Z_DRDY_CLK_ENABLE();
 
+    /* --  CDI CTRL bus ----------------------------------------------------- */
     HWCON_CTRL_I2C_CLK_ENABLE();
     HWCON_CTRL_SCL_CLK_ENABLE();
     HWCON_CTRL_SDA_CLK_ENABLE();
+
+    /* -- AUX --------------------------------------------------------------- */
+    HWCON_AUX_SPI_CLK_ENABLE();
+    HWCON_AUX_SPI_MOSI_CLK_ENABLE();
+    HWCON_AUX_SPI_MISO_CLK_ENABLE();
+    HWCON_AUX_SPI_SCK_CLK_ENABLE();
+    HWCON_AUX_SPI_NSS_CLK_ENABLE();
+    HWCON_AUX_DRDY_CLK_ENABLE();
 #if defined(HWCON_TEST_TIMER0_ENABLE)
     /* --  TEST TIMER0  ----------------------------------------------------- */
     HWCON_TEST_TIMER0_CLK_ENABLE();
@@ -210,14 +241,17 @@ void setup_gpio(void)
 static
 void setup_exti(void)
 {
-    /* --  ACQ0: DRDY pin  -------------------------------------------------- */
+    /* --  Probe X axis DRDY pin  ------------------------------------------- */
     HAL_NVIC_SetPriority(HWCON_PROBE_X_DRDY_EXTI, HWCON_IRQ_PRIO_PROBE_EXTI, 0);
 
-    /* --  ACQ1: DRDY pin  -------------------------------------------------- */
+    /* --  Probe Y axis DRDY pin  ------------------------------------------- */
     HAL_NVIC_SetPriority(HWCON_PROBE_Y_DRDY_EXTI, HWCON_IRQ_PRIO_PROBE_EXTI, 0);
 
-    /* --  ACQ2: DRDY pin  -------------------------------------------------- */
+    /* --  Probe Z axis DRDY pin  ------------------------------------------- */
     HAL_NVIC_SetPriority(HWCON_PROBE_Z_DRDY_EXTI, HWCON_IRQ_PRIO_PROBE_EXTI, 0);
+
+    /* --  AUX DRDY pin  ---------------------------------------------------- */
+	HAL_NVIC_SetPriority(HWCON_AUX_DRDY_EXTI, HWCON_IRQ_PRIO_AUX_EXTI, 0);
 }
 
 static
@@ -245,7 +279,7 @@ void setup_spi(void)
     g_rtcomm.spi.Init.Mode              = SPI_MODE_SLAVE;
     HAL_SPI_Init(&g_rtcomm.spi);
 
-    /* --  PROBE X: SPI  ---------------------------------------------------- */
+    /* -- Probe X axis SPI -------------------------------------------------- */
     config.flags = SPI_TRANSFER_TX   | SPI_TRANSFER_RX   | SPI_CLK_POL_LOW   |
                    SPI_CLK_PHA_2EDGE | SPI_MODE_MS       | SPI_SS_SOFTWARE   |
                    SPI_DATA_8BIT;
@@ -255,19 +289,26 @@ void setup_spi(void)
     HAL_NVIC_ClearPendingIRQ(HWCON_PROBE_X_SPI_IRQ);
     HAL_NVIC_EnableIRQ(HWCON_PROBE_X_SPI_IRQ);
 
-    /* --  PROBE Y: SPI  ---------------------------------------------------- */
+    /* -- Probe Y axis SPI -------------------------------------------------- */
     config.prescaler = HWCON_PROBE_Y_SPI_BAUD_CLOCK;
     spi_bus_init(&HWCON_PROBE_Y_SPI, &config);
     HAL_NVIC_SetPriority(HWCON_PROBE_Y_SPI_IRQ, HWCON_IRQ_PRIO_PROBE_SPI, 0);
     HAL_NVIC_ClearPendingIRQ(HWCON_PROBE_Y_SPI_IRQ);
     HAL_NVIC_EnableIRQ(HWCON_PROBE_Y_SPI_IRQ);
 
-    /* --  PROBE Z: SPI  ---------------------------------------------------- */
+    /* -- Probe Z axis SPI -------------------------------------------------- */
     config.prescaler = HWCON_PROBE_Z_SPI_BAUD_CLOCK;
     spi_bus_init(&HWCON_PROBE_Z_SPI, &config);
     HAL_NVIC_SetPriority(HWCON_PROBE_Z_SPI_IRQ, HWCON_IRQ_PRIO_PROBE_SPI, 0);
     HAL_NVIC_ClearPendingIRQ(HWCON_PROBE_Z_SPI_IRQ);
     HAL_NVIC_EnableIRQ(HWCON_PROBE_Z_SPI_IRQ);
+
+    /* -- AUX SPI ----------------------------------------------------------- */
+    config.prescaler = HWCON_AUX_SPI_BAUD_CLOCK;
+	spi_bus_init(&HWCON_AUX_SPI, &config);
+	HAL_NVIC_SetPriority(HWCON_AUX_SPI_IRQ, HWCON_IRQ_PRIO_AUX_SPI, 0);
+	HAL_NVIC_ClearPendingIRQ(HWCON_AUX_SPI_IRQ);
+	HAL_NVIC_EnableIRQ(HWCON_AUX_SPI_IRQ);
 }
 
 static
