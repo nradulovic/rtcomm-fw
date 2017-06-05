@@ -81,7 +81,7 @@ enum spi_state
 struct spi_bus
 {
     SPI_TypeDef *               regs;
-    size_t						count;
+    size_t                      count;
     struct spi_device *         device;
     struct spi_transfer *       transfer;
     enum spi_state              state;
@@ -149,8 +149,8 @@ set_done(void * arg)
 static
 void bus_clear_overrun(struct spi_bus * host)
 {
-	ncore_dummy_rd(host->regs->DR);                                       		/* Clear status flag */
-	ncore_dummy_rd(host->regs->SR);
+    ncore_dummy_rd(host->regs->DR);                                             /* Clear status flag */
+    ncore_dummy_rd(host->regs->SR);
 }
 
 
@@ -175,12 +175,12 @@ void isr_tx_only(struct spi_bus * bus)
             break;
         }
         case STATE_TX_WAIT: {
-        	ncore_dummy_rd(bus->regs->DR);
+            ncore_dummy_rd(bus->regs->DR);
             bus->state = STATE_TX_COMPLETE;
             break;
         }
         case STATE_TX_COMPLETE: {
-        	ncore_dummy_rd(bus->regs->DR);
+            ncore_dummy_rd(bus->regs->DR);
             bus->regs->CR2 = 0;
 
             if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
@@ -202,39 +202,39 @@ void isr_tx_only(struct spi_bus * bus)
 static
 void isr_rx_only(struct spi_bus * bus)
 {
-    struct spi_transfer * 		transfer = bus->transfer;
-    uint32_t					itflag;
+    struct spi_transfer *       transfer = bus->transfer;
+    uint32_t                    itflag;
 
-	itflag = bus->regs->SR;
+    itflag = bus->regs->SR;
 
-	if (itflag & SPI_SR_RXNE) {
-		transfer->buff[bus->count++] = (uint8_t)bus->regs->DR;
+    if (itflag & SPI_SR_RXNE) {
+        transfer->buff[bus->count++] = (uint8_t)bus->regs->DR;
 
-		if (bus->count != transfer->size) {
-			bus->regs->DR = 0u;
-		}
-	}
+        if (bus->count != transfer->size) {
+            bus->regs->DR = 0u;
+        }
+    }
 
-	if (itflag & (SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF)) {
-		if (itflag & SPI_SR_OVR) {
-			bus_clear_overrun(bus);
-			transfer->error = NERROR_DEVICE_FAIL;
-		} else {
-			/*
-			 * TODO: clear other errors
-			 */
-			transfer->error = NERROR_DEVICE_NO_COMM;
-		}
-	}
+    if (itflag & (SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF)) {
+        if (itflag & SPI_SR_OVR) {
+            bus_clear_overrun(bus);
+            transfer->error = NERROR_DEVICE_FAIL;
+        } else {
+            /*
+             * TODO: clear other errors
+             */
+            transfer->error = NERROR_DEVICE_NO_COMM;
+        }
+    }
 
-	if (bus->count == transfer->size) {
-		if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
-			/* Deactivate CS pin */
-			bus->device->cs_deactivate();
-		}
-		bus->regs->CR2 &= ~(SPI_CR2_RXNEIE | SPI_CR2_ERRIE);
-		transfer->complete(transfer->arg);
-	}
+    if (bus->count == transfer->size) {
+        if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
+            /* Deactivate CS pin */
+            bus->device->cs_deactivate();
+        }
+        bus->regs->CR2 &= ~(SPI_CR2_RXNEIE | SPI_CR2_ERRIE);
+        transfer->complete(transfer->arg);
+    }
 }
 
 
@@ -257,7 +257,7 @@ void spi_host_write_async(struct spi_bus * bus, struct spi_device * device,
 
     /* Clear any overrun errors */
     if (bus->regs->SR & SPI_SR_OVR) {
-    	bus_clear_overrun(bus);
+        bus_clear_overrun(bus);
     }
 
     if (transfer->size == 1) {
@@ -293,7 +293,7 @@ void spi_host_read_async(struct spi_bus * bus, struct spi_device * device,
 
     bus->device = device;
     bus->count = 0u;
-	bus->isr_handler = isr_rx_only;
+    bus->isr_handler = isr_rx_only;
     bus->transfer = transfer;
     bus->transfer->error = NERROR_NONE;
 
@@ -328,8 +328,8 @@ void spi_transfer_sync(struct spi_device * device,
     }
 
     while (!is_done) {
-		ncore_idle();
-	}
+        ncore_idle();
+    }
 
     if (old_complete) {
         old_complete(old_arg);
@@ -440,11 +440,11 @@ nerror spi_bus_init(struct spi_bus * bus, const struct spi_config * config)
 void spi_device_init(struct spi_device * device, struct spi_bus * bus,
         void (* cs_activate)(void), void (* cs_deactivate)(void))
 {
-	device->bus     		= bus;
-	device->flags           = 0;
-	device->cs_activate 	= cs_activate;
-	device->cs_deactivate	= cs_deactivate;
-	device->cs_deactivate();
+    device->bus             = bus;
+    device->flags           = 0;
+    device->cs_activate     = cs_activate;
+    device->cs_deactivate   = cs_deactivate;
+    device->cs_deactivate();
 }
 
 

@@ -36,8 +36,8 @@
 
 #define LOOP_COUNT                      (50ul * 100000ul)
 
-#define led_heartbeat_on()														\
-	gpio_set(HWCON_HEARTBEAT_PORT, HWCON_HEARTBEAT_PIN)
+#define led_heartbeat_on()                                                      \
+    gpio_set(HWCON_HEARTBEAT_PORT, HWCON_HEARTBEAT_PIN)
 
 #define led_heartbeat_off()                                                     \
     gpio_clr(HWCON_HEARTBEAT_PORT, HWCON_HEARTBEAT_PIN)
@@ -48,23 +48,23 @@
 /*=======================================================  LOCAL VARIABLES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-uint32_t 						g_status_counters[_STATUS_LAST_ID];
+uint32_t                        g_status_counters[_STATUS_LAST_ID];
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 void status_warn(enum status_msg warn)
 {
-	if (warn > NARRAY_DIMENSION(g_status_counters)) {
-		g_status_counters[STATUS_FATAL_UNHANDLED_EXCP]++;
-	} else {
-		g_status_counters[warn]++;
-	}
+    if (warn > NARRAY_DIMENSION(g_status_counters)) {
+        g_status_counters[STATUS_FATAL_UNHANDLED_EXCP]++;
+    } else {
+        g_status_counters[warn]++;
+    }
 }
 
 void status_error(enum status_msg error)
 {
-	uint32_t					counter;
+    uint32_t                    counter;
     volatile uint32_t           idx;
 
     for (;;) {

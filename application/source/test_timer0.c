@@ -37,19 +37,19 @@
 /*=======================================================  LOCAL VARIABLES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-TIM_HandleTypeDef        		g_test_timer0;
+TIM_HandleTypeDef               g_test_timer0;
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 void test_timer0_disable(void)
 {
-	HAL_TIM_Base_Stop_IT(&g_test_timer0);
+    HAL_TIM_Base_Stop_IT(&g_test_timer0);
 }
 
 void test_timer0_enable(void)
 {
-	HAL_TIM_Base_Start_IT(&g_test_timer0);
+    HAL_TIM_Base_Start_IT(&g_test_timer0);
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

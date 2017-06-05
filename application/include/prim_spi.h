@@ -35,8 +35,8 @@
 
 /*===============================================================  MACRO's  ==*/
 
-#define SPI_TRANSFER_RX			        (0x1u << 0 )
-#define SPI_TRANSFER_TX			        (0x1u << 1 )
+#define SPI_TRANSFER_RX                 (0x1u << 0 )
+#define SPI_TRANSFER_TX                 (0x1u << 1 )
 #define SPI_CLK_POL_LOW                 (0x1u << 2 )
 #define SPI_CLK_POL_HIGH                (0x1u << 3 )
 #define SPI_CLK_PHA_1EDGE               (0x1u << 4 )
@@ -63,18 +63,18 @@ struct spi_config
 struct spi_transfer
 {
     uint8_t *                   buff;
-	void					 (* complete)(void * arg);
-	void *                      arg;
-	uint16_t					size;
-	uint32_t                    error;
+    void                     (* complete)(void * arg);
+    void *                      arg;
+    uint16_t                    size;
+    uint32_t                    error;
 };
 
 struct spi_device
 {
-    struct spi_bus * 	        bus;
+    struct spi_bus *            bus;
     uint32_t                    flags;
-	void 					 (* cs_activate)(void);
-	void 					 (* cs_deactivate)(void);
+    void                     (* cs_activate)(void);
+    void                     (* cs_deactivate)(void);
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/

@@ -36,7 +36,7 @@
 /*===============================================================  MACRO's  ==*/
 
 #define acquisition_probe_drdy_isr(channel) \
-	ads1256_drdy_isr(&(channel)->group)
+    ads1256_drdy_isr(&(channel)->group)
 
 /*------------------------------------------------------  C++ extern begin  --*/
 #ifdef __cplusplus
@@ -46,31 +46,31 @@ extern "C" {
 
 struct probe
 {
-	struct ads1256_group 		group;
-	struct ads1256_chip			chip[IO_PROBE_CHANNELS];
-	struct ads1256_group_config group_config;
-	struct ads1256_chip_config  chip_config[IO_PROBE_CHANNELS];
+    struct ads1256_group        group;
+    struct ads1256_chip         chip[IO_PROBE_CHANNELS];
+    struct ads1256_group_config group_config;
+    struct ads1256_chip_config  chip_config[IO_PROBE_CHANNELS];
 };
 
 struct aux
 {
-	struct ads1256_group		group;
-	struct ads1256_chip			chip;
-	struct ads1256_group_config group_config;
-	struct ads1256_chip_config	chip_config;
-	int32_t						mvalues[IO_AUX_CHANNELS];
+    struct ads1256_group        group;
+    struct ads1256_chip         chip;
+    struct ads1256_group_config group_config;
+    struct ads1256_chip_config  chip_config;
+    int32_t                     mvalues[IO_AUX_CHANNELS];
 };
 
 struct autorange
 {
-	bool						is_enabled;
+    bool                        is_enabled;
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-extern struct probe 			g_probe;
-extern struct aux				g_aux;
-extern struct autorange			g_autorange;
+extern struct probe             g_probe;
+extern struct aux               g_aux;
+extern struct autorange         g_autorange;
 
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 

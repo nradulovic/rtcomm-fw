@@ -38,34 +38,34 @@ void NMI_Handler(void)
 
 void HardFault_Handler(void)
 {
-	status_error(STATUS_FATAL_UNHANDLED_EXCP);
+    status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void MemManage_Handler(void)
 {
-	status_error(STATUS_FATAL_UNHANDLED_EXCP);
+    status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void BusFault_Handler(void)
 {
-	status_error(STATUS_FATAL_UNHANDLED_EXCP);
+    status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void UsageFault_Handler(void)
 {
-	status_error(STATUS_FATAL_UNHANDLED_EXCP);
+    status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void SVC_Handler(void)
 {
-	status_error(STATUS_FATAL_UNHANDLED_EXCP);
+    status_error(STATUS_FATAL_UNHANDLED_EXCP);
 }
 
 void DebugMon_Handler(void)
 {
-	/* NOTE:
-	 * Leave this ISR free.
-	 */
+    /* NOTE:
+     * Leave this ISR free.
+     */
 }
 
 /* NOTE:
@@ -91,13 +91,13 @@ void HWCON_RTCOMM_SPI_DMA_TX_IRQHandler(void)
 #if defined(HWCON_TEST_TIMER0_ENABLE)
 void HWCON_TEST_TIMER0_IRQHandler(void)
 {
-	HAL_TIM_IRQHandler(&g_test_timer0);
+    HAL_TIM_IRQHandler(&g_test_timer0);
 }
 #endif
 
 void HWCON_PROBE_X_DRDY_EXTI_Handler(void)
 {
-	acquisition_probe_drdy_isr(&g_probe);
+    acquisition_probe_drdy_isr(&g_probe);
 }
 
 void HWCON_PROBE_X_SPI_IRQ_Handler(void)
@@ -107,7 +107,7 @@ void HWCON_PROBE_X_SPI_IRQ_Handler(void)
 
 void HWCON_PROBE_Y_DRDY_EXTI_Handler(void)
 {
-	acquisition_probe_drdy_isr(&g_probe);
+    acquisition_probe_drdy_isr(&g_probe);
 }
 
 void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
@@ -117,7 +117,7 @@ void HWCON_PROBE_Y_SPI_IRQ_Handler(void)
 
 void HWCON_PROBE_Z_DRDY_EXTI_Handler(void)
 {
-	acquisition_probe_drdy_isr(&g_probe);
+    acquisition_probe_drdy_isr(&g_probe);
 }
 
 void HWCON_PROBE_Z_IRQ_Handler(void)
@@ -127,22 +127,22 @@ void HWCON_PROBE_Z_IRQ_Handler(void)
 
 void HWCON_AUX_DRDY_EXTI_Handler(void)
 {
-	acquisition_probe_drdy_isr(&g_aux);
+    acquisition_probe_drdy_isr(&g_aux);
 }
 
 void HWCON_AUX_SPI_IRQ_Handler(void)
 {
-	spi_bus_isr(&HWCON_AUX_SPI);
+    spi_bus_isr(&HWCON_AUX_SPI);
 }
 
 void HWCON_CTRL_I2C_EV_IRQHandler(void)
 {
-	HAL_I2C_EV_IRQHandler(&g_ctrl.i2c);
+    HAL_I2C_EV_IRQHandler(&g_ctrl.i2c);
 }
 
 void HWCON_CTRL_I2C_ER_IRQHandler(void)
 {
-	HAL_I2C_ER_IRQHandler(&g_ctrl.i2c);
+    HAL_I2C_ER_IRQHandler(&g_ctrl.i2c);
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

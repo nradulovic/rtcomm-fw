@@ -49,9 +49,9 @@ uint8_t protocol_from_probe_mux_lo(const struct io_ctrl_config * config);
 
 bool protocol_from_en_aux_bufer(const struct io_ctrl_config * config);
 uint8_t protocol_from_aux_mux_hi(const struct io_ctrl_config * config,
-		uint32_t mchannel);
+        uint32_t mchannel);
 uint8_t protocol_from_aux_mux_lo(const struct io_ctrl_config * config,
-		uint32_t mchannel);
+        uint32_t mchannel);
 bool protocol_from_aux_en_aux1(const struct io_ctrl_config * config);
 bool protocol_from_aux_en_aux2(const struct io_ctrl_config * config);
 

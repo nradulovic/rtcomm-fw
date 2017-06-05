@@ -40,44 +40,44 @@
 /*=======================================================  LOCAL VARIABLES  ==*/
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-struct rtcomm_handle			g_rtcomm;
+struct rtcomm_handle            g_rtcomm;
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
 static void notify_set(void)
 {
-	gpio_set(HWCON_RTCOMM_RRQ_PORT, HWCON_RTCOMM_RRQ_PIN);
+    gpio_set(HWCON_RTCOMM_RRQ_PORT, HWCON_RTCOMM_RRQ_PIN);
 }
 
 static void notify_reset(void)
 {
-	gpio_clr(HWCON_RTCOMM_RRQ_PORT, HWCON_RTCOMM_RRQ_PIN);
+    gpio_clr(HWCON_RTCOMM_RRQ_PORT, HWCON_RTCOMM_RRQ_PIN);
 }
 
 static void unlock_dma(struct rtcomm_handle * handle)
 {
-	handle->state = STATE_RESET_DMA;
+    handle->state = STATE_RESET_DMA;
 
-	/* NOTE:
-	 * HAL_SPI_DMAStop() always returns HAL_OK: no need to check return value.
-	 */
-	HAL_SPI_DMAStop(&handle->spi);
-	__HAL_UNLOCK(&handle->spi);
-	handle->state = STATE_IDLE;
+    /* NOTE:
+     * HAL_SPI_DMAStop() always returns HAL_OK: no need to check return value.
+     */
+    HAL_SPI_DMAStop(&handle->spi);
+    __HAL_UNLOCK(&handle->spi);
+    handle->state = STATE_IDLE;
 }
 
 static void setup_dma(struct rtcomm_handle * handle)
 {
-	HAL_StatusTypeDef error;
+    HAL_StatusTypeDef error;
 
-	handle->state = STATE_SETUP_DMA;
+    handle->state = STATE_SETUP_DMA;
 
-	error = HAL_SPI_Transmit_DMA(&handle->spi, handle->storage_b, handle->size);
+    error = HAL_SPI_Transmit_DMA(&handle->spi, handle->storage_b, handle->size);
 
-	if (error) {
-		status_error(STATUS_RTCOMM_TRANSFER_ERR);
-	}
-	handle->state = STATE_SENDING;
+    if (error) {
+        status_error(STATUS_RTCOMM_TRANSFER_ERR);
+    }
+    handle->state = STATE_SENDING;
 }
 
 static void * peek_buffer(struct rtcomm_handle * handle)
@@ -87,7 +87,7 @@ static void * peek_buffer(struct rtcomm_handle * handle)
 
         return (handle->storage_b);
     } else {
-    	status_warn(STATUS_RTCOMM_SKIPPED_ERR);
+        status_warn(STATUS_RTCOMM_SKIPPED_ERR);
 
         return (NULL);
     }
@@ -95,36 +95,36 @@ static void * peek_buffer(struct rtcomm_handle * handle)
 
 static void invoke_sending_task_fn(void * arg)
 {
-	struct rtcomm_handle *		rtcomm = arg;
+    struct rtcomm_handle *      rtcomm = arg;
 
-	ntask_ready_i(&rtcomm->sending_task);
+    ntask_ready_i(&rtcomm->sending_task);
 }
 
 static void emit_buffer(struct rtcomm_handle * handle)
 {
-	notify_reset();
+    notify_reset();
 
-	if (handle->state == STATE_PREP_DATA) {
-		setup_dma(handle);
-	} else {
-		status_warn(STATUS_RTCOMM_SKIPPED_ERR);
+    if (handle->state == STATE_PREP_DATA) {
+        setup_dma(handle);
+    } else {
+        status_warn(STATUS_RTCOMM_SKIPPED_ERR);
         /*
          * We are trying to send new buffer to consumer but the consumer has not
          * read us yet. In this case do the following:
          * - do NOT reset DMA
          * - do NOT setup DMA since it is already setup
          */
-	}
-	notify_set();
+    }
+    notify_set();
 }
 
 static void sending_task_fn(struct ntask * task, void * arg)
 {
-	struct rtcomm_handle *		rtcomm = arg;
-    void * 						buffer = peek_buffer(rtcomm);
+    struct rtcomm_handle *      rtcomm = arg;
+    void *                      buffer = peek_buffer(rtcomm);
 
     if (buffer) {
-    	rtcomm_pre_send(buffer);
+        rtcomm_pre_send(buffer);
     }
     emit_buffer(rtcomm);
     ntask_block(task);
@@ -133,29 +133,29 @@ static void sending_task_fn(struct ntask * task, void * arg)
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
-		void * storage_b, uint16_t size)
+        void * storage_b, uint16_t size)
 {
-	static const struct ntask_define sending_task_define =
-	{
-		.name = "sending task",
-		.priority = 31,
-		.vf_task = sending_task_fn
-	};
-	handle->storage_a = storage_a;
-	handle->storage_b = storage_b;
-	handle->size = size;
-	handle->state = STATE_IDLE;
-	ntask_init(&handle->sending_task, &sending_task_define, handle);
-	nsched_deferred_init(&handle->invoke_sending_task, invoke_sending_task_fn,
-			handle);
+    static const struct ntask_define sending_task_define =
+    {
+        .name = "sending task",
+        .priority = 31,
+        .vf_task = sending_task_fn
+    };
+    handle->storage_a = storage_a;
+    handle->storage_b = storage_b;
+    handle->size = size;
+    handle->state = STATE_IDLE;
+    ntask_init(&handle->sending_task, &sending_task_define, handle);
+    nsched_deferred_init(&handle->invoke_sending_task, invoke_sending_task_fn,
+            handle);
 }
 
 
 
 void rtcomm_clear(struct rtcomm_handle * handle)
 {
-	memset(handle->storage_a, 0, handle->size);
-	memset(handle->storage_b, 0, handle->size);
+    memset(handle->storage_a, 0, handle->size);
+    memset(handle->storage_b, 0, handle->size);
 }
 
 
@@ -172,7 +172,7 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
         handle->storage_a = handle->storage_b;
         handle->storage_b = tmp;
     } else {
-    	status_warn(STATUS_RTCOMM_SKIPPED_ERR);
+        status_warn(STATUS_RTCOMM_SKIPPED_ERR);
         /*
          * We are trying to publish new buffer but the consumer has not
          * read the previous buffer yet. In this case do the following:
@@ -186,24 +186,24 @@ void rtcomm_release_new(struct rtcomm_handle * handle)
 
 void rtcomm_isr_complete(struct rtcomm_handle * handle)
 {
-	if (handle->state != STATE_SENDING) {
-		status_warn(STATUS_RTCOMM_COMPLETE_ERR);
-	}
-	notify_reset();
-	handle->state = STATE_IDLE;
+    if (handle->state != STATE_SENDING) {
+        status_warn(STATUS_RTCOMM_COMPLETE_ERR);
+    }
+    notify_reset();
+    handle->state = STATE_IDLE;
 }
 
 
 
 void rtcomm_isr_error(struct rtcomm_handle * handle)
 {
-	if (handle->state != STATE_IDLE) {
-		status_warn(STATUS_RTCOMM_TRANSFER_ERR);
+    if (handle->state != STATE_IDLE) {
+        status_warn(STATUS_RTCOMM_TRANSFER_ERR);
 
-		if (handle->state == STATE_SENDING) {
-			unlock_dma(handle);
-		}
-	}
+        if (handle->state == STATE_SENDING) {
+            unlock_dma(handle);
+        }
+    }
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

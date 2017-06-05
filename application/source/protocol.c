@@ -41,109 +41,109 @@
 
 bool protocol_from_en_probe_buffer(const struct io_ctrl_config * config)
 {
-	return (config->en_probe_buffer == 1u ? true : false);
+    return (config->en_probe_buffer == 1u ? true : false);
 }
 
 uint8_t protocol_from_probe_mux_hi(const struct io_ctrl_config * config)
 {
-	return (config->probe_mux_hi <= 8 ? config->probe_mux_hi : 8);
+    return (config->probe_mux_hi <= 8 ? config->probe_mux_hi : 8);
 }
 
 uint8_t protocol_from_probe_mux_lo(const struct io_ctrl_config * config)
 {
-	return (config->probe_mux_lo <= 8 ? config->probe_mux_lo : 8);
+    return (config->probe_mux_lo <= 8 ? config->probe_mux_lo : 8);
 }
 
 bool protocol_from_en_aux_bufer(const struct io_ctrl_config * config)
 {
-	return (config->en_aux_buffer == 1u ? true : false);
+    return (config->en_aux_buffer == 1u ? true : false);
 }
 
 uint8_t protocol_from_aux_mux_hi(const struct io_ctrl_config * config,
-		uint32_t mchannel)
+        uint32_t mchannel)
 {
-	uint8_t						val;
+    uint8_t                     val;
 
-	switch (mchannel) {
-		case 0:
-			val = config->aux1_mux_hi;
-			break;
-		case 1:
-			val = config->aux2_mux_hi;
-			break;
-		default:
-			val = 0;
-			break;
-	}
+    switch (mchannel) {
+        case 0:
+            val = config->aux1_mux_hi;
+            break;
+        case 1:
+            val = config->aux2_mux_hi;
+            break;
+        default:
+            val = 0;
+            break;
+    }
 
-	return (val <= 8 ? val : 8);
+    return (val <= 8 ? val : 8);
 }
 
 uint8_t protocol_from_aux_mux_lo(const struct io_ctrl_config * config,
-		uint32_t mchannel)
+        uint32_t mchannel)
 {
-	uint8_t						val;
+    uint8_t                     val;
 
-	switch (mchannel) {
-		case 0:
-			val = config->aux1_mux_lo;
-			break;
-		case 1:
-			val = config->aux2_mux_lo;
-			break;
-		default:
-			val = 0;
-			break;
-	}
+    switch (mchannel) {
+        case 0:
+            val = config->aux1_mux_lo;
+            break;
+        case 1:
+            val = config->aux2_mux_lo;
+            break;
+        default:
+            val = 0;
+            break;
+    }
 
-	return (val <= 8 ? val : 8);
+    return (val <= 8 ? val : 8);
 }
 
 bool protocol_from_aux_en_aux1(const struct io_ctrl_config * config)
 {
-	return (config->en_aux1 == 1u ? true : false);
+    return (config->en_aux1 == 1u ? true : false);
 }
 
 bool protocol_from_aux_en_aux2(const struct io_ctrl_config * config)
 {
-	return (config->en_aux2 == 1u ? true : false);
+    return (config->en_aux2 == 1u ? true : false);
 }
 
 uint8_t protocol_from_workmode(const struct io_ctrl_param * param)
 {
-	switch (param->data.workmode) {
-		case IO_WORKMODE_NORMAL: 			return (ADS1256_SAMPLE_MODE_CONT);
-		case IO_WORKMODE_TRIG_CONTINUOUS: 	return (ADS1256_SAMPLE_MODE_CONT);
-		case IO_WORKMODE_TRIG_SINGLE_SHOT:	return (ADS1256_SAMPLE_MODE_CONT);
-		default: 							return (ADS1256_SAMPLE_MODE_CONT);
-	}
+    switch (param->data.workmode) {
+        case IO_WORKMODE_NORMAL:            return (ADS1256_SAMPLE_MODE_CONT);
+        case IO_WORKMODE_TRIG_CONTINUOUS:   return (ADS1256_SAMPLE_MODE_CONT);
+        case IO_WORKMODE_TRIG_SINGLE_SHOT:  return (ADS1256_SAMPLE_MODE_CONT);
+        default:                            return (ADS1256_SAMPLE_MODE_CONT);
+    }
 }
 
 uint32_t protocol_from_vspeed(const struct io_ctrl_param * param)
 {
-	/* NOTE:
-	 * This closely follows JNI document.
-	 */
-	switch (param->data.vspeed) {
-		case 1:  	return (ADS1256_SAMPLE_RATE_10);
-		case 4:		return (ADS1256_SAMPLE_RATE_30);
-		case 5:		return (ADS1256_SAMPLE_RATE_50);
-		case 6: 	return (ADS1256_SAMPLE_RATE_60);
-		case 7:		return (ADS1256_SAMPLE_RATE_100);
-		case 8:		return (ADS1256_SAMPLE_RATE_500);
-		case 9: 	return (ADS1256_SAMPLE_RATE_1000);
-		case 10:	return (ADS1256_SAMPLE_RATE_2000);
-		case 11:	return (ADS1256_SAMPLE_RATE_3750);
-		case 12:	return (ADS1256_SAMPLE_RATE_7500);
-		case 13: 	return (ADS1256_SAMPLE_RATE_15000);
-		case 14: 	return (ADS1256_SAMPLE_RATE_30000);
-		default:	return (ADS1256_SAMPLE_RATE_1000);
-	}
+    /* NOTE:
+     * This closely follows JNI document.
+     */
+    switch (param->data.vspeed) {
+        case 1:     return (ADS1256_SAMPLE_RATE_10);
+        case 4:     return (ADS1256_SAMPLE_RATE_30);
+        case 5:     return (ADS1256_SAMPLE_RATE_50);
+        case 6:     return (ADS1256_SAMPLE_RATE_60);
+        case 7:     return (ADS1256_SAMPLE_RATE_100);
+        case 8:     return (ADS1256_SAMPLE_RATE_500);
+        case 9:     return (ADS1256_SAMPLE_RATE_1000);
+        case 10:    return (ADS1256_SAMPLE_RATE_2000);
+        case 11:    return (ADS1256_SAMPLE_RATE_3750);
+        case 12:    return (ADS1256_SAMPLE_RATE_7500);
+        case 13:    return (ADS1256_SAMPLE_RATE_15000);
+        case 14:    return (ADS1256_SAMPLE_RATE_30000);
+        default:    return (ADS1256_SAMPLE_RATE_1000);
+    }
 }
 
 bool protocol_from_en_autorange(const struct io_ctrl_param * param)
 {
-	return (param->data.en_autorange == 1u ? true : false);
+    return (param->data.en_autorange == 1u ? true : false);
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

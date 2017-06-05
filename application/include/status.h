@@ -36,17 +36,17 @@
 
 enum status_msg
 {
-	STATUS_FATAL_UNHANDLED_EXCP,
-	STATUS_FATAL_HW_INIT_FAILED,
-	STATUS_RUNTIME_CHECK_FAILED,
-	STATUS_CTRL_COMM_ERR,
-	STATUS_CTRL_DATA_ERR,
-	STATUS_ADS_ERR,
-	STATUS_NO_RESOURCE_ERR,
-	STATUS_RTCOMM_SKIPPED_ERR,
-	STATUS_RTCOMM_TRANSFER_ERR,
-	STATUS_RTCOMM_COMPLETE_ERR,
-	_STATUS_LAST_ID
+    STATUS_FATAL_UNHANDLED_EXCP,
+    STATUS_FATAL_HW_INIT_FAILED,
+    STATUS_RUNTIME_CHECK_FAILED,
+    STATUS_CTRL_COMM_ERR,
+    STATUS_CTRL_DATA_ERR,
+    STATUS_ADS_ERR,
+    STATUS_NO_RESOURCE_ERR,
+    STATUS_RTCOMM_SKIPPED_ERR,
+    STATUS_RTCOMM_TRANSFER_ERR,
+    STATUS_RTCOMM_COMPLETE_ERR,
+    _STATUS_LAST_ID
 };
 
 /*-------------------------------------------------------  C++ extern base  --*/
@@ -65,22 +65,22 @@ void status_error(enum status_msg error);
 static inline
 uint32_t status_get(enum status_msg stat)
 {
-	extern uint32_t 			g_status_counters[];
+    extern uint32_t             g_status_counters[];
 
-	return (g_status_counters[stat]);
+    return (g_status_counters[stat]);
 }
 
 static inline
 uint32_t status_get_total(void)
 {
-	uint32_t					stat_id;
-	uint32_t					retval;
+    uint32_t                    stat_id;
+    uint32_t                    retval;
 
-	for (stat_id = 0, retval =0; stat_id < _STATUS_LAST_ID; stat_id++) {
-		retval += status_get(stat_id);
-	}
+    for (stat_id = 0, retval =0; stat_id < _STATUS_LAST_ID; stat_id++) {
+        retval += status_get(stat_id);
+    }
 
-	return (retval);
+    return (retval);
 }
 /*--------------------------------------------------------  C++ extern end  --*/
 #ifdef __cplusplus

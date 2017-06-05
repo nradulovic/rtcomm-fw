@@ -47,45 +47,45 @@ extern "C" {
 
 enum rtcomm_state
 {
-	STATE_INIT,
-	STATE_IDLE,
-	STATE_PREP_DATA,
-	STATE_RESET_DMA,
-	STATE_SETUP_DMA,
-	STATE_SENDING,
+    STATE_INIT,
+    STATE_IDLE,
+    STATE_PREP_DATA,
+    STATE_RESET_DMA,
+    STATE_SETUP_DMA,
+    STATE_SENDING,
 };
 
 struct rtcomm_handle
 {
-	void *						storage_a;
-	void *						storage_b;
-	uint16_t					size;
-	enum rtcomm_state			state;
-	SPI_HandleTypeDef			spi;
-	DMA_HandleTypeDef			dma_tx;
-	struct ntask				sending_task;
-	struct nsched_deferred		invoke_sending_task;
+    void *                      storage_a;
+    void *                      storage_b;
+    uint16_t                    size;
+    enum rtcomm_state           state;
+    SPI_HandleTypeDef           spi;
+    DMA_HandleTypeDef           dma_tx;
+    struct ntask                sending_task;
+    struct nsched_deferred      invoke_sending_task;
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-extern struct rtcomm_handle		g_rtcomm;
+extern struct rtcomm_handle     g_rtcomm;
 
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 
 void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
-		void * storage_b, uint16_t size);
+        void * storage_b, uint16_t size);
 
 void rtcomm_clear(struct rtcomm_handle * handle);
 
 static inline
 void * rtcomm_request_new(struct rtcomm_handle * handle)
 {
-	return (handle->storage_a);
+    return (handle->storage_a);
 }
 
 /*
- * At this point a producer needs ne	w buffer to write to. It is RTCOMMs
+ * At this point a producer needs ne    w buffer to write to. It is RTCOMMs
  * responsibility to obtain a new buffer while sending the current one to the
  * consumer.
  */

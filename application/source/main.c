@@ -36,7 +36,7 @@
 
 /*=========================================================  LOCAL MACRO's  ==*/
 
-#define do_tasks()				nthread_schedule()
+#define do_tasks()              nthread_schedule()
 
 /*======================================================  LOCAL DATA TYPES  ==*/
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -46,44 +46,44 @@
 
 static void init_early(void)
 {
-	/*
-	 * Save reset source here?
-	 */
+    /*
+     * Save reset source here?
+     */
 }
 
 static void init_peripherals(void)
 {
-	HAL_Init();
-	psm_init_clock();
-	psm_init_gpio();
-	psm_init_exti();
-	psm_init_spi();
-	psm_init_i2c();
-	psm_init_timer();
+    HAL_Init();
+    psm_init_clock();
+    psm_init_gpio();
+    psm_init_exti();
+    psm_init_spi();
+    psm_init_i2c();
+    psm_init_timer();
 }
 
 static void init_tasks(void)
 {
-	static uint8_t 				mem_buffer[10240];
-	static struct nheap   		mem;
+    static uint8_t              mem_buffer[10240];
+    static struct nheap         mem;
 
-	ncore_init();
-	ncore_timer_enable();
-	nheap_init(&mem, mem_buffer, sizeof(mem_buffer));
-	nevent_register_mem(&mem.mem_class);
+    ncore_init();
+    ncore_timer_enable();
+    nheap_init(&mem, mem_buffer, sizeof(mem_buffer));
+    nevent_register_mem(&mem.mem_class);
 
-	nepa_init(&g_controller_epa, 	&g_controller_epa_define);
-	nepa_init(&g_ctrl_epa,   		&g_ctrl_epa_define);
+    nepa_init(&g_controller_epa,    &g_controller_epa_define);
+    nepa_init(&g_ctrl_epa,          &g_ctrl_epa_define);
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 int main(void)
 {
-	init_early();
-	init_peripherals();
-	init_tasks();
-	do_tasks();
+    init_early();
+    init_peripherals();
+    init_tasks();
+    do_tasks();
 
     return (0);
 }

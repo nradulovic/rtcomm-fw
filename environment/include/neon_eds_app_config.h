@@ -39,7 +39,7 @@
 #define CONFIG_API_VALIDATION           1
 #define CONFIG_ASSERT_INTERNAL          1
 
-#define CONFIG_EVENT_SIZE				1
+#define CONFIG_EVENT_SIZE               1
 
 #define CONFIG_CORE_TIMER_SOURCE        5
 

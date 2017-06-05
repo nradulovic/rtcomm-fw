@@ -42,10 +42,10 @@
 
 struct acquisition
 {
-	struct io_ctrl_config		config;
-	struct io_ctrl_param 		param;
-	uint32_t					buffer_size;
-	uint32_t					current_sample;
+    struct io_ctrl_config       config;
+    struct io_ctrl_param        param;
+    uint32_t                    buffer_size;
+    uint32_t                    current_sample;
 };
 
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -82,70 +82,70 @@ static void aux_sample_finished(const struct ads1256_group * group);
 
 /* -- Probe pointers to callbacks and info structs -- */
 static const struct ads1256_chip_vt
-								g_probe_chip_vt[IO_PROBE_CHANNELS] =
+                                g_probe_chip_vt[IO_PROBE_CHANNELS] =
 {
     [IO_CHANNEL_X] = {
-        .drdy_isr_enable 	= axis_x_drdy_isr_enable,
-		.drdy_isr_disable 	= axis_x_drdy_isr_disable,
-        .nss_activate 		= axis_x_nss_activate,
-        .nss_deactivate 	= axis_x_nss_deactivate,
+        .drdy_isr_enable    = axis_x_drdy_isr_enable,
+        .drdy_isr_disable   = axis_x_drdy_isr_disable,
+        .nss_activate       = axis_x_nss_activate,
+        .nss_deactivate     = axis_x_nss_deactivate,
     },
     [IO_CHANNEL_Y] = {
-		.drdy_isr_enable 	= axis_y_drdy_isr_enable,
-		.drdy_isr_disable 	= axis_y_drdy_isr_disable,
-        .nss_activate		= axis_y_nss_activate,
-        .nss_deactivate		= axis_y_nss_deactivate,
+        .drdy_isr_enable    = axis_y_drdy_isr_enable,
+        .drdy_isr_disable   = axis_y_drdy_isr_disable,
+        .nss_activate       = axis_y_nss_activate,
+        .nss_deactivate     = axis_y_nss_deactivate,
     },
-	[IO_CHANNEL_Z] = {
-		.drdy_isr_enable 	= axis_z_drdy_isr_enable,
-		.drdy_isr_disable 	= axis_z_drdy_isr_disable,
-		.nss_activate		= axis_z_nss_activate,
-		.nss_deactivate		= axis_z_nss_deactivate,
+    [IO_CHANNEL_Z] = {
+        .drdy_isr_enable    = axis_z_drdy_isr_enable,
+        .drdy_isr_disable   = axis_z_drdy_isr_disable,
+        .nss_activate       = axis_z_nss_activate,
+        .nss_deactivate     = axis_z_nss_deactivate,
     }
 };
 
-static struct spi_bus * const 	g_probe_chip_spi_bus[IO_PROBE_CHANNELS] =
+static struct spi_bus * const   g_probe_chip_spi_bus[IO_PROBE_CHANNELS] =
 {
-	[IO_CHANNEL_X] = &HWCON_PROBE_X_SPI,
-	[IO_CHANNEL_Y] = &HWCON_PROBE_Y_SPI,
-	[IO_CHANNEL_Z] = &HWCON_PROBE_Z_SPI,
+    [IO_CHANNEL_X] = &HWCON_PROBE_X_SPI,
+    [IO_CHANNEL_Y] = &HWCON_PROBE_Y_SPI,
+    [IO_CHANNEL_Z] = &HWCON_PROBE_Z_SPI,
 };
 
 static const struct ads1256_group_vt
-								g_probe_group_vt =
+                                g_probe_group_vt =
 {
-	.power_activate 	= probe_power_activate,
-	.power_deactivate 	= probe_power_deactivate,
-	.sample_finished 	= probe_sample_finished
+    .power_activate     = probe_power_activate,
+    .power_deactivate   = probe_power_deactivate,
+    .sample_finished    = probe_sample_finished
 };
 
 /* -- AUX pointers to callbacks and info structs -- */
 
 static const struct ads1256_chip_vt
-								g_aux_chip_vt =
+                                g_aux_chip_vt =
 {
-	.drdy_isr_enable 	= aux_drdy_isr_enable,
-	.drdy_isr_disable	= aux_drdy_isr_disable,
-	.nss_activate		= aux_nss_activate,
-	.nss_deactivate		= aux_nss_deactivate
+    .drdy_isr_enable    = aux_drdy_isr_enable,
+    .drdy_isr_disable   = aux_drdy_isr_disable,
+    .nss_activate       = aux_nss_activate,
+    .nss_deactivate     = aux_nss_deactivate
 };
 
-static struct spi_bus * const 	g_aux_chip_spi_bus = &HWCON_AUX_SPI;
+static struct spi_bus * const   g_aux_chip_spi_bus = &HWCON_AUX_SPI;
 
 static const struct ads1256_group_vt
-								g_aux_group_vt =
+                                g_aux_group_vt =
 {
-	.power_activate 	= NULL, /* NOTE: The group doesn't have power control */
-	.power_deactivate   = NULL, /* NOTE: The group doesn't have power control */
-	.sample_finished    = aux_sample_finished
+    .power_activate     = NULL, /* NOTE: The group doesn't have power control */
+    .power_deactivate   = NULL, /* NOTE: The group doesn't have power control */
+    .sample_finished    = aux_sample_finished
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-struct probe					g_probe;
-struct aux						g_aux;
-struct autorange				g_autorange;
-struct acquisition 				g_acquisition;
+struct probe                    g_probe;
+struct aux                      g_aux;
+struct autorange                g_autorange;
+struct acquisition              g_acquisition;
 
 /*============================================  LOCAL FUNCTION DEFINITIONS  ==*/
 
@@ -155,9 +155,9 @@ struct acquisition 				g_acquisition;
 
 static void axis_x_drdy_isr_enable(void)
 {
-	/* Clear EXTI controller interrupt bit, because this is holding interrupt.
-	 */
-	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_X_DRDY_PIN);
+    /* Clear EXTI controller interrupt bit, because this is holding interrupt.
+     */
+    __HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_X_DRDY_PIN);
     NVIC_ClearPendingIRQ(HWCON_PROBE_X_DRDY_EXTI);
     NVIC_EnableIRQ(HWCON_PROBE_X_DRDY_EXTI);
 }
@@ -183,8 +183,8 @@ static void axis_x_nss_deactivate(void)
 
 static void axis_y_drdy_isr_enable(void)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Y_DRDY_PIN);
-	NVIC_ClearPendingIRQ(HWCON_PROBE_Y_DRDY_EXTI);
+    __HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Y_DRDY_PIN);
+    NVIC_ClearPendingIRQ(HWCON_PROBE_Y_DRDY_EXTI);
     NVIC_EnableIRQ(HWCON_PROBE_Y_DRDY_EXTI);
 }
 
@@ -209,8 +209,8 @@ static void axis_y_nss_deactivate(void)
 
 static void axis_z_drdy_isr_enable(void)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Z_DRDY_PIN);
-	NVIC_ClearPendingIRQ(HWCON_PROBE_Z_DRDY_EXTI);
+    __HAL_GPIO_EXTI_CLEAR_IT(HWCON_PROBE_Z_DRDY_PIN);
+    NVIC_ClearPendingIRQ(HWCON_PROBE_Z_DRDY_EXTI);
     NVIC_EnableIRQ(HWCON_PROBE_Z_DRDY_EXTI);
 }
 
@@ -235,30 +235,30 @@ static void axis_z_nss_deactivate(void)
 
 static void probe_power_activate(void)
 {
-	gpio_set(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
+    gpio_set(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
 }
 
 static void probe_power_deactivate(void)
 {
-	gpio_clr(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
+    gpio_clr(HWCON_PROBE_SYNC_PORT, HWCON_PROBE_SYNC_PIN);
 }
 
 static void probe_sample_finished(const struct ads1256_group * group)
 {
-	struct ads1256_chip *		chip;
+    struct ads1256_chip *       chip;
 
-	struct io_buffer * buffer = rtcomm_request_new(&g_rtcomm);
+    struct io_buffer * buffer = rtcomm_request_new(&g_rtcomm);
 
-	for (chip = group->chips; chip != NULL; chip = chip->next) {
-		buffer->sample[g_acquisition.current_sample][chip->id] =
-				ads1256_get_value(chip);
-	}
-	g_acquisition.current_sample++;
+    for (chip = group->chips; chip != NULL; chip = chip->next) {
+        buffer->sample[g_acquisition.current_sample][chip->id] =
+                ads1256_get_value(chip);
+    }
+    g_acquisition.current_sample++;
 
-	if (g_acquisition.current_sample == g_acquisition.buffer_size) {
-		g_acquisition.current_sample = 0u;
-		rtcomm_release_new(&g_rtcomm);
-	}
+    if (g_acquisition.current_sample == g_acquisition.buffer_size) {
+        g_acquisition.current_sample = 0u;
+        rtcomm_release_new(&g_rtcomm);
+    }
 }
 
 /*
@@ -266,35 +266,35 @@ static void probe_sample_finished(const struct ads1256_group * group)
  */
 static void aux_drdy_isr_enable(void)
 {
-	/* Clear EXTI controller interrupt bit, because this is holding interrupt.
-	 */
-	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_AUX_DRDY_PIN);
+    /* Clear EXTI controller interrupt bit, because this is holding interrupt.
+     */
+    __HAL_GPIO_EXTI_CLEAR_IT(HWCON_AUX_DRDY_PIN);
     NVIC_ClearPendingIRQ(HWCON_AUX_DRDY_EXTI);
     NVIC_EnableIRQ(HWCON_AUX_DRDY_EXTI);
 }
 
 static void aux_drdy_isr_disable(void)
 {
-	NVIC_DisableIRQ(HWCON_AUX_DRDY_EXTI);
+    NVIC_DisableIRQ(HWCON_AUX_DRDY_EXTI);
 }
 
 static void aux_nss_activate(void)
 {
-	gpio_clr(HWCON_AUX_NSS_PORT, HWCON_AUX_NSS_PIN);
+    gpio_clr(HWCON_AUX_NSS_PORT, HWCON_AUX_NSS_PIN);
 }
 
 static void aux_nss_deactivate(void)
 {
-	gpio_set(HWCON_AUX_NSS_PORT, HWCON_AUX_NSS_PIN);
+    gpio_set(HWCON_AUX_NSS_PORT, HWCON_AUX_NSS_PIN);
 }
 
 static void aux_sample_finished(const struct ads1256_group * group)
 {
-	struct ads1256_chip *		chip;
+    struct ads1256_chip *       chip;
 
-	for (chip = group->chips; chip != NULL; chip = chip->next) {
-		g_aux.mvalues[chip->current_mchannel] = ads1256_get_value(chip);
-	}
+    for (chip = group->chips; chip != NULL; chip = chip->next) {
+        g_aux.mvalues[chip->current_mchannel] = ads1256_get_value(chip);
+    }
 }
 
 /*
@@ -303,81 +303,81 @@ static void aux_sample_finished(const struct ads1256_group * group)
 
 static int probe_set_config(const struct io_ctrl_config * config)
 {
-	bool						channel_is_enabled[IO_PROBE_CHANNELS];
-	uint32_t					master_channel = UINT32_MAX;
-	uint32_t					channel_id;
+    bool                        channel_is_enabled[IO_PROBE_CHANNELS];
+    uint32_t                    master_channel = UINT32_MAX;
+    uint32_t                    channel_id;
 
-	channel_is_enabled[IO_CHANNEL_X] = config->en_x == 1u ? true : false;
-	channel_is_enabled[IO_CHANNEL_Y] = config->en_y == 1u ? true : false;
-	channel_is_enabled[IO_CHANNEL_Z] = config->en_z == 1u ? true : false;
+    channel_is_enabled[IO_CHANNEL_X] = config->en_x == 1u ? true : false;
+    channel_is_enabled[IO_CHANNEL_Y] = config->en_y == 1u ? true : false;
+    channel_is_enabled[IO_CHANNEL_Z] = config->en_z == 1u ? true : false;
 
-	for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
-		if (channel_is_enabled[channel_id]) {
-			ads1256_group_add_chip(&g_probe.group, &g_probe.chip[channel_id]);
+    for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
+        if (channel_is_enabled[channel_id]) {
+            ads1256_group_add_chip(&g_probe.group, &g_probe.chip[channel_id]);
 
-			if (master_channel == UINT32_MAX) {
-				master_channel = channel_id;
-			}
-			g_probe.chip_config[channel_id].enable_buffer =
-					protocol_from_en_probe_buffer(config);
-			g_probe.chip_config[channel_id].enable_ext_osc = true;
-			g_probe.chip_config[channel_id].gpio = 0u;
-			g_probe.chip_config[channel_id].is_master =
-					channel_id == master_channel ? true : false;
-			g_probe.chip_config[channel_id].mux_hi[0] =
-					protocol_from_probe_mux_hi(config);
-			g_probe.chip_config[channel_id].mux_lo[0] =
-					protocol_from_probe_mux_lo(config);
-			g_probe.chip_config[channel_id].no_mux_channels = 1;
-		}
-	}
+            if (master_channel == UINT32_MAX) {
+                master_channel = channel_id;
+            }
+            g_probe.chip_config[channel_id].enable_buffer =
+                    protocol_from_en_probe_buffer(config);
+            g_probe.chip_config[channel_id].enable_ext_osc = true;
+            g_probe.chip_config[channel_id].gpio = 0u;
+            g_probe.chip_config[channel_id].is_master =
+                    channel_id == master_channel ? true : false;
+            g_probe.chip_config[channel_id].mux_hi[0] =
+                    protocol_from_probe_mux_hi(config);
+            g_probe.chip_config[channel_id].mux_lo[0] =
+                    protocol_from_probe_mux_lo(config);
+            g_probe.chip_config[channel_id].no_mux_channels = 1;
+        }
+    }
 
-	return (0);
+    return (0);
 }
 
 static int aux_set_config(const struct io_ctrl_config * config)
 {
-	uint32_t					no_mux_channels;
+    uint32_t                    no_mux_channels;
 
-	no_mux_channels = 0u;
-	no_mux_channels += protocol_from_aux_en_aux1(config) ? 1u : 0u;
-	no_mux_channels += protocol_from_aux_en_aux2(config) ? 1u : 0u;
+    no_mux_channels = 0u;
+    no_mux_channels += protocol_from_aux_en_aux1(config) ? 1u : 0u;
+    no_mux_channels += protocol_from_aux_en_aux2(config) ? 1u : 0u;
 
-	g_aux.chip_config.enable_buffer = protocol_from_en_aux_bufer(config);
-	g_aux.chip_config.enable_ext_osc = true;
-	g_aux.chip_config.gpio = 0u;
-	g_aux.chip_config.is_master = true;
+    g_aux.chip_config.enable_buffer = protocol_from_en_aux_bufer(config);
+    g_aux.chip_config.enable_ext_osc = true;
+    g_aux.chip_config.gpio = 0u;
+    g_aux.chip_config.is_master = true;
 
-	if (no_mux_channels == 1) {
-		if (protocol_from_aux_en_aux1(config)) {
-			g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
-			g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
-		} else {
-			g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 1);
-			g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 1);
-		}
-	} else if (no_mux_channels == 2) {
-		g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
-		g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
-		g_aux.chip_config.mux_hi[1] = protocol_from_aux_mux_hi(config, 1);
-		g_aux.chip_config.mux_lo[1] = protocol_from_aux_mux_lo(config, 1);
-	}
-	g_aux.chip_config.no_mux_channels = (uint8_t)no_mux_channels;
-	g_aux.group_config.sampling_mode = ADS1256_SAMPLE_MODE_REQ;
-	g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_10;
+    if (no_mux_channels == 1) {
+        if (protocol_from_aux_en_aux1(config)) {
+            g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
+            g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
+        } else {
+            g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 1);
+            g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 1);
+        }
+    } else if (no_mux_channels == 2) {
+        g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
+        g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
+        g_aux.chip_config.mux_hi[1] = protocol_from_aux_mux_hi(config, 1);
+        g_aux.chip_config.mux_lo[1] = protocol_from_aux_mux_lo(config, 1);
+    }
+    g_aux.chip_config.no_mux_channels = (uint8_t)no_mux_channels;
+    g_aux.group_config.sampling_mode = ADS1256_SAMPLE_MODE_REQ;
+    g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_10;
 
-	if (no_mux_channels != 0u) {
-		ads1256_group_add_chip(&g_aux.group, &g_aux.chip);
-	}
+    if (no_mux_channels != 0u) {
+        ads1256_group_add_chip(&g_aux.group, &g_aux.chip);
+    }
 
-	return (0);
+    return (0);
 }
 
 static int autorange_set_config(const struct io_ctrl_config * config)
 {
-	(void)config;
+    (void)config;
 
-	return (0);
+    return (0);
 }
 
 
@@ -385,179 +385,179 @@ static int autorange_set_config(const struct io_ctrl_config * config)
 
 void acquisition_init(void)
 {
-	/* NOTE:
-	 * Allocate the io_buffer. We need two of the because the FW works as
-	 * ping-pong buffer.
-	 */
-	static struct io_buffer		buffer[2];
-	uint32_t					channel_id;
+    /* NOTE:
+     * Allocate the io_buffer. We need two of the because the FW works as
+     * ping-pong buffer.
+     */
+    static struct io_buffer     buffer[2];
+    uint32_t                    channel_id;
 
-	/* -- Probe chips initialization -- */
-	ads1256_group_init(&g_probe.group, &g_probe_group_vt);
-	ads1256_set_group_config(&g_probe.group, &g_probe.group_config);
+    /* -- Probe chips initialization -- */
+    ads1256_group_init(&g_probe.group, &g_probe_group_vt);
+    ads1256_set_group_config(&g_probe.group, &g_probe.group_config);
 
-	for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
-		ads1256_init_chip(&g_probe.chip[channel_id],
-				g_probe_chip_spi_bus[channel_id],
-				&g_probe_chip_vt[channel_id], channel_id);
-		ads1256_set_per_chip_config(&g_probe.chip[channel_id],
-				&g_probe.chip_config[channel_id]);
-	}
+    for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
+        ads1256_init_chip(&g_probe.chip[channel_id],
+                g_probe_chip_spi_bus[channel_id],
+                &g_probe_chip_vt[channel_id], channel_id);
+        ads1256_set_per_chip_config(&g_probe.chip[channel_id],
+                &g_probe.chip_config[channel_id]);
+    }
 
-	/* -- AUX chip initialization -- */
-	ads1256_group_init(&g_aux.group, &g_aux_group_vt);
-	ads1256_set_group_config(&g_aux.group, &g_aux.group_config);
-	ads1256_init_chip(&g_aux.chip, g_aux_chip_spi_bus, &g_aux_chip_vt, 0);
-	ads1256_set_per_chip_config(&g_aux.chip, &g_aux.chip_config);
+    /* -- AUX chip initialization -- */
+    ads1256_group_init(&g_aux.group, &g_aux_group_vt);
+    ads1256_set_group_config(&g_aux.group, &g_aux.group_config);
+    ads1256_init_chip(&g_aux.chip, g_aux_chip_spi_bus, &g_aux_chip_vt, 0);
+    ads1256_set_per_chip_config(&g_aux.chip, &g_aux.chip_config);
 
-	/* -- CDI rtcomm initialization -- */
+    /* -- CDI rtcomm initialization -- */
     rtcomm_init(&g_rtcomm, &buffer[0], &buffer[1], sizeof(buffer[0]));
 }
 
 int acquisition_set_config(const struct io_ctrl_config * config)
 {
-	int 						retval;
+    int                         retval;
 
-	retval = probe_set_config(config);
+    retval = probe_set_config(config);
 
-	if (retval != 0) {
-		return (retval);
-	}
-	retval = aux_set_config(config);
+    if (retval != 0) {
+        return (retval);
+    }
+    retval = aux_set_config(config);
 
-	if (retval != 0) {
-		return (retval);
-	}
-	retval = autorange_set_config(config);
+    if (retval != 0) {
+        return (retval);
+    }
+    retval = autorange_set_config(config);
 
-	if (retval == 0) {
-		memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
-	}
+    if (retval == 0) {
+        memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
+    }
 
-	return (retval);
+    return (retval);
 }
 
 int acquisition_probe_set_param(const struct io_ctrl_param * param)
 {
-	int						retval;
+    int                     retval;
 
-	g_probe.group_config.sampling_mode = protocol_from_workmode(param);
-	g_probe.group_config.sampling_rate = protocol_from_vspeed(param);
+    g_probe.group_config.sampling_mode = protocol_from_workmode(param);
+    g_probe.group_config.sampling_rate = protocol_from_vspeed(param);
 
-	/* Finally apply all probe settings */
-	retval = ads1256_apply_group_config(&g_probe.group);
+    /* Finally apply all probe settings */
+    retval = ads1256_apply_group_config(&g_probe.group);
 
-	if (retval) {
-		return (retval);
-	}
+    if (retval) {
+        return (retval);
+    }
 
-	/* Finally apply all aux settings */
-	retval = ads1256_apply_group_config(&g_aux.group);
+    /* Finally apply all aux settings */
+    retval = ads1256_apply_group_config(&g_aux.group);
 
-	if (retval) {
-		return (retval);
-	}
+    if (retval) {
+        return (retval);
+    }
 
-	/* Set buffer size ten times smaller then sample rate. We want 10 buffers
-	 * per second which are sent from firmware to application processor.
-	 */
-	g_acquisition.buffer_size = protocol_from_vspeed(param) / 10u;
+    /* Set buffer size ten times smaller then sample rate. We want 10 buffers
+     * per second which are sent from firmware to application processor.
+     */
+    g_acquisition.buffer_size = protocol_from_vspeed(param) / 10u;
 
-	/* Clear main buffers before using them. This is good when watching SPI
-	 * signals using logic analyzer.
-	 */
-	rtcomm_clear(&g_rtcomm);
-	memset(&g_aux.mvalues[0], 0, sizeof(g_aux.mvalues));
+    /* Clear main buffers before using them. This is good when watching SPI
+     * signals using logic analyzer.
+     */
+    rtcomm_clear(&g_rtcomm);
+    memset(&g_aux.mvalues[0], 0, sizeof(g_aux.mvalues));
 
-	/* Make a copy of params because we will later use this info to create
-	 * io_buffer.
-	 */
-	memcpy(&g_acquisition.param, param, sizeof(g_acquisition.param));
+    /* Make a copy of params because we will later use this info to create
+     * io_buffer.
+     */
+    memcpy(&g_acquisition.param, param, sizeof(g_acquisition.param));
 
-	return (retval);
+    return (retval);
 }
 
 int acquisition_aux_set_param(const struct io_ctrl_param * param)
 {
-	(void)param;
-	/* NOTE:
-	 * AUX does not have any parameters.
-	 */
+    (void)param;
+    /* NOTE:
+     * AUX does not have any parameters.
+     */
 
-	return (0);
+    return (0);
 }
 
 int acquisition_autorange_set_param(const struct io_ctrl_param * param)
 {
-	g_autorange.is_enabled = protocol_from_en_autorange(param);
+    g_autorange.is_enabled = protocol_from_en_autorange(param);
 
-	return (0);
+    return (0);
 }
 
 void acquisition_stop_sampling(void)
 {
-	ads1256_stop_sampling(&g_probe.group);
+    ads1256_stop_sampling(&g_probe.group);
 }
 
 int acquisition_start_sampling(void)
 {
-	int							retval;
+    int                         retval;
 
-	g_acquisition.current_sample = 0u;
+    g_acquisition.current_sample = 0u;
 
-	retval = ads1256_start_sampling(&g_probe.group);
+    retval = ads1256_start_sampling(&g_probe.group);
 
-	if (retval != 0) {
-		return (retval);
-	}
+    if (retval != 0) {
+        return (retval);
+    }
 
-	if (protocol_from_aux_en_aux1(&g_acquisition.config) ||
-		protocol_from_aux_en_aux2(&g_acquisition.config)) {
-		retval = ads1256_start_sampling(&g_aux.group);
-	}
+    if (protocol_from_aux_en_aux1(&g_acquisition.config) ||
+        protocol_from_aux_en_aux2(&g_acquisition.config)) {
+        retval = ads1256_start_sampling(&g_aux.group);
+    }
 
-	return (retval);
+    return (retval);
 }
 
 void rtcomm_pre_send(void * buffer)
 {
-	struct io_buffer *		io_buffer = buffer;
-	static uint32_t 		frame_count;
-	uint32_t				mchannel_id;
+    struct io_buffer *      io_buffer = buffer;
+    static uint32_t         frame_count;
+    uint32_t                mchannel_id;
 
-	/* Update header and footer */
-	rtcomm_header_pack(&io_buffer->header, sizeof(struct io_buffer),
-			frame_count++);
-	rtcomm_footer_pack(&io_buffer->footer, &io_buffer->header);
+    /* Update header and footer */
+    rtcomm_header_pack(&io_buffer->header, sizeof(struct io_buffer),
+            frame_count++);
+    rtcomm_footer_pack(&io_buffer->footer, &io_buffer->header);
 
-	/* Get status */
-	io_buffer->stats.runtime_check_failed =
-			status_get(STATUS_RUNTIME_CHECK_FAILED);
-	io_buffer->stats.total_errors =
-			status_get_total();
-	io_buffer->stats.ctrl_comm_err =
-			status_get(STATUS_CTRL_COMM_ERR);
-	io_buffer->stats.ctrl_data_err =
-			status_get(STATUS_CTRL_DATA_ERR);
-	io_buffer->stats.ads_err =
-			status_get(STATUS_ADS_ERR);
-	io_buffer->stats.no_resource_err =
-			status_get(STATUS_NO_RESOURCE_ERR);
-	io_buffer->stats.rtcomm_skipped_err =
-			status_get(STATUS_RTCOMM_SKIPPED_ERR);
-	io_buffer->stats.rtcomm_transfer_err =
-			status_get(STATUS_RTCOMM_TRANSFER_ERR);
-	io_buffer->stats.rtcomm_complete_err =
-			status_get(STATUS_RTCOMM_COMPLETE_ERR);
+    /* Get status */
+    io_buffer->stats.runtime_check_failed =
+            status_get(STATUS_RUNTIME_CHECK_FAILED);
+    io_buffer->stats.total_errors =
+            status_get_total();
+    io_buffer->stats.ctrl_comm_err =
+            status_get(STATUS_CTRL_COMM_ERR);
+    io_buffer->stats.ctrl_data_err =
+            status_get(STATUS_CTRL_DATA_ERR);
+    io_buffer->stats.ads_err =
+            status_get(STATUS_ADS_ERR);
+    io_buffer->stats.no_resource_err =
+            status_get(STATUS_NO_RESOURCE_ERR);
+    io_buffer->stats.rtcomm_skipped_err =
+            status_get(STATUS_RTCOMM_SKIPPED_ERR);
+    io_buffer->stats.rtcomm_transfer_err =
+            status_get(STATUS_RTCOMM_TRANSFER_ERR);
+    io_buffer->stats.rtcomm_complete_err =
+            status_get(STATUS_RTCOMM_COMPLETE_ERR);
 
-	/* Return parameters that were used for sampling */
-	memcpy(&io_buffer->param, &g_acquisition.param.data,
-			sizeof(io_buffer->param));
+    /* Return parameters that were used for sampling */
+    memcpy(&io_buffer->param, &g_acquisition.param.data,
+            sizeof(io_buffer->param));
 
-	/* Update AUX channels */
-	for (mchannel_id = 0; mchannel_id < IO_AUX_CHANNELS; mchannel_id++) {
-		io_buffer->aux[mchannel_id] = g_aux.mvalues[mchannel_id];
-	}
+    /* Update AUX channels */
+    for (mchannel_id = 0; mchannel_id < IO_AUX_CHANNELS; mchannel_id++) {
+        io_buffer->aux[mchannel_id] = g_aux.mvalues[mchannel_id];
+    }
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

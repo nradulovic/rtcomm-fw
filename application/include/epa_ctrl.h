@@ -43,35 +43,35 @@ extern "C" {
 
 enum ctrl_epa_events
 {
-	CTRL_EVT_CONFIG = EPA_CTRL_EVENT_BASE,
-	CTRL_EVT_PARAM
+    CTRL_EVT_CONFIG = EPA_CTRL_EVENT_BASE,
+    CTRL_EVT_PARAM
 };
 
 struct ctrl_evt_config
 {
-	struct nevent				super;
-	struct io_ctrl_config		config;
+    struct nevent               super;
+    struct io_ctrl_config       config;
 };
 
 struct ctrl_evt_param
 {
-	struct nevent				super;
-	struct io_ctrl_param		param;
+    struct nevent               super;
+    struct io_ctrl_param        param;
 };
 
 struct ctrl
 {
-	I2C_HandleTypeDef			i2c;
-	void *						buffer;
-	uint16_t					size;
+    I2C_HandleTypeDef           i2c;
+    void *                      buffer;
+    uint16_t                    size;
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
 
-extern struct nepa_define 		g_ctrl_epa_define;
-extern struct nepa 				g_ctrl_epa;
+extern struct nepa_define       g_ctrl_epa_define;
+extern struct nepa              g_ctrl_epa;
 
-extern struct ctrl 				g_ctrl;
+extern struct ctrl              g_ctrl;
 
 /*===================================================  FUNCTION PROTOTYPES  ==*/
 
