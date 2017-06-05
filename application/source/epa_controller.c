@@ -121,21 +121,7 @@ static naction state_uninitialized(struct nsm * sm, const nevent * event)
 			const struct ctrl_evt_config *
 								evt_config = nevent_data(event);
 
-			retval = acquisition_probe_set_config(&evt_config->config);
-
-			if (retval) {
-				status_warn(STATUS_RUNTIME_CHECK_FAILED);
-
-				return (naction_handled());
-			}
-			retval = acquisition_aux_set_config(&evt_config->config);
-
-			if (retval) {
-				status_warn(STATUS_RUNTIME_CHECK_FAILED);
-
-				return (naction_handled());
-			}
-			retval = acquisition_autorange_set_config(&evt_config->config);
+			retval = acquisition_set_config(&evt_config->config);
 
 			if (retval) {
 				status_warn(STATUS_RUNTIME_CHECK_FAILED);

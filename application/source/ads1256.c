@@ -286,14 +286,8 @@ static void ads_chip_sampling_prepare(struct ads1256_chip * chip)
 
 static void ads_chip_sampling_enable(struct ads1256_chip * chip)
 {
-	if (chip->group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
-		/* Continuous mode */
-		if (chip->config->is_master) {
-			chip->group->master = chip;
-			chip->vt->drdy_isr_enable();
-		}
-	} else {
-		/* Read by command */
+	if (chip->config->is_master) {
+		chip->group->master = chip;
 		chip->vt->drdy_isr_enable();
 	}
 }
@@ -357,6 +351,37 @@ static int ads_group_apply_config(struct ads1256_group * group)
 	}
 
 	return (retval);
+}
+
+static void drdy_isr_mode_cont(struct ads1256_group * group)
+{
+	struct ads1256_chip * chip;
+
+	/* NOTE:
+	 * This for loop must be executed as the first block of code in ISR. This is
+	 * needed because we want to start reading as soon as possible. All other
+	 * stuff that needs to be done in this ISR can be done after read start.
+	 */
+	for (chip = group->chips; chip != NULL; chip = chip->next) {
+		ads_chip_read_data_async(chip);
+	}
+	group->master->vt->drdy_isr_disable();
+}
+
+static void drdy_isr_mode_req(struct ads1256_group * group)
+{
+	struct ads1256_chip * chip;
+
+	/* NOTE:
+	 * First disable the ISR because the ads_chip_read_data_sync may call
+	 * sample_finished which starts the sampling again. If the order of
+	 * execution is alternated then the sampling process will halt.
+	 */
+	group->master->vt->drdy_isr_disable();
+
+	for (chip = group->chips; chip != NULL; chip = chip->next) {
+		ads_chip_read_data_sync(chip);
+	}
 }
 
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
@@ -517,17 +542,10 @@ int ads1256_stop_sampling(struct ads1256_group * group)
 
 void ads1256_drdy_isr(struct ads1256_group * group)
 {
-	struct ads1256_chip * chip;
-
 	if (group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
-		for (chip = group->chips; chip != NULL; chip = chip->next) {
-			ads_chip_read_data_async(chip);
-		}
-		group->master->vt->drdy_isr_disable();
+		drdy_isr_mode_cont(group);
 	} else {
-		for (chip = group->chips; chip != NULL; chip = chip->next) {
-			ads_chip_read_data_sync(chip);
-		}
+		drdy_isr_mode_req(group);
 	}
 }
 

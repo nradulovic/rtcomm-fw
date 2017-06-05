@@ -296,6 +296,66 @@ static void aux_sample_finished(const struct ads1256_group * group)
 	 */
 }
 
+
+static int acquisition_probe_set_config(const struct io_ctrl_config * config)
+{
+	bool						channel_is_enabled[IO_PROBE_CHANNELS];
+	uint32_t					master_channel = UINT32_MAX;
+	uint32_t					channel_id;
+
+	channel_is_enabled[IO_CHANNEL_X] = config->en_x == 1u ? true : false;
+	channel_is_enabled[IO_CHANNEL_Y] = config->en_y == 1u ? true : false;
+	channel_is_enabled[IO_CHANNEL_Z] = config->en_z == 1u ? true : false;
+
+	for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
+		if (channel_is_enabled[channel_id]) {
+			ads1256_group_add_chip(&g_probe.group, &g_probe.chip[channel_id]);
+
+			if (master_channel == UINT32_MAX) {
+				master_channel = channel_id;
+			}
+			g_probe.chip_config[channel_id].enable_buffer =
+					protocol_from_en_probe_buffer(config);
+			g_probe.chip_config[channel_id].enable_ext_osc = true;
+			g_probe.chip_config[channel_id].gpio = 0u;
+			g_probe.chip_config[channel_id].is_master =
+					channel_id == master_channel ? true : false;
+			g_probe.chip_config[channel_id].mux_hi =
+					protocol_from_probe_mux_hi(config);
+			g_probe.chip_config[channel_id].mux_lo =
+					protocol_from_probe_mux_lo(config);
+		}
+	}
+
+	return (0);
+}
+
+static int acquisition_aux_set_config(const struct io_ctrl_config * config)
+{
+	g_aux.chip_config.enable_buffer = protocol_from_en_aux_bufer(config);
+	g_aux.chip_config.enable_ext_osc = true;
+	g_aux.chip_config.gpio = 0u;
+	g_aux.chip_config.is_master = true;
+	g_aux.chip_config.mux_hi = protocol_from_aux_mux_hi(config, 0);
+	g_aux.chip_config.mux_lo = protocol_from_aux_mux_lo(config,	0);
+	g_aux.group_config.sampling_mode = ADS1256_SAMPLE_MODE_REQ;
+	g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_2_5;
+
+	if (!!config->en_aux1 || !!config->en_aux2) {
+		ads1256_group_add_chip(&g_aux.group, &g_aux.chip);
+	}
+
+	return (0);
+}
+
+static int acquisition_autorange_set_config(const struct io_ctrl_config * config)
+{
+	(void)config;
+
+	return (0);
+}
+
+
 /*===========================================  GLOBAL FUNCTION DEFINITIONS  ==*/
 
 void acquisition_init(void)
@@ -329,57 +389,27 @@ void acquisition_init(void)
     rtcomm_init(&g_rtcomm, &buffer[0], &buffer[1], sizeof(buffer[0]));
 }
 
-int acquisition_probe_set_config(const struct io_ctrl_config * config)
+int acquisition_set_config(const struct io_ctrl_config * config)
 {
-	bool						channel_is_enabled[IO_PROBE_CHANNELS];
-	uint32_t					master_channel = UINT32_MAX;
-	uint32_t					channel_id;
+	int 						retval;
 
-	channel_is_enabled[IO_CHANNEL_X] = config->en_x == 1u ? true : false;
-	channel_is_enabled[IO_CHANNEL_Y] = config->en_y == 1u ? true : false;
-	channel_is_enabled[IO_CHANNEL_Z] = config->en_z == 1u ? true : false;
+	retval = acquisition_probe_set_config(config);
 
-	for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
-		if (channel_is_enabled[channel_id]) {
-			ads1256_group_add_chip(&g_probe.group, &g_probe.chip[channel_id]);
-
-			if (master_channel == UINT32_MAX) {
-				master_channel = channel_id;
-			}
-			g_probe.chip_config[channel_id].enable_buffer =
-					protocol_from_en_probe_buffer(config);
-			g_probe.chip_config[channel_id].enable_ext_osc = true;
-			g_probe.chip_config[channel_id].gpio = 0u;
-			g_probe.chip_config[channel_id].is_master =
-					channel_id == master_channel ? true : false;
-			g_probe.chip_config[channel_id].mux_hi =
-					protocol_from_probe_mux_hi(config);
-			g_probe.chip_config[channel_id].mux_lo =
-					protocol_from_probe_mux_lo(config);
-		}
+	if (retval != 0) {
+		return (retval);
 	}
-	memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
+	retval = acquisition_aux_set_config(config);
 
-	return (0);
-}
+	if (retval != 0) {
+		return (retval);
+	}
+	retval = acquisition_autorange_set_config(config);
 
-int acquisition_aux_set_config(const struct io_ctrl_config * config)
-{
-	g_aux.chip_config.enable_buffer = protocol_from_en_aux_bufer(config);
-	g_aux.chip_config.enable_ext_osc = true;
-	g_aux.chip_config.gpio = 0u;
-	g_aux.chip_config.is_master = true;
-	g_aux.group_config.sampling_mode = ADS1256_SAMPLE_MODE_REQ;
-	g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_2_5;
+	if (retval == 0) {
+		memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
+	}
 
-	return (0);
-}
-
-int acquisition_autorange_set_config(const struct io_ctrl_config * config)
-{
-	(void)config;
-
-	return (0);
+	return (retval);
 }
 
 int acquisition_probe_set_param(const struct io_ctrl_param * param)
@@ -391,8 +421,15 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 	g_probe.group_config.sampling_rate =
 			protocol_from_vspeed(param);
 
-	/* Finally apply all settings */
+	/* Finally apply all probe settings */
 	retval = ads1256_apply_group_config(&g_probe.group);
+
+	if (retval) {
+		return (retval);
+	}
+
+	/* Finally apply all aux settings */
+	retval = ads1256_apply_group_config(&g_aux.group);
 
 	if (retval) {
 		return (retval);
@@ -445,6 +482,14 @@ int acquisition_start_sampling(void)
 	g_acquisition.current_sample = 0u;
 
 	retval = ads1256_start_sampling(&g_probe.group);
+
+	if (retval != 0) {
+		return (retval);
+	}
+
+	if (!!g_acquisition.config.en_aux1 || !!g_acquisition.config.en_aux2) {
+		retval = ads1256_start_sampling(&g_aux.group);
+	}
 
 	return (retval);
 }

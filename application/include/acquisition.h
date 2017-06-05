@@ -35,8 +35,8 @@
 
 /*===============================================================  MACRO's  ==*/
 
-#define acquisition_probe_drdy_isr(probe) \
-	ads1256_drdy_isr(&(probe)->group)
+#define acquisition_probe_drdy_isr(channel) \
+	ads1256_drdy_isr(&(channel)->group)
 
 /*------------------------------------------------------  C++ extern begin  --*/
 #ifdef __cplusplus
@@ -75,11 +75,7 @@ extern struct autorange			g_autorange;
 
 void acquisition_init(void);
 
-int acquisition_probe_set_config(const struct io_ctrl_config * config);
-
-int acquisition_aux_set_config(const struct io_ctrl_config * config);
-
-int acquisition_autorange_set_config(const struct io_ctrl_config * config);
+int acquisition_set_config(const struct io_ctrl_config * config);
 
 int acquisition_probe_set_param(const struct io_ctrl_param * param);
 

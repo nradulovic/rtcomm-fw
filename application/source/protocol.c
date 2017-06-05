@@ -59,6 +59,46 @@ bool protocol_from_en_aux_bufer(const struct io_ctrl_config * config)
 	return (config->en_aux_buffer == 1u ? true : false);
 }
 
+uint8_t protocol_from_aux_mux_hi(const struct io_ctrl_config * config,
+		uint32_t mchannel)
+{
+	uint8_t						val;
+
+	switch (mchannel) {
+		case 0:
+			val = config->aux1_mux_hi;
+			break;
+		case 1:
+			val = config->aux2_mux_hi;
+			break;
+		default:
+			val = 0;
+			break;
+	}
+
+	return (val <= 8 ? val : 8);
+}
+
+uint8_t protocol_from_aux_mux_lo(const struct io_ctrl_config * config,
+		uint32_t mchannel)
+{
+	uint8_t						val;
+
+	switch (mchannel) {
+		case 0:
+			val = config->aux1_mux_lo;
+			break;
+		case 1:
+			val = config->aux2_mux_lo;
+			break;
+		default:
+			val = 0;
+			break;
+	}
+
+	return (val <= 8 ? val : 8);
+}
+
 uint8_t protocol_from_workmode(const struct io_ctrl_param * param)
 {
 	switch (param->data.workmode) {
