@@ -303,14 +303,11 @@ int acquisition_probe_set_config(const struct io_ctrl_config * config)
 	bool						channel_is_enabled[IO_PROBE_CHANNELS];
 	uint32_t					master_channel = UINT32_MAX;
 	uint32_t					index;
-	int							retval;
 
 	channel_is_enabled[IO_CHANNEL_X] = config->en_x == 1u ? true : false;
 	channel_is_enabled[IO_CHANNEL_Y] = config->en_y == 1u ? true : false;
 	channel_is_enabled[IO_CHANNEL_Z] = config->en_z == 1u ? true : false;
 
-	g_probe.group_config.sampling_mode = ADS1256_SAMPLE_MODE_CONT;
-	g_probe.group_config.sampling_rate = 1000u;
 	ads1256_set_group_config(&g_probe.group, &g_probe.group_config);
 
 	for (index = 0u; index < IO_PROBE_CHANNELS; index++) {
@@ -334,13 +331,9 @@ int acquisition_probe_set_config(const struct io_ctrl_config * config)
 					&g_probe.chip_config[index]);
 		}
 	}
-	retval = ads1256_apply_group_config(&g_probe.group);
+	memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
 
-	if (!retval) {
-		memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
-	}
-
-	return (retval);
+	return (0);
 }
 
 int acquisition_aux_set_config(const struct io_ctrl_config * config)

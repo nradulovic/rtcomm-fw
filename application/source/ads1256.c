@@ -248,17 +248,21 @@ static int ads_chip_apply_config(struct ads1256_chip * chip)
 	/* Setup MUX */
 	reg_val = ADS_MUX(chip->config->mux_hi, chip->config->mux_lo);
 	ads_chip_write_reg_sync(chip, ADS_REG_MUX, reg_val);
+	HAL_Delay(2);
 
 	/* Setup OSC */
 	reg_val = chip->config->enable_ext_osc ? ADS_ADCON_CLKOUT_FCLKIN : 0u;
 	ads_chip_write_reg_sync(chip, ADS_REG_ADCON, reg_val);
+	HAL_Delay(2);
 
 	/* Setup GPIO */
 	ads_chip_write_reg_sync(chip, ADS_REG_IO, chip->config->gpio);
+	HAL_Delay(2);
 
 	/* Setup buffer */
 	reg_val = chip->config->enable_buffer ? ADS_STATUS_BUFEN_ENABLED : 0u;
 	ads_chip_write_reg_sync(chip, ADS_REG_STATUS, reg_val);
+	HAL_Delay(2);
 
 	/* Setup sampling frequency */
 	reg_val = map_sample_rate_to_reg(chip->group->config->sampling_rate);
@@ -267,6 +271,7 @@ static int ads_chip_apply_config(struct ads1256_chip * chip)
 		return (-1);
 	}
 	ads_chip_write_reg_sync(chip, ADS_REG_DRATE, reg_val);
+	HAL_Delay(2);
 
 	return (0);
 }
@@ -331,6 +336,12 @@ static int ads_group_apply_config(struct ads1256_group * group)
 		if (retval != 0) {
 			break;
 		}
+	}
+
+	if (group->config->sampling_rate > 100u) {
+		HAL_Delay(10u);
+	} else {
+		HAL_Delay(110u);
 	}
 
 	return (retval);
@@ -402,13 +413,13 @@ int ads1256_apply_group_config(struct ads1256_group * group)
 
 			ads_group_power_activate(group);
 			/* Wait for power-on cycle */
-			HAL_Delay(10);
+			HAL_Delay(20);
 
 			for (chip = group->chips; chip != NULL; chip = chip->next) {
 				ads_chip_set_cmd_sync(chip, ADS_CMD_RESET);
 			}
 			/* Wait for reset cycle */
-			HAL_Delay(10);
+			HAL_Delay(20);
 			retval = ads_group_apply_config(group);
 
 			if (retval == 0) {

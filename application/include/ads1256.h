@@ -80,6 +80,8 @@ struct ads1256_group_config
 	 * 1 - mode RDATAC
 	 */
 	uint8_t						sampling_mode;
+
+	/* Value in SPS */
 	uint32_t					sampling_rate;
 };
 
