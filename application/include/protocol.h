@@ -47,6 +47,8 @@ bool protocol_from_en_probe_buffer(const struct io_ctrl_config * config);
 uint8_t protocol_from_probe_mux_hi(const struct io_ctrl_config * config);
 uint8_t protocol_from_probe_mux_lo(const struct io_ctrl_config * config);
 
+bool protocol_from_en_aux_bufer(const struct io_ctrl_config * config);
+
 uint8_t protocol_from_workmode(const struct io_ctrl_param * param);
 uint32_t protocol_from_vspeed(const struct io_ctrl_param * param);
 bool protocol_from_en_autorange(const struct io_ctrl_param * param);
