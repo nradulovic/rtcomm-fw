@@ -69,6 +69,7 @@ extern "C" {
 /* Forward declarations */
 struct ads1256_group;
 
+/* Virtual Table of functions associated with one ADC chip. */
 struct ads1256_chip_vt
 {
 	void 					 (* drdy_isr_enable)(void);
@@ -77,6 +78,7 @@ struct ads1256_chip_vt
 	void                     (* nss_deactivate)(void);
 };
 
+/* Virtual Table of functions associated with one group of chips. */
 struct ads1256_group_vt
 {
 	void                     (* power_activate)(void);
@@ -84,28 +86,46 @@ struct ads1256_group_vt
 	void				 	 (* sample_finished)(const struct ads1256_group *);
 };
 
+/* Configuration for one ADC chip. */
 struct ads1256_chip_config
 {
 	uint8_t						mux_lo[ADS1256_MAX_MCHANNELS];
 	uint8_t						mux_hi[ADS1256_MAX_MCHANNELS];
+
+	/* Number of MUX channels in mux_lo and mux_hi arrays */
 	uint8_t						no_mux_channels;
+
+	/* GPIO value to set at start */
 	uint8_t						gpio;
+
+	/* Enable ADC clocking to external pin */
 	bool						enable_ext_osc;
+
+	/* Enable ADC input buffer */
 	bool						enable_buffer;
+
+	/* When true then this ADC is the master of the group. It's DRDY signal is
+	 * taken as master DRDY signal for all ADCs in the group.
+	 */
 	bool						is_master;
 };
 
 struct ads1256_group_config
 {
-	/* 0 - mode RDATA
-	 * 1 - mode RDATAC
+	/* ADC sampling mode:
+	 * 1 - ADS1256_SAMPLE_MODE_REQ - data is read by explicit RDATA command
+	 * 2 - ADS1256_SAMPLE_MODE_CONT - data is read just after DRDY signal has
+	 * 		gone to low.
 	 */
 	uint8_t						sampling_mode;
 
-	/* Value in SPS */
+	/* ADC sampling rate, value in SPS. See ADS1256_SAMPLE_RATE_* macros for
+	 * possible values.
+	 */
 	uint32_t					sampling_rate;
 };
 
+/* Main ADS1256 struct. Each struct is serving one physical ADC chip. */
 struct ads1256_chip
 {
     struct spi_transfer     	transfer;
@@ -126,6 +146,10 @@ struct ads1256_chip
 	uint32_t					id_mask;
 };
 
+/* A group of ADC chips. This structure is used to synchronize several ADC
+ * chips, where all chips are clocked by one master chip. A group must have at
+ * least one chip.
+ */
 struct ads1256_group
 {
 	struct ads1256_chip *		chips;

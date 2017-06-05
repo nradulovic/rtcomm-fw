@@ -58,6 +58,7 @@ struct aux
 	struct ads1256_chip			chip;
 	struct ads1256_group_config group_config;
 	struct ads1256_chip_config	chip_config;
+	int32_t						mvalues[IO_AUX_CHANNELS];
 };
 
 struct autorange

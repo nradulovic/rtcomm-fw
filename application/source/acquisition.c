@@ -290,14 +290,18 @@ static void aux_nss_deactivate(void)
 
 static void aux_sample_finished(const struct ads1256_group * group)
 {
-	(void)group;
-	/*
-	 * TODO: Fill this with appropriate code
-	 */
+	struct ads1256_chip *		chip;
+
+	for (chip = group->chips; chip != NULL; chip = chip->next) {
+		g_aux.mvalues[chip->current_mchannel] = ads1256_get_value(chip);
+	}
 }
 
+/*
+ * Other methods
+ */
 
-static int acquisition_probe_set_config(const struct io_ctrl_config * config)
+static int probe_set_config(const struct io_ctrl_config * config)
 {
 	bool						channel_is_enabled[IO_PROBE_CHANNELS];
 	uint32_t					master_channel = UINT32_MAX;
@@ -331,7 +335,7 @@ static int acquisition_probe_set_config(const struct io_ctrl_config * config)
 	return (0);
 }
 
-static int acquisition_aux_set_config(const struct io_ctrl_config * config)
+static int aux_set_config(const struct io_ctrl_config * config)
 {
 	uint32_t					no_mux_channels;
 
@@ -343,13 +347,24 @@ static int acquisition_aux_set_config(const struct io_ctrl_config * config)
 	g_aux.chip_config.enable_ext_osc = true;
 	g_aux.chip_config.gpio = 0u;
 	g_aux.chip_config.is_master = true;
-	g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
-	g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
-	g_aux.chip_config.mux_hi[1] = protocol_from_aux_mux_hi(config, 1);
-	g_aux.chip_config.mux_lo[1] = protocol_from_aux_mux_lo(config, 1);
+
+	if (no_mux_channels == 1) {
+		if (protocol_from_aux_en_aux1(config)) {
+			g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
+			g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
+		} else {
+			g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 1);
+			g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 1);
+		}
+	} else if (no_mux_channels == 2) {
+		g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
+		g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
+		g_aux.chip_config.mux_hi[1] = protocol_from_aux_mux_hi(config, 1);
+		g_aux.chip_config.mux_lo[1] = protocol_from_aux_mux_lo(config, 1);
+	}
 	g_aux.chip_config.no_mux_channels = (uint8_t)no_mux_channels;
 	g_aux.group_config.sampling_mode = ADS1256_SAMPLE_MODE_REQ;
-	g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_2_5;
+	g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_10;
 
 	if (no_mux_channels != 0u) {
 		ads1256_group_add_chip(&g_aux.group, &g_aux.chip);
@@ -358,7 +373,7 @@ static int acquisition_aux_set_config(const struct io_ctrl_config * config)
 	return (0);
 }
 
-static int acquisition_autorange_set_config(const struct io_ctrl_config * config)
+static int autorange_set_config(const struct io_ctrl_config * config)
 {
 	(void)config;
 
@@ -403,17 +418,17 @@ int acquisition_set_config(const struct io_ctrl_config * config)
 {
 	int 						retval;
 
-	retval = acquisition_probe_set_config(config);
+	retval = probe_set_config(config);
 
 	if (retval != 0) {
 		return (retval);
 	}
-	retval = acquisition_aux_set_config(config);
+	retval = aux_set_config(config);
 
 	if (retval != 0) {
 		return (retval);
 	}
-	retval = acquisition_autorange_set_config(config);
+	retval = autorange_set_config(config);
 
 	if (retval == 0) {
 		memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
@@ -426,10 +441,8 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 {
 	int						retval;
 
-	g_probe.group_config.sampling_mode =
-			protocol_from_workmode(param);
-	g_probe.group_config.sampling_rate =
-			protocol_from_vspeed(param);
+	g_probe.group_config.sampling_mode = protocol_from_workmode(param);
+	g_probe.group_config.sampling_rate = protocol_from_vspeed(param);
 
 	/* Finally apply all probe settings */
 	retval = ads1256_apply_group_config(&g_probe.group);
@@ -454,6 +467,7 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 	 * signals using logic analyzer.
 	 */
 	rtcomm_clear(&g_rtcomm);
+	memset(&g_aux.mvalues[0], 0, sizeof(g_aux.mvalues));
 
 	/* Make a copy of params because we will later use this info to create
 	 * io_buffer.
@@ -509,6 +523,7 @@ void rtcomm_pre_send(void * buffer)
 {
 	struct io_buffer *		io_buffer = buffer;
 	static uint32_t 		frame_count;
+	uint32_t				mchannel_id;
 
 	/* Update header and footer */
 	rtcomm_header_pack(&io_buffer->header, sizeof(struct io_buffer),
@@ -538,6 +553,11 @@ void rtcomm_pre_send(void * buffer)
 	/* Return parameters that were used for sampling */
 	memcpy(&io_buffer->param, &g_acquisition.param.data,
 			sizeof(io_buffer->param));
+
+	/* Update AUX channels */
+	for (mchannel_id = 0; mchannel_id < IO_AUX_CHANNELS; mchannel_id++) {
+		io_buffer->aux[mchannel_id] = g_aux.mvalues[mchannel_id];
+	}
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/
