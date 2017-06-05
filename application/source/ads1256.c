@@ -463,6 +463,7 @@ int ads1256_start_sampling(struct ads1256_group * group)
 	for (chip = group->chips; chip != NULL; chip = chip->next) {
 		ads_chip_sampling_enable(chip);
 	}
+	HAL_Delay(2);
 	group->state = ADS_DRV_STATE_SAMPLING;
 	ads_group_power_activate(group);
 
