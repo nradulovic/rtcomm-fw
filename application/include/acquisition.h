@@ -48,14 +48,16 @@ struct probe
 {
 	struct ads1256_group 		group;
 	struct ads1256_chip			chip[IO_PROBE_CHANNELS];
-	struct ads1256_chip_config  chip_config[IO_PROBE_CHANNELS];
 	struct ads1256_group_config group_config;
+	struct ads1256_chip_config  chip_config[IO_PROBE_CHANNELS];
 };
 
 struct aux
 {
 	struct ads1256_group		group;
 	struct ads1256_chip			chip;
+	struct ads1256_group_config group_config;
+	struct ads1256_chip_config	chip_config;
 };
 
 struct autorange

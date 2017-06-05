@@ -80,6 +80,7 @@ static void aux_sample_finished(const struct ads1256_group * group);
 
 /*=======================================================  LOCAL VARIABLES  ==*/
 
+/* -- Probe pointers to callbacks and info structs -- */
 static const struct ads1256_chip_vt
 								g_probe_chip_vt[IO_PROBE_CHANNELS] =
 {
@@ -113,9 +114,30 @@ static struct spi_bus * const 	g_probe_chip_spi_bus[IO_PROBE_CHANNELS] =
 static const struct ads1256_group_vt
 								g_probe_group_vt =
 {
-	.power_activate = probe_power_activate,
-	.power_deactivate = probe_power_deactivate,
-	.sample_finished = probe_sample_finished
+	.power_activate 	= probe_power_activate,
+	.power_deactivate 	= probe_power_deactivate,
+	.sample_finished 	= probe_sample_finished
+};
+
+/* -- AUX pointers to callbacks and info structs -- */
+
+static const struct ads1256_chip_vt
+								g_aux_chip_vt =
+{
+	.drdy_isr_enable 	= aux_drdy_isr_enable,
+	.drdy_isr_disable	= aux_drdy_isr_disable,
+	.nss_activate		= aux_nss_activate,
+	.nss_deactivate		= aux_nss_deactivate
+};
+
+static struct spi_bus * const 	g_aux_chip_spi_bus = &HWCON_AUX_SPI;
+
+static const struct ads1256_group_vt
+								g_aux_group_vt =
+{
+	.power_activate 	= NULL, /* NOTE: The group doesn't have power control */
+	.power_deactivate   = NULL, /* NOTE: The group doesn't have power control */
+	.sample_finished    = aux_sample_finished
 };
 
 /*======================================================  GLOBAL VARIABLES  ==*/
@@ -142,7 +164,6 @@ static void axis_x_drdy_isr_enable(void)
 
 static void axis_x_drdy_isr_disable(void)
 {
-	//NVIC_ClearPendingIRQ(HWCON_PROBE_X_DRDY_EXTI);
     NVIC_DisableIRQ(HWCON_PROBE_X_DRDY_EXTI);
 }
 
@@ -245,30 +266,26 @@ static void probe_sample_finished(const struct ads1256_group * group)
  */
 static void aux_drdy_isr_enable(void)
 {
-	/*
-	 * TODO: Fill this with appropriate code
+	/* Clear EXTI controller interrupt bit, because this is holding interrupt.
 	 */
+	__HAL_GPIO_EXTI_CLEAR_IT(HWCON_AUX_DRDY_PIN);
+    NVIC_ClearPendingIRQ(HWCON_AUX_DRDY_EXTI);
+    NVIC_EnableIRQ(HWCON_AUX_DRDY_EXTI);
 }
 
 static void aux_drdy_isr_disable(void)
 {
-	/*
-	 * TODO: Fill this with appropriate code
-	 */
+	NVIC_DisableIRQ(HWCON_AUX_DRDY_EXTI);
 }
 
 static void aux_nss_activate(void)
 {
-	/*
-	 * TODO: Fill this with appropriate code
-	 */
+	gpio_clr(HWCON_AUX_NSS_PORT, HWCON_AUX_NSS_PIN);
 }
 
 static void aux_nss_deactivate(void)
 {
-	/*
-	 * TODO: Fill this with appropriate code
-	 */
+	gpio_set(HWCON_AUX_NSS_PORT, HWCON_AUX_NSS_PIN);
 }
 
 static void aux_sample_finished(const struct ads1256_group * group)
@@ -283,18 +300,32 @@ static void aux_sample_finished(const struct ads1256_group * group)
 
 void acquisition_init(void)
 {
+	/* NOTE:
+	 * Allocate the io_buffer. We need two of the because the FW works as
+	 * ping-pong buffer.
+	 */
 	static struct io_buffer		buffer[2];
+	uint32_t					channel_id;
 
+	/* -- Probe chips initialization -- */
 	ads1256_group_init(&g_probe.group, &g_probe_group_vt);
-	ads1256_init_chip(&g_probe.chip[IO_CHANNEL_X],
-			g_probe_chip_spi_bus[IO_CHANNEL_X],
-			&g_probe_chip_vt[IO_CHANNEL_X], IO_CHANNEL_X);
-	ads1256_init_chip(&g_probe.chip[IO_CHANNEL_Y],
-			g_probe_chip_spi_bus[IO_CHANNEL_Y],
-			&g_probe_chip_vt[IO_CHANNEL_Y], IO_CHANNEL_Y);
-	ads1256_init_chip(&g_probe.chip[IO_CHANNEL_Z],
-			g_probe_chip_spi_bus[IO_CHANNEL_Z],
-			&g_probe_chip_vt[IO_CHANNEL_Z], IO_CHANNEL_Z);
+	ads1256_set_group_config(&g_probe.group, &g_probe.group_config);
+
+	for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
+		ads1256_init_chip(&g_probe.chip[channel_id],
+				g_probe_chip_spi_bus[channel_id],
+				&g_probe_chip_vt[channel_id], channel_id);
+		ads1256_set_per_chip_config(&g_probe.chip[channel_id],
+				&g_probe.chip_config[channel_id]);
+	}
+
+	/* -- AUX chip initialization -- */
+	ads1256_group_init(&g_aux.group, &g_aux_group_vt);
+	ads1256_set_group_config(&g_aux.group, &g_aux.group_config);
+	ads1256_init_chip(&g_aux.chip, g_aux_chip_spi_bus, &g_aux_chip_vt, 0);
+	ads1256_set_per_chip_config(&g_aux.chip, &g_aux.chip_config);
+
+	/* -- CDI rtcomm initialization -- */
     rtcomm_init(&g_rtcomm, &buffer[0], &buffer[1], sizeof(buffer[0]));
 }
 
@@ -302,33 +333,29 @@ int acquisition_probe_set_config(const struct io_ctrl_config * config)
 {
 	bool						channel_is_enabled[IO_PROBE_CHANNELS];
 	uint32_t					master_channel = UINT32_MAX;
-	uint32_t					index;
+	uint32_t					channel_id;
 
 	channel_is_enabled[IO_CHANNEL_X] = config->en_x == 1u ? true : false;
 	channel_is_enabled[IO_CHANNEL_Y] = config->en_y == 1u ? true : false;
 	channel_is_enabled[IO_CHANNEL_Z] = config->en_z == 1u ? true : false;
 
-	ads1256_set_group_config(&g_probe.group, &g_probe.group_config);
-
-	for (index = 0u; index < IO_PROBE_CHANNELS; index++) {
-		if (channel_is_enabled[index]) {
-			ads1256_group_add_chip(&g_probe.group, &g_probe.chip[index]);
+	for (channel_id = 0u; channel_id < IO_PROBE_CHANNELS; channel_id++) {
+		if (channel_is_enabled[channel_id]) {
+			ads1256_group_add_chip(&g_probe.group, &g_probe.chip[channel_id]);
 
 			if (master_channel == UINT32_MAX) {
-				master_channel = index;
+				master_channel = channel_id;
 			}
-			g_probe.chip_config[index].enable_buffer =
+			g_probe.chip_config[channel_id].enable_buffer =
 					protocol_from_en_probe_buffer(config);
-			g_probe.chip_config[index].enable_ext_osc = true;
-			g_probe.chip_config[index].gpio = 0u;
-			g_probe.chip_config[index].is_master =
-					index == master_channel ? true : false;
-			g_probe.chip_config[index].mux_hi =
+			g_probe.chip_config[channel_id].enable_ext_osc = true;
+			g_probe.chip_config[channel_id].gpio = 0u;
+			g_probe.chip_config[channel_id].is_master =
+					channel_id == master_channel ? true : false;
+			g_probe.chip_config[channel_id].mux_hi =
 					protocol_from_probe_mux_hi(config);
-			g_probe.chip_config[index].mux_lo =
+			g_probe.chip_config[channel_id].mux_lo =
 					protocol_from_probe_mux_lo(config);
-			ads1256_set_per_chip_config(&g_probe.chip[index],
-					&g_probe.chip_config[index]);
 		}
 	}
 	memcpy(&g_acquisition.config, config, sizeof(g_acquisition.config));
@@ -338,7 +365,12 @@ int acquisition_probe_set_config(const struct io_ctrl_config * config)
 
 int acquisition_aux_set_config(const struct io_ctrl_config * config)
 {
-	(void)config;
+	g_aux.chip_config.enable_buffer = protocol_from_en_aux_bufer(config);
+	g_aux.chip_config.enable_ext_osc = true;
+	g_aux.chip_config.gpio = 0u;
+	g_aux.chip_config.is_master = true;
+	g_aux.group_config.sampling_mode = ADS1256_SAMPLE_MODE_REQ;
+	g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_2_5;
 
 	return (0);
 }
@@ -358,20 +390,27 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 			protocol_from_workmode(param);
 	g_probe.group_config.sampling_rate =
 			protocol_from_vspeed(param);
+
+	/* Finally apply all settings */
 	retval = ads1256_apply_group_config(&g_probe.group);
 
 	if (retval) {
 		return (retval);
 	}
-	/* NOTE:
-	 * Set buffer size ten times smaller then sample rate. We want 10 buffers
+
+	/* Set buffer size ten times smaller then sample rate. We want 10 buffers
 	 * per second which are sent from firmware to application processor.
 	 */
 	g_acquisition.buffer_size = protocol_from_vspeed(param) / 10u;
 
-	/* Clear main buffers before using them */
+	/* Clear main buffers before using them. This is good when watching SPI
+	 * signals using logic analyzer.
+	 */
 	rtcomm_clear(&g_rtcomm);
 
+	/* Make a copy of params because we will later use this info to create
+	 * io_buffer.
+	 */
 	memcpy(&g_acquisition.param, param, sizeof(g_acquisition.param));
 
 	return (retval);
@@ -380,6 +419,9 @@ int acquisition_probe_set_param(const struct io_ctrl_param * param)
 int acquisition_aux_set_param(const struct io_ctrl_param * param)
 {
 	(void)param;
+	/* NOTE:
+	 * AUX does not have any parameters.
+	 */
 
 	return (0);
 }
