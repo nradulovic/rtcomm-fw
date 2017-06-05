@@ -49,7 +49,7 @@
 #define HWCON_IRQ_PRIO_NEON					4
 #define HWCON_IRQ_PRIO_RTCOMM_SPI_DMA_TX    1
 #define HWCON_IRQ_PRIO_AUX_SPI            	4
-#define HWCON_IRQ_PRIO_AUX_EXTI           	4
+#define HWCON_IRQ_PRIO_AUX_EXTI           	5
 #define HWCON_IRQ_PRIO_CTRL               	8
 
 #define HWCON_TEST_TIMER0_IRQ_PRIO		1
