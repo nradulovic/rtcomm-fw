@@ -40,6 +40,23 @@
 #define ADS1256_SAMPLE_MODE_REQ			0u
 #define ADS1256_SAMPLE_MODE_CONT		1u
 
+#define ADS1256_SAMPLE_RATE_2_5			2u
+#define ADS1256_SAMPLE_RATE_5			5u
+#define ADS1256_SAMPLE_RATE_10			10u
+#define ADS1256_SAMPLE_RATE_15			15u
+#define ADS1256_SAMPLE_RATE_25			25u
+#define ADS1256_SAMPLE_RATE_30			30u
+#define ADS1256_SAMPLE_RATE_50			50u
+#define ADS1256_SAMPLE_RATE_60			60u
+#define ADS1256_SAMPLE_RATE_100			100u
+#define ADS1256_SAMPLE_RATE_500			500u
+#define ADS1256_SAMPLE_RATE_1000		1000u
+#define ADS1256_SAMPLE_RATE_2000		2000u
+#define ADS1256_SAMPLE_RATE_3750		3750u
+#define ADS1256_SAMPLE_RATE_7500		7500u
+#define ADS1256_SAMPLE_RATE_15000		15000u
+#define ADS1256_SAMPLE_RATE_30000		30000u
+
 /*------------------------------------------------------  C++ extern begin  --*/
 #ifdef __cplusplus
 extern "C" {

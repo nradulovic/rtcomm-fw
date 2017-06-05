@@ -54,6 +54,11 @@ uint8_t protocol_from_probe_mux_lo(const struct io_ctrl_config * config)
 	return (config->probe_mux_lo <= 8 ? config->probe_mux_lo : 8);
 }
 
+bool protocol_from_en_aux_bufer(const struct io_ctrl_config * config)
+{
+	return (config->en_aux_buffer == 1u ? true : false);
+}
+
 uint8_t protocol_from_workmode(const struct io_ctrl_param * param)
 {
 	switch (param->data.workmode) {
@@ -66,23 +71,23 @@ uint8_t protocol_from_workmode(const struct io_ctrl_param * param)
 
 uint32_t protocol_from_vspeed(const struct io_ctrl_param * param)
 {
-	/*
-	 * This follows JNI document.
+	/* NOTE:
+	 * This closely follows JNI document.
 	 */
 	switch (param->data.vspeed) {
-		case 1:  	return (10);
-		case 4:		return (30);
-		case 5:		return (50);
-		case 6: 	return (60);
-		case 7:		return (100);
-		case 8:		return (500);
-		case 9: 	return (1000);
-		case 10:	return (2000);
-		case 11:	return (3750);
-		case 12:	return (7500);
-		case 13: 	return (15000);
-		case 14: 	return (30000);
-		default:	return (1000);
+		case 1:  	return (ADS1256_SAMPLE_RATE_10);
+		case 4:		return (ADS1256_SAMPLE_RATE_30);
+		case 5:		return (ADS1256_SAMPLE_RATE_50);
+		case 6: 	return (ADS1256_SAMPLE_RATE_60);
+		case 7:		return (ADS1256_SAMPLE_RATE_100);
+		case 8:		return (ADS1256_SAMPLE_RATE_500);
+		case 9: 	return (ADS1256_SAMPLE_RATE_1000);
+		case 10:	return (ADS1256_SAMPLE_RATE_2000);
+		case 11:	return (ADS1256_SAMPLE_RATE_3750);
+		case 12:	return (ADS1256_SAMPLE_RATE_7500);
+		case 13: 	return (ADS1256_SAMPLE_RATE_15000);
+		case 14: 	return (ADS1256_SAMPLE_RATE_30000);
+		default:	return (ADS1256_SAMPLE_RATE_1000);
 	}
 }
 

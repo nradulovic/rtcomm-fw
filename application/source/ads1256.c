@@ -338,8 +338,20 @@ static int ads_group_apply_config(struct ads1256_group * group)
 		}
 	}
 
-	if (group->config->sampling_rate > 100u) {
-		HAL_Delay(10u);
+	/* NOTE:
+	 * It is not stated in datasheet but it seems this ADC doesn't like to be
+	 * synchronized while first sampling period is ongoing. Because of this just
+	 * wait a bit and then continue working.
+	 */
+	if (group->config->sampling_rate > 1000u) {
+		/* NOTE:
+		 * There is a bug in HAL_Delay routine that when called with argument 1
+		 * it may exit right away. So instead of HAL_Delay(1) we are calling
+		 * HAL_Delay(2).
+		 */
+		HAL_Delay(2);
+	} else if (group->config->sampling_rate > 100u) {
+		HAL_Delay(11u);
 	} else {
 		HAL_Delay(110u);
 	}
