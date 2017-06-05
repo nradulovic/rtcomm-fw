@@ -34,6 +34,7 @@
 #include <stdbool.h>
 
 #include "prim_spi.h"
+#include "cdi/io.h"
 
 /*===============================================================  MACRO's  ==*/
 
@@ -56,6 +57,8 @@
 #define ADS1256_SAMPLE_RATE_7500		7500u
 #define ADS1256_SAMPLE_RATE_15000		15000u
 #define ADS1256_SAMPLE_RATE_30000		30000u
+
+#define ADS1256_MAX_MCHANNELS			IO_AUX_CHANNELS
 
 /*------------------------------------------------------  C++ extern begin  --*/
 #ifdef __cplusplus
@@ -83,8 +86,9 @@ struct ads1256_group_vt
 
 struct ads1256_chip_config
 {
-	uint8_t						mux_lo;
-	uint8_t						mux_hi;
+	uint8_t						mux_lo[ADS1256_MAX_MCHANNELS];
+	uint8_t						mux_hi[ADS1256_MAX_MCHANNELS];
+	uint8_t						no_mux_channels;
 	uint8_t						gpio;
 	bool						enable_ext_osc;
 	bool						enable_buffer;
@@ -117,6 +121,7 @@ struct ads1256_chip
 		uint8_t						buffer[4];
 		uint32_t					integer;
 	} 							l;
+	uint32_t					current_mchannel;
 	uint32_t					id;
 	uint32_t					id_mask;
 };

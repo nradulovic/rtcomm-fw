@@ -246,7 +246,7 @@ static int ads_chip_apply_config(struct ads1256_chip * chip)
 		return (-2);
 	}
 	/* Setup MUX */
-	reg_val = ADS_MUX(chip->config->mux_hi, chip->config->mux_lo);
+	reg_val = ADS_MUX(chip->config->mux_hi[0], chip->config->mux_lo[0]);
 	ads_chip_write_reg_sync(chip, ADS_REG_MUX, reg_val);
 	HAL_Delay(2);
 
@@ -370,7 +370,7 @@ static void drdy_isr_mode_cont(struct ads1256_group * group)
 
 static void drdy_isr_mode_req(struct ads1256_group * group)
 {
-	struct ads1256_chip * chip;
+	struct ads1256_chip * 		chip;
 
 	/* NOTE:
 	 * First disable the ISR because the ads_chip_read_data_sync may call
@@ -379,8 +379,29 @@ static void drdy_isr_mode_req(struct ads1256_group * group)
 	 */
 	group->master->vt->drdy_isr_disable();
 
+	/* NOTE:
+	 * Done by the algorithm specified in ADS1256 datasheet
+	 * SBAS288K − JUNE 2003 − REVISED SEPTEMBER 2013, Figure 19 on page 21.
+	 */
 	for (chip = group->chips; chip != NULL; chip = chip->next) {
+
+		if (chip->config->no_mux_channels != 1) {
+			uint8_t					reg_val;
+
+			reg_val = ADS_MUX(chip->config->mux_hi[chip->current_mchannel],
+					chip->config->mux_lo[chip->current_mchannel]);
+
+			ads_chip_write_reg_sync(chip, ADS_REG_MUX, reg_val);
+			ads_chip_set_cmd_sync(chip, ADS_CMD_SYNC);
+			ads_chip_set_cmd_sync(chip, ADS_CMD_WAKEUP);
+		}
 		ads_chip_read_data_sync(chip);
+
+		chip->current_mchannel++;
+
+		if (chip->current_mchannel == chip->config->no_mux_channels) {
+			chip->current_mchannel = 0u;
+		}
 	}
 }
 

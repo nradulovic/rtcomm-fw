@@ -320,10 +320,11 @@ static int acquisition_probe_set_config(const struct io_ctrl_config * config)
 			g_probe.chip_config[channel_id].gpio = 0u;
 			g_probe.chip_config[channel_id].is_master =
 					channel_id == master_channel ? true : false;
-			g_probe.chip_config[channel_id].mux_hi =
+			g_probe.chip_config[channel_id].mux_hi[0] =
 					protocol_from_probe_mux_hi(config);
-			g_probe.chip_config[channel_id].mux_lo =
+			g_probe.chip_config[channel_id].mux_lo[0] =
 					protocol_from_probe_mux_lo(config);
+			g_probe.chip_config[channel_id].no_mux_channels = 1;
 		}
 	}
 
@@ -332,16 +333,25 @@ static int acquisition_probe_set_config(const struct io_ctrl_config * config)
 
 static int acquisition_aux_set_config(const struct io_ctrl_config * config)
 {
+	uint32_t					no_mux_channels;
+
+	no_mux_channels = 0u;
+	no_mux_channels += protocol_from_aux_en_aux1(config) ? 1u : 0u;
+	no_mux_channels += protocol_from_aux_en_aux2(config) ? 1u : 0u;
+
 	g_aux.chip_config.enable_buffer = protocol_from_en_aux_bufer(config);
 	g_aux.chip_config.enable_ext_osc = true;
 	g_aux.chip_config.gpio = 0u;
 	g_aux.chip_config.is_master = true;
-	g_aux.chip_config.mux_hi = protocol_from_aux_mux_hi(config, 0);
-	g_aux.chip_config.mux_lo = protocol_from_aux_mux_lo(config,	0);
+	g_aux.chip_config.mux_hi[0] = protocol_from_aux_mux_hi(config, 0);
+	g_aux.chip_config.mux_lo[0] = protocol_from_aux_mux_lo(config, 0);
+	g_aux.chip_config.mux_hi[1] = protocol_from_aux_mux_hi(config, 1);
+	g_aux.chip_config.mux_lo[1] = protocol_from_aux_mux_lo(config, 1);
+	g_aux.chip_config.no_mux_channels = (uint8_t)no_mux_channels;
 	g_aux.group_config.sampling_mode = ADS1256_SAMPLE_MODE_REQ;
 	g_aux.group_config.sampling_rate = ADS1256_SAMPLE_RATE_2_5;
 
-	if (!!config->en_aux1 || !!config->en_aux2) {
+	if (no_mux_channels != 0u) {
 		ads1256_group_add_chip(&g_aux.group, &g_aux.chip);
 	}
 
@@ -487,7 +497,8 @@ int acquisition_start_sampling(void)
 		return (retval);
 	}
 
-	if (!!g_acquisition.config.en_aux1 || !!g_acquisition.config.en_aux2) {
+	if (protocol_from_aux_en_aux1(&g_acquisition.config) ||
+		protocol_from_aux_en_aux2(&g_acquisition.config)) {
 		retval = ads1256_start_sampling(&g_aux.group);
 	}
 

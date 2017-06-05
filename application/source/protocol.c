@@ -99,6 +99,16 @@ uint8_t protocol_from_aux_mux_lo(const struct io_ctrl_config * config,
 	return (val <= 8 ? val : 8);
 }
 
+bool protocol_from_aux_en_aux1(const struct io_ctrl_config * config)
+{
+	return (config->en_aux1 == 1u ? true : false);
+}
+
+bool protocol_from_aux_en_aux2(const struct io_ctrl_config * config)
+{
+	return (config->en_aux2 == 1u ? true : false);
+}
+
 uint8_t protocol_from_workmode(const struct io_ctrl_param * param)
 {
 	switch (param->data.workmode) {
