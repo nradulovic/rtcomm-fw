@@ -28,11 +28,13 @@
 /*=========================================================  INCLUDE FILES  ==*/
 
 #include <string.h>
-#include "epa_ctrl.h"
-#include "epa_controller.h"
-#include "neon_eds.h"
+
+#include "psm.h"
 #include "cdi/io.h"
 #include "status.h"
+#include "epa_ctrl.h"
+#include "neon_eds.h"
+#include "epa_controller.h"
 
 /*=========================================================  LOCAL MACRO's  ==*/
 /*======================================================  LOCAL DATA TYPES  ==*/
@@ -148,6 +150,18 @@ static void ctrl_start_rx(struct ctrl * ctrl, void * buffer, uint16_t size)
 	}
 }
 
+static void ctrl_reinit(struct ctrl * ctrl)
+{
+	/* NOTE:
+	 * This is one dirty solution. If I2C is not ready, just turn-off all IRQ
+	 * and set state variable to ready, the function HAL_I2C_Slave_Receive_IT()
+	 * will handle the rest of stuff.
+	 */
+	if (HAL_I2C_GetState(&ctrl->i2c) != HAL_I2C_STATE_READY) {
+		psm_reinit_i2c_ctrl();
+	}
+}
+
 /* - State machine states --------------------------------------------------- */
 
 static naction state_init(struct nsm * sm, const nevent * event)
@@ -188,6 +202,7 @@ static naction state_wait_config(struct nsm * sm, const nevent * event)
 
 	switch (nevent_id(event)) {
 		case NSM_ENTRY: {
+			ctrl_reinit(&g_ctrl);
 			ctrl_start_rx(&g_ctrl, &ws->buff.config, sizeof(ws->buff.config));
 
 			return (naction_handled());
@@ -255,6 +270,7 @@ static naction state_wait_param(struct nsm * sm, const nevent * event)
 
 	switch (nevent_id(event)) {
 		case NSM_ENTRY: {
+			ctrl_reinit(&g_ctrl);
 			ctrl_start_rx(&g_ctrl, &ws->buff.param, sizeof(ws->buff.param));
 
 			return (naction_handled());

@@ -28,6 +28,7 @@
 
 /*=========================================================  INCLUDE FILES  ==*/
 
+#include "psm.h"
 #include "main.h"
 #include "neon_eds.h"
 #include "epa_ctrl.h"
@@ -53,6 +54,12 @@ static void init_early(void)
 static void init_peripherals(void)
 {
 	HAL_Init();
+	psm_init_clock();
+	psm_init_gpio();
+	psm_init_exti();
+	psm_init_spi();
+	psm_init_i2c();
+	psm_init_timer();
 }
 
 static void init_tasks(void)
