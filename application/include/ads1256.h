@@ -72,6 +72,7 @@ struct ads1256_group;
 /* Virtual Table of functions associated with one ADC chip. */
 struct ads1256_chip_vt
 {
+	uint32_t				 (* drdy_is_high)(void);
     void                     (* drdy_isr_enable)(void);
     void                     (* drdy_isr_disable)(void);
     void                     (* nss_activate)(void);
@@ -182,6 +183,8 @@ void ads1256_set_group_config(struct ads1256_group * group,
         const struct ads1256_group_config * config);
 
 int ads1256_apply_group_config(struct ads1256_group * group);
+
+int ads1256_wait_ready(struct ads1256_group * group);
 
 int ads1256_start_sampling(struct ads1256_group * group);
 

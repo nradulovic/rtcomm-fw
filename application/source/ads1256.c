@@ -261,6 +261,7 @@ static int ads_chip_apply_config(struct ads1256_chip * chip)
 
     /* Setup buffer */
     reg_val = chip->config->enable_buffer ? ADS_STATUS_BUFEN_ENABLED : 0u;
+    reg_val |= ADS_STATUS_ACAL_ENABLED;
     ads_chip_write_reg_sync(chip, ADS_REG_STATUS, reg_val);
     HAL_Delay(2);
 
@@ -271,7 +272,6 @@ static int ads_chip_apply_config(struct ads1256_chip * chip)
         return (-1);
     }
     ads_chip_write_reg_sync(chip, ADS_REG_DRATE, reg_val);
-    HAL_Delay(2);
 
     return (0);
 }
@@ -330,24 +330,6 @@ static int ads_group_apply_config(struct ads1256_group * group)
         if (retval != 0) {
             break;
         }
-    }
-
-    /* NOTE:
-     * It is not stated in datasheet but it seems this ADC doesn't like to be
-     * synchronized while first sampling period is ongoing. Because of this just
-     * wait a bit and then continue working.
-     */
-    if (group->config->sampling_rate > 1000u) {
-        /* NOTE:
-         * There is a bug in HAL_Delay routine that when called with argument 1
-         * it may exit right away. So instead of HAL_Delay(1) we are calling
-         * HAL_Delay(2).
-         */
-        HAL_Delay(2);
-    } else if (group->config->sampling_rate > 100u) {
-        HAL_Delay(11u);
-    } else {
-        HAL_Delay(110u);
     }
 
     return (retval);
@@ -507,6 +489,24 @@ int ads1256_apply_group_config(struct ads1256_group * group)
     }
 
     return (retval);
+}
+
+int ads1256_wait_ready(struct ads1256_group * group)
+{
+	struct ads1256_chip *		chip;
+
+    /* NOTE:
+     * It is not stated in datasheet but it seems this ADC doesn't like to be
+     * synchronized while first sampling period is ongoing. Because of this just
+     * wait a bit and then continue working.
+     *
+	 * Wait up to one sampling cycle to finish the configuration
+	 */
+    for (chip = group->chips; chip != NULL; chip = chip->next) {
+	    while (chip->vt->drdy_is_high());
+    }
+
+    return (0);
 }
 
 int ads1256_start_sampling(struct ads1256_group * group)

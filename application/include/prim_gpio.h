@@ -38,6 +38,8 @@
 
 #define gpio_clr(port, pin)             (port)->BSRR = (uint32_t)(pin) << 16u;
 
+#define gpio_read(port, pin)			((port)->IDR & pin)
+
 /*------------------------------------------------------  C++ extern begin  --*/
 #ifdef __cplusplus
 extern "C" {

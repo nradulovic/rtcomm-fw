@@ -51,16 +51,19 @@ struct acquisition
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
 
 /* -- Probe callbacks for ADS1256 Module -- */
+static uint32_t axis_x_drdy_is_high(void);
 static void axis_x_drdy_isr_enable(void);
 static void axis_x_drdy_isr_disable(void);
 static void axis_x_nss_activate(void);
 static void axis_x_nss_deactivate(void);
 
+static uint32_t axis_y_drdy_is_high(void);
 static void axis_y_drdy_isr_enable(void);
 static void axis_y_drdy_isr_disable(void);
 static void axis_y_nss_activate(void);
 static void axis_y_nss_deactivate(void);
 
+static uint32_t axis_z_drdy_is_high(void);
 static void axis_z_drdy_isr_enable(void);
 static void axis_z_drdy_isr_disable(void);
 static void axis_z_nss_activate(void);
@@ -71,6 +74,7 @@ static void probe_power_deactivate(void);
 static void probe_sample_finished(const struct ads1256_group * group);
 
 /* -- AUX ADC callbacks for ADS1256 Module -- */
+static uint32_t aux_drdy_is_high(void);
 static void aux_drdy_isr_enable(void);
 static void aux_drdy_isr_disable(void);
 static void aux_nss_activate(void);
@@ -85,18 +89,21 @@ static const struct ads1256_chip_vt
                                 g_probe_chip_vt[IO_PROBE_CHANNELS] =
 {
     [IO_CHANNEL_X] = {
+    	.drdy_is_high       = axis_x_drdy_is_high,
         .drdy_isr_enable    = axis_x_drdy_isr_enable,
         .drdy_isr_disable   = axis_x_drdy_isr_disable,
         .nss_activate       = axis_x_nss_activate,
         .nss_deactivate     = axis_x_nss_deactivate,
     },
     [IO_CHANNEL_Y] = {
+		.drdy_is_high       = axis_y_drdy_is_high,
         .drdy_isr_enable    = axis_y_drdy_isr_enable,
         .drdy_isr_disable   = axis_y_drdy_isr_disable,
         .nss_activate       = axis_y_nss_activate,
         .nss_deactivate     = axis_y_nss_deactivate,
     },
     [IO_CHANNEL_Z] = {
+		.drdy_is_high       = axis_z_drdy_is_high,
         .drdy_isr_enable    = axis_z_drdy_isr_enable,
         .drdy_isr_disable   = axis_z_drdy_isr_disable,
         .nss_activate       = axis_z_nss_activate,
@@ -124,6 +131,7 @@ static const struct ads1256_group_vt
 static const struct ads1256_chip_vt
                                 g_aux_chip_vt =
 {
+	.drdy_is_high       = aux_drdy_is_high,
     .drdy_isr_enable    = aux_drdy_isr_enable,
     .drdy_isr_disable   = aux_drdy_isr_disable,
     .nss_activate       = aux_nss_activate,
@@ -153,6 +161,11 @@ struct acquisition              g_acquisition;
  * Probe axis X methods
  */
 
+static uint32_t axis_x_drdy_is_high(void)
+{
+	return (gpio_read(HWCON_PROBE_X_DRDY_PORT, HWCON_PROBE_X_DRDY_PIN));
+}
+
 static void axis_x_drdy_isr_enable(void)
 {
     /* Clear EXTI controller interrupt bit, because this is holding interrupt.
@@ -180,6 +193,10 @@ static void axis_x_nss_deactivate(void)
 /*
  * Probe axis Y methods
  */
+static uint32_t axis_y_drdy_is_high(void)
+{
+	return (gpio_read(HWCON_PROBE_Y_DRDY_PORT, HWCON_PROBE_Y_DRDY_PIN));
+}
 
 static void axis_y_drdy_isr_enable(void)
 {
@@ -206,6 +223,10 @@ static void axis_y_nss_deactivate(void)
 /*
  * Probe axis Z methods
  */
+static uint32_t axis_z_drdy_is_high(void)
+{
+	return (gpio_read(HWCON_PROBE_Z_DRDY_PORT, HWCON_PROBE_Z_DRDY_PIN));
+}
 
 static void axis_z_drdy_isr_enable(void)
 {
@@ -264,6 +285,11 @@ static void probe_sample_finished(const struct ads1256_group * group)
 /*
  * Aux ADC methods
  */
+static uint32_t aux_drdy_is_high(void)
+{
+	return (gpio_read(HWCON_AUX_DRDY_PORT, HWCON_AUX_DRDY_PIN));
+}
+
 static void aux_drdy_isr_enable(void)
 {
     /* Clear EXTI controller interrupt bit, because this is holding interrupt.
@@ -502,6 +528,9 @@ void acquisition_stop_sampling(void)
 int acquisition_start_sampling(void)
 {
     int                         retval;
+
+    ads1256_wait_ready(&g_probe.group);
+	ads1256_wait_ready(&g_aux.group);
 
     g_acquisition.current_sample = 0u;
 
