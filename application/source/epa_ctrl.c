@@ -188,7 +188,10 @@ static naction state_init(struct nsm * sm, const nevent * event)
                 ws->buff.config.probe_mux_lo = 2;
                 ws->buff.config.aux1_mux_hi = 3;
                 ws->buff.config.aux1_mux_lo = 2;
+                ws->buff.config.aux2_mux_hi = 4;
+                ws->buff.config.aux2_mux_lo = 5;
                 ws->buff.config.en_aux1 = 1;
+                ws->buff.config.en_aux2 = 1;
                 ws->buff.config.en_aux_buffer = 0;
                 ws->buff.config.probe_pga = 1;
             }
