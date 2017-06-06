@@ -114,7 +114,7 @@
 #define ADS_DRV_STATE_CONFIG            1u
 #define ADS_DRV_STATE_SAMPLING          2u
 
-#define ADS_READ_WRITE_DELAY            24u
+#define ADS_READ_WRITE_DELAY            50u
 
 /*======================================================  LOCAL DATA TYPES  ==*/
 /*=============================================  LOCAL FUNCTION PROTOTYPES  ==*/
@@ -241,10 +241,18 @@ void ads_chip_read_data_async(struct ads1256_chip * chip)
 static int ads_chip_apply_config(struct ads1256_chip * chip)
 {
     uint8_t                 reg_val;
+    uint32_t				repeat;
 
     if (!chip->config) {
         return (-2);
     }
+
+    for (repeat = 0u; repeat < 3; repeat++) {
+    	ads_chip_set_cmd_sync(chip, ADS_CMD_RESET);
+    }
+    while (chip->vt->drdy_is_high());
+
+    chip->current_mchannel = chip->config->no_mux_channels - 1u;
     /* Setup MUX */
     reg_val = ADS_MUX(chip->config->mux_hi[0], chip->config->mux_lo[0]);
     ads_chip_write_reg_sync(chip, ADS_REG_MUX, reg_val);
@@ -449,17 +457,10 @@ int ads1256_apply_group_config(struct ads1256_group * group)
 
     switch (group->state) {
         case ADS_DRV_STATE_INIT: {
-            struct ads1256_chip * chip;
-
             ads_group_power_activate(group);
             /* Wait for power-on cycle */
-            HAL_Delay(20);
 
-            for (chip = group->chips; chip != NULL; chip = chip->next) {
-                ads_chip_set_cmd_sync(chip, ADS_CMD_RESET);
-            }
-            /* Wait for reset cycle */
-            HAL_Delay(20);
+            HAL_Delay(40);
             retval = ads_group_apply_config(group);
 
             if (retval == 0) {
@@ -526,6 +527,12 @@ int ads1256_start_sampling(struct ads1256_group * group)
         ads_chip_sampling_prepare(chip);
     }
 
+    if (group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
+    	group->isr = drdy_isr_mode_cont;
+    } else {
+    	group->isr = drdy_isr_mode_req;
+    }
+
     /* Synchronize the chips */
     ads_group_power_deactivate(group);
 
@@ -559,15 +566,6 @@ int ads1256_stop_sampling(struct ads1256_group * group)
     group->state = ADS_DRV_STATE_CONFIG;
 
     return (0);
-}
-
-void ads1256_drdy_isr(struct ads1256_group * group)
-{
-    if (group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
-        drdy_isr_mode_cont(group);
-    } else {
-        drdy_isr_mode_req(group);
-    }
 }
 
 /*================================*//** @cond *//*==  CONFIGURATION ERRORS  ==*/

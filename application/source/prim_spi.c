@@ -69,22 +69,12 @@
 
 /*======================================================  LOCAL DATA TYPES  ==*/
 
-enum spi_state
-{
-    STATE_RX_CONT,
-    STATE_TX_CONT,
-    STATE_TX_WAIT,
-    STATE_TX_COMPLETE,
-    STATE_IDLE
-};
-
 struct spi_bus
 {
     SPI_TypeDef *               regs;
     size_t                      count;
     struct spi_device *         device;
     struct spi_transfer *       transfer;
-    enum spi_state              state;
     void                     (* isr_handler)(struct spi_bus * bus);
 };
 
@@ -158,42 +148,39 @@ void bus_clear_overrun(struct spi_bus * host)
 static
 void isr_tx_only(struct spi_bus * bus)
 {
-    if (bus->regs->SR & SPI_SR_OVR) {
-        bus->transfer->error = NERROR_DEVICE_FAIL;
-        bus_clear_overrun(bus);
+	uint32_t                    itflag;
+	struct spi_transfer *       transfer = bus->transfer;
+
+	itflag = bus->regs->SR;
+
+    if (itflag & SPI_SR_RXNE) {
+    	ncore_dummy_rd(bus->regs->DR);
+    	bus->count++;
+
+        if (bus->count != transfer->size) {
+            bus->regs->DR = transfer->buff[bus->count];
+        }
     }
 
-    switch (bus->state) {
-        case STATE_TX_CONT: {
-            bus->regs->DR = bus->transfer->buff[bus->count++];
+	if (itflag & (SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF)) {
+		if (itflag & SPI_SR_OVR) {
+			bus_clear_overrun(bus);
+			transfer->error = NERROR_DEVICE_FAIL;
+		} else {
+			/*
+			 * TODO: clear other errors
+			 */
+			transfer->error = NERROR_DEVICE_NO_COMM;
+		}
+	}
 
-            if (bus->transfer->size == bus->count) {
-                ncore_dummy_rd(bus->regs->DR);
-                bus->regs->CR2 = SPI_CR2_RXNEIE;
-                bus->state = STATE_TX_WAIT;
-            }
-            break;
+    if (bus->count == transfer->size) {
+        if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
+            /* Deactivate CS pin */
+            bus->device->cs_deactivate();
         }
-        case STATE_TX_WAIT: {
-            ncore_dummy_rd(bus->regs->DR);
-            bus->state = STATE_TX_COMPLETE;
-            break;
-        }
-        case STATE_TX_COMPLETE: {
-            ncore_dummy_rd(bus->regs->DR);
-            bus->regs->CR2 = 0;
-
-            if (!(bus->device->flags & SPI_TRANSFER_CS_DISABLE)) {
-                /* Deactivate CS pin */
-                bus->device->cs_deactivate();
-            }
-            bus->transfer->complete(bus->transfer->arg);
-            bus->transfer = NULL;
-            break;
-        }
-        default: {
-            status_error(STATUS_RUNTIME_CHECK_FAILED);
-        }
+        bus->regs->CR2 &= ~(SPI_CR2_RXNEIE | SPI_CR2_ERRIE);
+        transfer->complete(transfer->arg);
     }
 }
 
@@ -245,42 +232,18 @@ void spi_host_write_async(struct spi_bus * bus, struct spi_device * device,
 {
     while (is_busy(bus));
 
+    bus->device = device;
+    bus->count = 0u;
+    bus->isr_handler = isr_tx_only;
+    bus->transfer = transfer;
+    bus->transfer->error = NERROR_NONE;
+
     /* Activate CS pin */
     if (!(device->flags & SPI_TRANSFER_CS_DISABLE)) {
         device->cs_activate();
     }
-    bus->device   = device;
-    bus->transfer = transfer;
-    bus->count = 0u;
-    bus->transfer->error = NERROR_NONE;
-    bus->isr_handler = isr_tx_only;
-
-    /* Clear any overrun errors */
-    if (bus->regs->SR & SPI_SR_OVR) {
-        bus_clear_overrun(bus);
-    }
-
-    if (transfer->size == 1) {
-        bus->state     = STATE_TX_COMPLETE;
-        bus->regs->DR  = transfer->buff[bus->count++];
-        bus->regs->CR2 = SPI_CR2_RXNEIE;
-    } else if (transfer->size == 2) {
-        bus->state     = STATE_TX_WAIT;
-        bus->regs->DR  = transfer->buff[bus->count++];
-
-        while (!is_tx_empty(bus));
-
-        bus->regs->DR  = transfer->buff[bus->count++];
-        bus->regs->CR2 = SPI_CR2_RXNEIE;
-    } else {
-        bus->state     = STATE_TX_CONT;
-        bus->regs->DR  = transfer->buff[bus->count++];
-
-        while (!is_tx_empty(bus));
-
-        bus->regs->DR  = transfer->buff[bus->count++];
-        bus->regs->CR2 = SPI_CR2_TXEIE;
-    }
+    bus->regs->DR = transfer->buff[0];
+    bus->regs->CR2 |= SPI_CR2_RXNEIE | SPI_CR2_ERRIE;
 }
 
 

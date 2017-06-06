@@ -153,6 +153,7 @@ struct ads1256_chip
  */
 struct ads1256_group
 {
+	void 					 (* isr)(struct ads1256_group *);
     struct ads1256_chip *       chips;
     struct ads1256_chip *       master;
     uint32_t                    state;
@@ -195,7 +196,7 @@ static inline int32_t ads1256_get_value(const struct ads1256_chip * chip)
     return (n_ext_i24((int32_t)(__REV(chip->l.integer) >> 8u)));
 }
 
-void ads1256_drdy_isr(struct ads1256_group * group);
+#define ads1256_drdy_isr(group) (group)->isr(group);
 
 /*--------------------------------------------------------  C++ extern end  --*/
 #ifdef __cplusplus
