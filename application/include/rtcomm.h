@@ -78,11 +78,7 @@ void rtcomm_init(struct rtcomm_handle * handle, void * storage_a,
 
 void rtcomm_clear(struct rtcomm_handle * handle);
 
-static inline
-void * rtcomm_request_new(struct rtcomm_handle * handle)
-{
-    return (handle->storage_a);
-}
+#define rtcomm_request_new(handle) (handle)->storage_a
 
 /*
  * At this point a producer needs ne    w buffer to write to. It is RTCOMMs

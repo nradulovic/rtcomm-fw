@@ -186,6 +186,7 @@ static naction state_init(struct nsm * sm, const nevent * event)
                 ws->buff.config.en_probe_buffer = 0;
                 ws->buff.config.probe_mux_hi = 3;
                 ws->buff.config.probe_mux_lo = 2;
+                ws->buff.config.probe_pga = 1;
                 ws->buff.config.aux1_mux_hi = 2;
                 ws->buff.config.aux1_mux_lo = 3;
                 ws->buff.config.aux2_mux_hi = 4;
@@ -193,7 +194,6 @@ static naction state_init(struct nsm * sm, const nevent * event)
                 ws->buff.config.en_aux1 = 1;
                 ws->buff.config.en_aux2 = 1;
                 ws->buff.config.en_aux_buffer = 0;
-                ws->buff.config.probe_pga = 1;
             }
             return (naction_transit_to(sm, state_wait_config));
         }
@@ -251,7 +251,7 @@ static naction state_wait_config(struct nsm * sm, const nevent * event)
                     ctrl_header_pack(&ws->buff.config.header, sizeof(ws->buff.param));
                     ws->buff.param.data.en_autorange = 0;
                     ws->buff.param.data.probe_gain = 0;
-                    ws->buff.param.data.vspeed = 1;
+                    ws->buff.param.data.vspeed = 14;
                     ws->buff.param.data.workmode = IO_WORKMODE_NORMAL;
                 }
                 return (naction_transit_to(sm, state_wait_param));

@@ -209,12 +209,8 @@ static void ads_data_reader(struct ads1256_chip * chip)
 
     if (group->sampled == group->enabled) {
         group->sampled = 0u;
-
         group->vt->sample_finished(group);
-
-        if (group->state == ADS_DRV_STATE_SAMPLING) {
-            group->master->vt->drdy_isr_enable();
-        }
+		group->master->vt->drdy_isr_enable();
     }
 }
 
@@ -229,12 +225,20 @@ static void ads_chip_read_data_sync(struct ads1256_chip * chip)
     ads_data_reader(chip);
 }
 
-static inline
-void ads_chip_read_data_async(struct ads1256_chip * chip)
+static void ads_chip_prep_read_data_async(struct ads1256_chip * chip)
 {
-    chip->transfer.size     = 3;
-    chip->transfer.complete = (void (* )(void * ))ads_data_reader;
-    chip->transfer.arg      = chip;
+	/* Prepare reading of 3 byte return data. This structure is later used by
+	 * ads_chip_preped_read_data_async()
+	 */
+	chip->transfer.size     = 3;
+	chip->transfer.complete = (void (* )(void * ))ads_data_reader;
+	chip->transfer.arg      = chip;
+	//spi_nss_force_active(&chip->device);
+}
+
+static inline
+void ads_chip_preped_read_data_async(struct ads1256_chip * chip)
+{
     spi_read_async(&chip->device, &chip->transfer);
 }
 
@@ -289,6 +293,7 @@ static void ads_chip_sampling_prepare(struct ads1256_chip * chip)
     if (chip->group->config->sampling_mode == ADS1256_SAMPLE_MODE_CONT) {
         /* Continuous mode */
         ads_chip_set_cmd_sync(chip, ADS_CMD_RDATAC);
+        ads_chip_prep_read_data_async(chip);
     }
 }
 
@@ -353,7 +358,7 @@ static void drdy_isr_mode_cont(struct ads1256_group * group)
      * stuff that needs to be done in this ISR can be done after read start.
      */
     for (chip = group->chips; chip != NULL; chip = chip->next) {
-        ads_chip_read_data_async(chip);
+        ads_chip_preped_read_data_async(chip);
     }
     group->master->vt->drdy_isr_disable();
 }

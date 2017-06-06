@@ -254,16 +254,16 @@ void spi_host_read_async(struct spi_bus * bus, struct spi_device * device,
 {
     while (is_busy(bus));
 
+    /* Activate CS pin */
+    if (!(device->flags & SPI_TRANSFER_CS_DISABLE)) {
+        device->cs_activate();
+    }
     bus->device = device;
     bus->count = 0u;
     bus->isr_handler = isr_rx_only;
     bus->transfer = transfer;
     bus->transfer->error = NERROR_NONE;
 
-    /* Activate CS pin */
-    if (!(device->flags & SPI_TRANSFER_CS_DISABLE)) {
-        device->cs_activate();
-    }
     bus->regs->DR = 0u;
     bus->regs->CR2 |= SPI_CR2_RXNEIE | SPI_CR2_ERRIE;
 }

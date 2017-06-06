@@ -35,7 +35,7 @@
 
 /*===============================================================  MACRO's  ==*/
 
-#define CONFIG_DEBUG                    1
+#define CONFIG_DEBUG                    0
 #define CONFIG_API_VALIDATION           1
 #define CONFIG_ASSERT_INTERNAL          1
 
